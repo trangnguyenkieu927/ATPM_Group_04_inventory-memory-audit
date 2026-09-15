@@ -1,0 +1,10 @@
+# TIMESTAMP | ACTION | PRODUCT_ID | QUANTITY | BALANCE
+2026-09-14 12:02:36 | IMPORT | SP001      | 10    | Balance: 30
+2026-09-14 12:02:39 | EXPORT | SP001      | 8     | Balance: 22
+2026-09-14 12:03:29 | IMPORT | SP001      | 20    | Balance: 42
+2026-09-14 12:03:30 | EXPORT | SP001      | 5     | Balance: 37
+2026-09-14 12:03:33 | IMPORT | SP002      | 1     | Balance: 31
+2026-09-14 12:03:34 | EXPORT | SP005      | 5     | Balance: 0
+2026-09-14 12:07:01 | IMPORT | SP001      | 20    | Balance: 57
+2026-09-14 12:07:02 | EXPORT | SP001      | 5     | Balance: 52
+2026-09-14 12:07:04 | IMPORT | SP002      | 1     | Balance: 32

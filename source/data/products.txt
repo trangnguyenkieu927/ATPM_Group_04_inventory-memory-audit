@@ -1,0 +1,6 @@
+# ID|Name|Quantity|Price
+SP001|Laptop Dell XPS 13|35|1499.99
+SP002|Chuot khong day Logitech MX Master|31|99.50
+SP003|Ban phim co Keychron K2|15|85.00
+SP004|Man hinh LG UltraFine 27 inch|10|350.00
+SP005|Tai nghe Sony WH-1000XM5|0|399.00
