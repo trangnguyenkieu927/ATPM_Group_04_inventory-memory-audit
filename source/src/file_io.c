@@ -44,37 +44,51 @@ static int parse_price(const char *text, double *value) {
 }
 
 static int parse_product_line(char *line, Product *product) {
-    char *fields[4];
+    char *tokens[8];
+    size_t token_count = 0;
     char *cursor = line;
-    size_t i;
-    int status;
-
-    for (i = 0; i < 4; ++i) {
-        fields[i] = cursor;
-        cursor = strchr(cursor, '|');
-        if (i < 3) {
-            if (cursor == NULL) {
-                return STATUS_ERR_FILE_IO;
-            }
-            *cursor++ = '\0';
-        } else if (cursor != NULL) {
-            return STATUS_ERR_FILE_IO;
-        }
-    }
-    if (strlen(fields[0]) >= sizeof(product->id) || strlen(fields[1]) >= sizeof(product->name)) {
-        return STATUS_ERR_FILE_IO;
-    }
 
     memset(product, 0, sizeof(*product));
-    memcpy(product->id, fields[0], strlen(fields[0]) + 1);
-    memcpy(product->name, fields[1], strlen(fields[1]) + 1);
-    snprintf(product->category, sizeof(product->category), "ChuaPhanLoai");
-    snprintf(product->unit, sizeof(product->unit), "Cai");
-    status = parse_int(fields[2], &product->quantity);
-    if (status != STATUS_SUCCESS) {
-        return status;
+    while (cursor != NULL && token_count < 8) {
+        tokens[token_count++] = cursor;
+        char *pipe = strchr(cursor, '|');
+        if (pipe != NULL) {
+            *pipe = '\0';
+            cursor = pipe + 1;
+        } else {
+            cursor = NULL;
+        }
     }
-    return parse_price(fields[3], &product->price);
+
+    if (token_count == 6) {
+        if (strlen(tokens[0]) >= sizeof(product->id) ||
+            strlen(tokens[1]) >= sizeof(product->name) ||
+            strlen(tokens[2]) >= sizeof(product->category) ||
+            strlen(tokens[3]) >= sizeof(product->unit)) {
+            return STATUS_ERR_FILE_IO;
+        }
+        snprintf(product->id, sizeof(product->id), "%s", tokens[0]);
+        snprintf(product->name, sizeof(product->name), "%s", tokens[1]);
+        snprintf(product->category, sizeof(product->category), "%s", tokens[2]);
+        snprintf(product->unit, sizeof(product->unit), "%s", tokens[3]);
+        if (parse_int(tokens[4], &product->quantity) != STATUS_SUCCESS) return STATUS_ERR_FILE_IO;
+        if (parse_price(tokens[5], &product->price) != STATUS_SUCCESS) return STATUS_ERR_FILE_IO;
+        return STATUS_SUCCESS;
+    } else if (token_count == 4) {
+        if (strlen(tokens[0]) >= sizeof(product->id) ||
+            strlen(tokens[1]) >= sizeof(product->name)) {
+            return STATUS_ERR_FILE_IO;
+        }
+        snprintf(product->id, sizeof(product->id), "%s", tokens[0]);
+        snprintf(product->name, sizeof(product->name), "%s", tokens[1]);
+        snprintf(product->category, sizeof(product->category), "ChuaPhanLoai");
+        snprintf(product->unit, sizeof(product->unit), "Cai");
+        if (parse_int(tokens[2], &product->quantity) != STATUS_SUCCESS) return STATUS_ERR_FILE_IO;
+        if (parse_price(tokens[3], &product->price) != STATUS_SUCCESS) return STATUS_ERR_FILE_IO;
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_ERR_FILE_IO;
 }
 
 int load_products_from_file(Inventory *inventory, const char *path) {
@@ -131,13 +145,14 @@ int save_products_to_file(const Inventory *inventory, const char *path) {
     if (file == NULL) {
         return STATUS_ERR_FILE_IO;
     }
-    if (fprintf(file, "# ID|Name|Quantity|Price\n") < 0) {
+    if (fprintf(file, "# ID|Name|Category|Unit|Quantity|Price\n") < 0) {
         fclose(file);
         return STATUS_ERR_FILE_IO;
     }
     for (i = 0; i < inventory->count; ++i) {
         const Product *product = &inventory->items[i];
-        if (fprintf(file, "%s|%s|%d|%.2f\n", product->id, product->name,
+        if (fprintf(file, "%s|%s|%s|%s|%d|%.2f\n",
+                    product->id, product->name, product->category, product->unit,
                     product->quantity, product->price) < 0) {
             fclose(file);
             return STATUS_ERR_FILE_IO;

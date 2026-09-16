@@ -5,6 +5,7 @@
 #include "../include/validation.h"
 #include "../include/product.h"
 #include "../include/inventory.h"
+#include "../include/file_io.h"
 #include "../include/utils.h"
 
 /* In danh sách sản phẩm đẹp mắt */
@@ -338,6 +339,103 @@ void handle_inventory_management(ProductList *list) {
     }
 }
 
+static void get_default_data_path(const char *user_input, char *out_path, size_t out_size) {
+    if (user_input != NULL && !is_empty_or_whitespace(user_input)) {
+        snprintf(out_path, out_size, "%s", user_input);
+        return;
+    }
+
+    FILE *f1 = fopen("data/products.txt", "r");
+    if (f1 != NULL) {
+        fclose(f1);
+        snprintf(out_path, out_size, "data/products.txt");
+        return;
+    }
+
+    FILE *f2 = fopen("source/data/products.txt", "r");
+    if (f2 != NULL) {
+        fclose(f2);
+        snprintf(out_path, out_size, "source/data/products.txt");
+        return;
+    }
+
+    snprintf(out_path, out_size, "source/data/products.txt");
+}
+
+/* Sub-menu đọc/ghi tệp dữ liệu */
+void print_file_io_menu() {
+    printf("\n______________________________________________________________________________________________________\n");
+    printf("                                SUB-MENU: DOC / GHI DU LIEU TEP (FILE I/O)             \n");
+    printf("______________________________________________________________________________________________________\n");
+    printf("  1. Doc du lieu tu tep (Load data from file)\n");
+    printf("  2. Ghi du lieu ra tep (Save data to file)\n");
+    printf("  0. Quay lai Menu chinh\n");
+    printf("______________________________________________________________________________________________________\n");
+}
+
+/* Xử lý các chức năng Sub-menu File I/O */
+void handle_file_io_management(ProductList *list) {
+    char input_buf[256];
+    char user_path[256];
+    char target_path[256];
+    int choice = -1;
+
+    while (1) {
+        print_file_io_menu();
+        safe_read_line("Lua chon File I/O (0-2): ", input_buf, sizeof(input_buf));
+
+        if (is_empty_or_whitespace(input_buf)) {
+            printf("[!] Vui long nhap mot lua chon hop le.\n");
+            continue;
+        }
+
+        if (safe_str_to_int(input_buf, &choice) != STATUS_SUCCESS) {
+            printf("[!] Lua chon khong phai la so nguyen. Vui long thu lai!\n");
+            continue;
+        }
+
+        if (choice == 0) {
+            break; /* Quay lại Menu chính */
+        }
+
+        switch (choice) {
+            case 1: {
+                /* Đọc dữ liệu từ tệp */
+                printf("\n>>> DOC DU LIEU TU TEP <<<\n");
+                safe_read_line("Nhap duong dan tep (Enter de dung mac dinh): ", user_path, sizeof(user_path));
+                get_default_data_path(user_path, target_path, sizeof(target_path));
+
+                int status = load_products_from_file(list, target_path);
+                if (status == STATUS_SUCCESS) {
+                    printf("[OK] Doc du lieu tu tep '%s' thanh cong! Da nap %zu san pham.\n", target_path, list->count);
+                } else if (status == STATUS_ERR_FILE_IO) {
+                    printf("[ERR] Loi thao tac tep (Tep khong ton tai hoac sai dinh dang): %s\n", target_path);
+                } else {
+                    printf("[ERR] Doc du lieu that bai! (Ma loi: %d)\n", status);
+                }
+                break;
+            }
+            case 2: {
+                /* Ghi dữ liệu ra tệp */
+                printf("\n>>> GHI DU LIEU RA TEP <<<\n");
+                safe_read_line("Nhap duong dan tep (Enter de dung mac dinh): ", user_path, sizeof(user_path));
+                get_default_data_path(user_path, target_path, sizeof(target_path));
+
+                int status = save_products_to_file(list, target_path);
+                if (status == STATUS_SUCCESS) {
+                    printf("[OK] Ghi du lieu thanh cong ra tep '%s'! Da luu %zu san pham.\n", target_path, list->count);
+                } else {
+                    printf("[ERR] Ghi du lieu ra tep '%s' that bai! (Ma loi: %d)\n", target_path, status);
+                }
+                break;
+            }
+            default:
+                printf("[!] Lua chon '%d' khong hop le.\n", choice);
+                break;
+        }
+    }
+}
+
 /* Hiển thị Menu chính của hệ thống quản lý kho */
 void print_main_menu() {
     printf("\n______________________________________________________________________________________________________\n");
@@ -355,6 +453,16 @@ int main() {
     if (product_list_init(&product_list) != STATUS_SUCCESS) {
         printf("[ERR] Khong thể khoi tao danh sach san pham!\n");
         return 1;
+    }
+
+    /* Tự động nạp dữ liệu từ tệp mặc định khi khởi chạy ứng dụng */
+    char default_path[256];
+    get_default_data_path(NULL, default_path, sizeof(default_path));
+
+    if (load_products_from_file(&product_list, default_path) == STATUS_SUCCESS) {
+        printf("[SYSTEM] Da tu dong nap %zu san pham tu '%s'.\n", product_list.count, default_path);
+    } else {
+        printf("[SYSTEM] Khoi tao danh sach san pham rong (Chua co tep data/products.txt).\n");
     }
 
     char input_buf[64];
@@ -375,7 +483,8 @@ int main() {
         }
 
         if (choice == 0) {
-            printf("\n[OK] Cam on ban da su dung chuong trinh. Tam biet!\n");
+            save_products_to_file(&product_list, default_path);
+            printf("\n[OK] Da tu dong luu du lieu vao '%s' va thoat chuong trinh. Tam biet!\n", default_path);
             break;
         }
 
@@ -389,7 +498,8 @@ int main() {
                 handle_inventory_management(&product_list);
                 break;
             case 3:
-                printf("\n[MENU 3] Chuc nang Doc/Ghi File (File I/O) - Dang tich hop...\n");
+                /* Gọi Sub-menu Đọc/Ghi dữ liệu tệp */
+                handle_file_io_management(&product_list);
                 break;
             default:
                 printf("\n[!] Lua chon '%d' khong nam trong menu. Vui long chon tu 0 den 3.\n", choice);
