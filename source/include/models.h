@@ -19,12 +19,15 @@ typedef struct {
     double price;
 } Product;
 
-/* Cấu trúc danh sách sản phẩm (mảng động quản lý bộ nhớ) */
+/* Cấu trúc danh sách sản phẩm (mảng động quản lý bộ nhớ duy nhất) */
 typedef struct {
     Product *items;                 /* Mảng các sản phẩm cấp phát động */
     size_t count;                   /* Số lượng sản phẩm hiện có */
     size_t capacity;                /* Sức chứa tối đa hiện tại của mảng */
 } ProductList;
+
+/* Inventory sử dụng ProductList làm container duy nhất cho toàn bộ hệ thống */
+typedef ProductList Inventory;
 
 /* Bảng mã lỗi / trạng thái xử lý */
 #define STATUS_SUCCESS                  0   /* Thao tác thành công, không có lỗi */

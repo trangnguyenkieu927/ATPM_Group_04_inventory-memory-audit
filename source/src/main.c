@@ -4,14 +4,26 @@
 #include <time.h>
 
 #include "../include/models.h"
-#include "../include/product.h"
 #include "../include/validation.h"
+#include "../include/product.h"
+#include "../include/inventory.h"
+#include "../include/file_io.h"
 #include "../include/utils.h"
 #include "../include/report.h"
 
 /* =========================================================================
  * 1. QUẢN LÝ ĐƯỜNG DẪN TỆP DỮ LIỆU & LỊCH SỬ GIAO DỊCH
  * ========================================================================= */
+
+static void resolve_data_paths(char *prod_path, char *trans_path, size_t max_len);
+static void log_transaction(const char *trans_file, const char *action, const char *id, int qty, int balance);
+static void print_history(const char *trans_file);
+static const char* get_status_desc(int status);
+
+void print_product_list(const ProductList *list);
+static void print_product_table(const ProductList *list) {
+    print_product_list(list);
+}
 
 static void resolve_data_paths(char *prod_path, char *trans_path, size_t max_len) {
     const char *p = find_file_path("products.txt");
@@ -58,84 +70,7 @@ static void print_history(const char *trans_file) {
 }
 
 /* =========================================================================
- * 2. ĐỌC / GHI DỮ LIỆU SẢN PHẨM TỪ TỆP PRODUCTS.TXT
- * ========================================================================= */
-
-static int load_products_to_list(ProductList *list, const char *filepath) {
-    FILE *f = fopen(filepath, "r");
-    if (f == NULL) {
-        return STATUS_ERR_FILE_IO;
-    }
-
-    char line[512];
-    while (fgets(line, sizeof(line), f) != NULL) {
-        trim_whitespace(line);
-        if (line[0] == '\0' || line[0] == '#') {
-            continue;
-        }
-
-        char *tokens[8];
-        int num_tokens = split_line(line, '|', tokens, 8);
-        if (num_tokens >= 6) {
-            Product p;
-            memset(&p, 0, sizeof(p));
-            safe_string_copy(p.id, sizeof(p.id), trim_whitespace(tokens[0]));
-            safe_string_copy(p.name, sizeof(p.name), trim_whitespace(tokens[1]));
-            safe_string_copy(p.category, sizeof(p.category), trim_whitespace(tokens[2]));
-            safe_string_copy(p.unit, sizeof(p.unit), trim_whitespace(tokens[3]));
-
-            int qty = 0;
-            if (safe_str_to_int(tokens[4], &qty) == STATUS_SUCCESS) {
-                p.quantity = qty;
-            } else {
-                p.quantity = 0;
-            }
-
-            double price = 0.0;
-            if (safe_str_to_double(tokens[5], &price) == STATUS_SUCCESS) {
-                p.price = price;
-            } else {
-                p.price = 0.0;
-            }
-
-            /* Không dùng add_product trực tiếp để tránh ghi đè lỗi trùng lặp khi khởi động */
-            if (find_product_by_id(list, p.id) == NULL) {
-                add_product(list, &p);
-            }
-        }
-    }
-
-    fclose(f);
-    return STATUS_SUCCESS;
-}
-
-static int save_products_from_list(const ProductList *list, const char *filepath) {
-    if (list == NULL || filepath == NULL) {
-        return STATUS_ERR_NULL_PTR;
-    }
-
-    FILE *f = fopen(filepath, "w");
-    if (f == NULL) {
-        return STATUS_ERR_FILE_IO;
-    }
-
-    fprintf(f, "# ID|Name|Category|Unit|Quantity|Price\n");
-    for (size_t i = 0; i < list->count; ++i) {
-        fprintf(f, "%s|%s|%s|%s|%d|%.2f\n",
-                list->items[i].id,
-                list->items[i].name,
-                list->items[i].category,
-                list->items[i].unit,
-                list->items[i].quantity,
-                list->items[i].price);
-    }
-
-    fclose(f);
-    return STATUS_SUCCESS;
-}
-
-/* =========================================================================
- * 3. HIỂN THỊ DANH SÁCH & BÁO CÁO KIỂM TOÁN TỆP
+ * 2. MÔ TẢ TRẠNG THÁI & HIỂN THỊ BẢNG SẢN PHẨM
  * ========================================================================= */
 
 static const char* get_status_desc(int status) {
@@ -155,15 +90,15 @@ static const char* get_status_desc(int status) {
     }
 }
 
-static void print_product_table(const ProductList *list) {
+void print_product_list(const ProductList *list) {
     if (list == NULL || list->count == 0) {
-        printf("\n[i] Danh sach san pham hien dang trong!\n");
+        printf("\n[!] Danh sach san pham hien dang RONG!\n");
         return;
     }
 
-    printf("\n=========================================================================================================================\n");
-    printf("                                      DANH SACH SAN PHAM TRONG KHO                                      \n");
-    printf("=========================================================================================================================\n");
+    printf("\n================================================================================================-------------------------\n");
+    printf("                                      DANH SACH SAN PHAM TRONG KHO (Tong so: %zu)                                      \n", list->count);
+    printf("================================================================================================-------------------------\n");
     printf("%-4s | %-10s | %-32s | %-16s | %-8s | %-8s | %-10s | %-12s\n",
            "STT", "MA SP", "TEN SAN PHAM", "LOAI SP", "DON VI", "TON KHO", "DON GIA ($)", "THANH TIEN ($)");
     printf("-------------------------------------------------------------------------------------------------------------------------\n");
@@ -190,7 +125,7 @@ static void print_product_table(const ProductList *list) {
     printf("-------------------------------------------------------------------------------------------------------------------------\n");
     printf("Tong so mat hang: %zu | Tong ton kho: %lld | Tong gia tri kho: %.2f $\n",
            list->count, total_quantity, total_inventory_value);
-    printf("=========================================================================================================================\n\n");
+    printf("================================================================================================-------------------------\n\n");
 }
 
 static void display_and_validate_file(const char *filepath) {
@@ -200,9 +135,9 @@ static void display_and_validate_file(const char *filepath) {
         return;
     }
 
-    printf("\n=========================================================================================================================\n");
+    printf("\n================================================================================================-------------------------\n");
     printf("                               KIEM TOAN DU LIEU TEP SAN PHAM (%s)                               \n", filepath);
-    printf("=========================================================================================================================\n");
+    printf("================================================================================================-------------------------\n");
     printf("%-8s | %-32s | %-12s | %-8s | %-8s | %-9s | %-18s\n",
            "MA SP", "TEN SAN PHAM", "LOAI SP", "DON VI", "SO LUONG", "GIA ($)", "TRANG THAI KIEM TOAN");
     printf("-------------------------------------------------------------------------------------------------------------------------\n");
@@ -260,13 +195,13 @@ static void display_and_validate_file(const char *filepath) {
     printf("-------------------------------------------------------------------------------------------------------------------------\n");
     printf("Tong so ban ghi: %d | Ban ghi hop le: %d | Ban ghi loi: %d\n",
            total_products, valid_products, total_products - valid_products);
-    printf("=========================================================================================================================\n\n");
+    printf("================================================================================================-------------------------\n\n");
 
     fclose(f);
 }
 
 /* =========================================================================
- * 4. BỘ KIỂM THỬ TỰ ĐỘNG (UNIT TEST SUITE)
+ * 3. BỘ KIỂM THỬ TỰ ĐỘNG (UNIT TEST SUITE)
  * ========================================================================= */
 
 static void run_all_unit_tests() {
@@ -361,7 +296,7 @@ static void run_all_unit_tests() {
 }
 
 /* =========================================================================
- * 5. CÁC TÍNH NĂNG TƯƠNG TÁC MENU
+ * 4. CÁC HÀM XỬ LÝ CHỨC NĂNG NGHIỆP VỤ
  * ========================================================================= */
 
 static void handle_add_product(ProductList *list, const char *prod_file) {
@@ -425,7 +360,7 @@ static void handle_add_product(ProductList *list, const char *prod_file) {
     int res = add_product(list, &p);
     if (res == STATUS_SUCCESS) {
         printf("[+] Them san pham '%s' thanh cong!\n", p.id);
-        save_products_from_list(list, prod_file);
+        save_products_to_file(list, prod_file);
         printf("[*] Da cap nhat tep du lieu: %s\n", prod_file);
     } else {
         printf("[-] Them san pham that bai: %s\n", get_status_desc(res));
@@ -491,7 +426,7 @@ static void handle_update_product(ProductList *list, const char *prod_file) {
     int res = update_product(list, id, p_name, p_cat, p_unit, new_qty, new_price);
     if (res == STATUS_SUCCESS) {
         printf("[+] Cap nhat san pham '%s' thanh cong!\n", id);
-        save_products_from_list(list, prod_file);
+        save_products_to_file(list, prod_file);
         printf("[*] Da cap nhat tep du lieu: %s\n", prod_file);
     } else {
         printf("[-] Cap nhat that bai: %s\n", get_status_desc(res));
@@ -519,7 +454,7 @@ static void handle_delete_product(ProductList *list, const char *prod_file) {
         int res = delete_product(list, id);
         if (res == STATUS_SUCCESS) {
             printf("[+] Xoa san pham '%s' thanh cong!\n", id);
-            save_products_from_list(list, prod_file);
+            save_products_to_file(list, prod_file);
             printf("[*] Da cap nhat tep du lieu: %s\n", prod_file);
         } else {
             printf("[-] Xoa that bai: %s\n", get_status_desc(res));
@@ -597,7 +532,7 @@ static void handle_import_stock(ProductList *list, const char *prod_file, const 
         return;
     }
 
-    printf("[i] San pham: %s | Ton kho hien tai: %d\n", p->name, p->quantity);
+    printf("[i] San pham: %s | Ton kho hien tai: %d %s\n", p->name, p->quantity, p->unit);
     char buf[64];
     safe_read_line("Nhap so luong can nhap kho (> 0): ", buf, sizeof(buf));
     trim_whitespace(buf);
@@ -614,18 +549,17 @@ static void handle_import_stock(ProductList *list, const char *prod_file, const 
         return;
     }
 
-    /* Kiem tra nguy co tran so nguyen (Integer Overflow) */
-    if (check_addition_overflow(p->quantity, qty) != STATUS_SUCCESS) {
+    int res = import_stock(list, p->id, qty);
+    if (res == STATUS_SUCCESS) {
+        printf("[+] Nhap kho thanh cong! Ton kho moi cua '%s': %d %s\n", p->id, p->quantity, p->unit);
+        log_transaction(trans_file, "IMPORT", p->id, qty, p->quantity);
+        save_products_to_file(list, prod_file);
+        printf("[*] Da ghi lich su giao dich va cap nhat tep kho hang.\n");
+    } else if (res == STATUS_ERR_OVERFLOW) {
         printf("[!] Canh bao nguy co tran so nguyen (Integer Overflow)! Khong the nhap kho.\n");
-        return;
+    } else {
+        printf("[-] Nhap kho that bai: %s\n", get_status_desc(res));
     }
-
-    p->quantity += qty;
-    printf("[+] Nhap kho thanh cong! Ton kho moi cua '%s': %d\n", p->id, p->quantity);
-
-    log_transaction(trans_file, "IMPORT", p->id, qty, p->quantity);
-    save_products_from_list(list, prod_file);
-    printf("[*] Da ghi lich su giao dich va cap nhat tep kho hang.\n");
 }
 
 static void handle_export_stock(ProductList *list, const char *prod_file, const char *trans_file) {
@@ -640,7 +574,7 @@ static void handle_export_stock(ProductList *list, const char *prod_file, const 
         return;
     }
 
-    printf("[i] San pham: %s | Ton kho hien tai: %d\n", p->name, p->quantity);
+    printf("[i] San pham: %s | Ton kho hien tai: %d %s\n", p->name, p->quantity, p->unit);
     char buf[64];
     safe_read_line("Nhap so luong can xuat kho (> 0): ", buf, sizeof(buf));
     trim_whitespace(buf);
@@ -657,18 +591,17 @@ static void handle_export_stock(ProductList *list, const char *prod_file, const 
         return;
     }
 
-    /* Kiem tra ton kho du hay khong (Underflow / Insufficient Stock) */
-    if (validate_export_quantity(p->quantity, qty) != STATUS_SUCCESS) {
+    int res = export_stock(list, p->id, qty);
+    if (res == STATUS_SUCCESS) {
+        printf("[+] Xuat kho thanh cong! Ton kho con lai cua '%s': %d %s\n", p->id, p->quantity, p->unit);
+        log_transaction(trans_file, "EXPORT", p->id, qty, p->quantity);
+        save_products_to_file(list, prod_file);
+        printf("[*] Da ghi lich su giao dich va cap nhat tep kho hang.\n");
+    } else if (res == STATUS_ERR_INSUFFICIENT_STOCK) {
         printf("[!] Ton kho khong du de xuat (Hien co: %d, can xuat: %d)!\n", p->quantity, qty);
-        return;
+    } else {
+        printf("[-] Xuat kho that bai: %s\n", get_status_desc(res));
     }
-
-    p->quantity -= qty;
-    printf("[+] Xuat kho thanh cong! Ton kho con lai cua '%s': %d\n", p->id, p->quantity);
-
-    log_transaction(trans_file, "EXPORT", p->id, qty, p->quantity);
-    save_products_from_list(list, prod_file);
-    printf("[*] Da ghi lich su giao dich va cap nhat tep kho hang.\n");
 }
 
 static void handle_report_menu(const ProductList *list) {
@@ -743,11 +676,10 @@ static void handle_report_menu(const ProductList *list) {
 }
 
 /* =========================================================================
- * 6. HÀM MAIN & VÒNG LẶP MENU TƯƠNG TÁC
+ * 5. HÀM MAIN & VÒNG LẶP MENU TƯƠNG TÁC
  * ========================================================================= */
 
 int main(int argc, char *argv[]) {
-    /* Khoi tao danh sach san pham dong */
     ProductList list;
     if (product_list_init(&list) != STATUS_SUCCESS) {
         fprintf(stderr, "[!] Loi cap phat bo nho dong cho ProductList.\n");
@@ -758,8 +690,8 @@ int main(int argc, char *argv[]) {
     char trans_file[256];
     resolve_data_paths(prod_file, trans_file, sizeof(prod_file));
 
-    /* Nap du lieu tu tep products.txt */
-    load_products_to_list(&list, prod_file);
+    /* Nap du lieu tu tep products.txt qua module file_io */
+    load_products_from_file(&list, prod_file);
 
     /* Ho tro che do chay lenh dong CLI (Test / Batch scripts) */
     if (argc > 1) {
@@ -854,7 +786,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 0:
                 printf("\n[*] Dang luu du lieu vao tep: %s...\n", prod_file);
-                save_products_from_list(&list, prod_file);
+                save_products_to_file(&list, prod_file);
                 printf("[*] Da luu thanh cong. Thoat chuong trinh.\n");
                 running = 0;
                 break;

@@ -5,12 +5,7 @@
 
 #include "models.h"
 
-/* Danh sach san pham duoc cap phat dong va so huu bo nho cua products. */
-typedef struct {
-    Product *products;
-    size_t count;
-    size_t capacity;
-} Inventory;
+/* Inventory sử dụng ProductList (container duy nhất được định nghĩa trong models.h) */
 
 int inventory_init(Inventory *inventory);
 void inventory_free(Inventory *inventory);

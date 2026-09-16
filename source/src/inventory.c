@@ -1,4 +1,5 @@
 #include "../include/inventory.h"
+#include "../include/product.h"
 #include "../include/validation.h"
 
 #include <stdlib.h>
@@ -6,102 +7,24 @@
 #include <stdint.h>
 #include <math.h>
 
-static int inventory_grow(Inventory *inventory) {
-    size_t new_capacity;
-    Product *new_products;
-
-    if (inventory->count < inventory->capacity) {
-        return STATUS_SUCCESS;
-    }
-
-    new_capacity = inventory->capacity == 0 ? INITIAL_CAPACITY : inventory->capacity * 2;
-    if (new_capacity < inventory->capacity || new_capacity > SIZE_MAX / sizeof(*new_products)) {
-        return STATUS_ERR_MEMORY;
-    }
-
-    new_products = realloc(inventory->products, new_capacity * sizeof(*new_products));
-    if (new_products == NULL) {
-        return STATUS_ERR_MEMORY;
-    }
-
-    inventory->products = new_products;
-    inventory->capacity = new_capacity;
-    return STATUS_SUCCESS;
-}
-
 int inventory_init(Inventory *inventory) {
-    if (inventory == NULL) {
-        return STATUS_ERR_NULL_PTR;
-    }
-
-    inventory->products = NULL;
-    inventory->count = 0;
-    inventory->capacity = 0;
-    return STATUS_SUCCESS;
+    return product_list_init(inventory);
 }
 
 void inventory_free(Inventory *inventory) {
-    if (inventory == NULL) {
-        return;
-    }
-
-    free(inventory->products);
-    inventory->products = NULL;
-    inventory->count = 0;
-    inventory->capacity = 0;
+    product_list_free(inventory);
 }
 
 const Product *find_product(const Inventory *inventory, const char *product_id) {
-    size_t i;
-
-    if (inventory == NULL || product_id == NULL) {
-        return NULL;
-    }
-
-    for (i = 0; i < inventory->count; ++i) {
-        if (strcmp(inventory->products[i].id, product_id) == 0) {
-            return &inventory->products[i];
-        }
-    }
-    return NULL;
+    return find_product_by_id(inventory, product_id);
 }
 
 Product *find_product_mutable(Inventory *inventory, const char *product_id) {
-    size_t i;
-
-    if (inventory == NULL || product_id == NULL) {
-        return NULL;
-    }
-
-    for (i = 0; i < inventory->count; ++i) {
-        if (strcmp(inventory->products[i].id, product_id) == 0) {
-            return &inventory->products[i];
-        }
-    }
-    return NULL;
+    return find_product_by_id(inventory, product_id);
 }
 
 int inventory_add_product(Inventory *inventory, const Product *product) {
-    int status;
-
-    if (inventory == NULL || product == NULL) {
-        return STATUS_ERR_NULL_PTR;
-    }
-    if (validate_product_id(product->id) != STATUS_SUCCESS || product->name[0] == '\0' ||
-        strnlen(product->name, MAX_NAME_LEN) == MAX_NAME_LEN || product->quantity < 0 ||
-        product->price < 0 || !isfinite(product->price)) {
-        return STATUS_ERR_INVALID_ID;
-    }
-    if (find_product(inventory, product->id) != NULL) {
-        return STATUS_ERR_INVALID_ID;
-    }
-
-    status = inventory_grow(inventory);
-    if (status != STATUS_SUCCESS) {
-        return status;
-    }
-    inventory->products[inventory->count++] = *product;
-    return STATUS_SUCCESS;
+    return add_product(inventory, product);
 }
 
 int import_stock(Inventory *inventory, const char *product_id, int quantity) {
