@@ -1,0 +1,15 @@
+# Tep du lieu dau vao kiem thu CWE-415: Kich hoat cac luong loi tai du lieu de kiem tra Double Free khi don dep bo nho
+# Dong hop le 1
+SP001|Laptop Dell XPS 13|Laptop|Chiec|38|1499.99
+
+# Dong hop le 2
+SP002|Chuot Logitech MX Master|Phu kien|Con|30|99.50
+
+# Dong loi dinh dang 1: Thieu truong gay ngat doc giua chung de kiem tra don dep bo nho
+SP003|Ban phim Keychron
+
+# Dong loi dinh dang 2: Sai dinh dang gia gay loi file I/O
+SP004|Man hinh LG|Man hinh|Chiec|10|invalid_price_abc
+
+# Dong trung lap ma san pham: Kich hoat STATUS_ERR_INVALID_ID / DUPLICATE
+SP001|Laptop Dell XPS 13 Trung Lap|Laptop|Chiec|10|1200.00
