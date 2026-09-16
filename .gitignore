@@ -1,0 +1,6 @@
+# Build artifacts
+*.exe
+*.o
+
+# Windows accidental file
+nul
