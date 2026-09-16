@@ -72,39 +72,48 @@ int add_product(ProductList *list, const Product *prod) {
         return STATUS_ERR_NULL_PTR;
     }
 
-    /* 1. Kiểm tra tính hợp lệ của mã sản phẩm (ID) */
+    /* 1. Kiểm tra tính hợp lệ của mã sản phẩm (ID) bằng Validation Module */
     int val_id = validate_product_id(prod->id);
     if (val_id != STATUS_SUCCESS) {
         return val_id;
     }
 
-    /* 2. Kiểm tra tính hợp lệ của tên sản phẩm */
-    if (prod->name[0] == '\0' || strlen(prod->name) >= MAX_NAME_LEN) {
-        return STATUS_ERR_INVALID_NAME;
+    /* 2. Kiểm tra tính hợp lệ của tên sản phẩm bằng Validation Module */
+    int val_name = validate_product_name(prod->name);
+    if (val_name != STATUS_SUCCESS) {
+        return val_name;
     }
 
-    /* 3. Kiểm tra tính hợp lệ của loại sản phẩm */
-    if (strlen(prod->category) >= MAX_CATEGORY_LEN) {
-        return STATUS_ERR_INVALID_NAME;
+    /* 3. Kiểm tra tính hợp lệ của loại sản phẩm bằng Validation Module */
+    int val_cat = validate_category(prod->category);
+    if (val_cat != STATUS_SUCCESS) {
+        return val_cat;
     }
 
-    /* 4. Kiểm tra tính hợp lệ của số lượng (> 0) */
+    /* 4. Kiểm tra tính hợp lệ của đơn vị tính bằng Validation Module */
+    int val_unit = validate_unit(prod->unit);
+    if (val_unit != STATUS_SUCCESS) {
+        return val_unit;
+    }
+
+    /* 5. Kiểm tra tính hợp lệ của số lượng (>= 0) bằng Validation Module */
     int val_qty = validate_quantity(prod->quantity);
     if (val_qty != STATUS_SUCCESS) {
         return val_qty;
     }
 
-    /* 5. Kiểm tra tính hợp lệ của đơn giá (>= 0) */
-    if (prod->price < 0.0) {
-        return STATUS_ERR_INVALID_PRICE;
+    /* 6. Kiểm tra tính hợp lệ của đơn giá (>= 0) bằng Validation Module */
+    int val_price = validate_price(prod->price);
+    if (val_price != STATUS_SUCCESS) {
+        return val_price;
     }
 
-    /* 6. Kiểm tra trùng lặp mã sản phẩm (Duplicate ID) */
+    /* 7. Kiểm tra trùng lặp mã sản phẩm (Duplicate ID) */
     if (find_product_by_id(list, prod->id) != NULL) {
         return STATUS_ERR_DUPLICATE_ID;
     }
 
-    /* 7. Mở rộng bộ nhớ mảng động an toàn khi đầy (Heap Reallocation Guard) */
+    /* 8. Mở rộng bộ nhớ mảng động an toàn khi đầy (Heap Reallocation Guard) */
     if (list->count >= list->capacity) {
         size_t new_cap = (list->capacity == 0) ? INITIAL_CAPACITY : (list->capacity * 2);
         Product *new_items = (Product *)realloc(list->items, new_cap * sizeof(Product));
@@ -115,11 +124,12 @@ int add_product(ProductList *list, const Product *prod) {
         list->capacity = new_cap;
     }
 
-    /* 8. Sao chép thông tin sản phẩm mới vào mảng */
+    /* 9. Sao chép thông tin sản phẩm mới vào mảng (bao gồm unit) */
     Product *target = &list->items[list->count];
     safe_strcpy(target->id, prod->id, sizeof(target->id));
     safe_strcpy(target->name, prod->name, sizeof(target->name));
     safe_strcpy(target->category, prod->category, sizeof(target->category));
+    safe_strcpy(target->unit, prod->unit, sizeof(target->unit));
     target->quantity = prod->quantity;
     target->price = prod->price;
 
@@ -128,7 +138,7 @@ int add_product(ProductList *list, const Product *prod) {
 }
 
 /* TASK 4: Sửa thông tin sản phẩm theo mã ID */
-int update_product(ProductList *list, const char *id, const char *new_name, const char *new_category, int new_quantity, double new_price) {
+int update_product(ProductList *list, const char *id, const char *new_name, const char *new_category, const char *new_unit, int new_quantity, double new_price) {
     if (list == NULL || id == NULL) {
         return STATUS_ERR_NULL_PTR;
     }
@@ -141,21 +151,32 @@ int update_product(ProductList *list, const char *id, const char *new_name, cons
 
     /* 1. Kiểm tra và cập nhật tên mới (nếu new_name != NULL) */
     if (new_name != NULL) {
-        if (new_name[0] == '\0' || strlen(new_name) >= MAX_NAME_LEN) {
-            return STATUS_ERR_INVALID_NAME;
+        int val_name = validate_product_name(new_name);
+        if (val_name != STATUS_SUCCESS) {
+            return val_name;
         }
         safe_strcpy(target->name, new_name, sizeof(target->name));
     }
 
     /* 2. Kiểm tra và cập nhật loại sản phẩm mới (nếu new_category != NULL) */
     if (new_category != NULL) {
-        if (strlen(new_category) >= MAX_CATEGORY_LEN) {
-            return STATUS_ERR_INVALID_NAME;
+        int val_cat = validate_category(new_category);
+        if (val_cat != STATUS_SUCCESS) {
+            return val_cat;
         }
         safe_strcpy(target->category, new_category, sizeof(target->category));
     }
 
-    /* 3. Kiểm tra và cập nhật số lượng mới (nếu new_quantity != -1) */
+    /* 3. Kiểm tra và cập nhật đơn vị tính mới (nếu new_unit != NULL) */
+    if (new_unit != NULL) {
+        int val_unit = validate_unit(new_unit);
+        if (val_unit != STATUS_SUCCESS) {
+            return val_unit;
+        }
+        safe_strcpy(target->unit, new_unit, sizeof(target->unit));
+    }
+
+    /* 4. Kiểm tra và cập nhật số lượng mới (nếu new_quantity != -1) */
     if (new_quantity != -1) {
         int val_qty = validate_quantity(new_quantity);
         if (val_qty != STATUS_SUCCESS) {
@@ -164,8 +185,12 @@ int update_product(ProductList *list, const char *id, const char *new_name, cons
         target->quantity = new_quantity;
     }
 
-    /* 4. Kiểm tra và cập nhật đơn giá mới (nếu new_price != -1.0) */
+    /* 5. Kiểm tra và cập nhật đơn giá mới (nếu new_price != -1.0) */
     if (new_price >= 0.0) {
+        int val_price = validate_price(new_price);
+        if (val_price != STATUS_SUCCESS) {
+            return val_price;
+        }
         target->price = new_price;
     } else if (new_price != -1.0) {
         return STATUS_ERR_INVALID_PRICE;
@@ -194,6 +219,7 @@ int delete_product(ProductList *list, const char *id) {
     return STATUS_ERR_NOT_FOUND;
 }
 
+/* TASK 6: Tìm kiếm sản phẩm theo ID */
 Product* find_product_by_id(const ProductList *list, const char *id) {
     if (list == NULL || id == NULL || list->items == NULL) {
         return NULL;

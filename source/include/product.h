@@ -30,11 +30,12 @@ int add_product(ProductList *list, const Product *prod);
  * @param id Mã sản phẩm cần sửa.
  * @param new_name Tên mới (truyền NULL nếu không muốn sửa tên).
  * @param new_category Loại sản phẩm mới (truyền NULL nếu không sửa loại).
+ * @param new_unit Đơn vị tính mới (truyền NULL nếu không sửa đơn vị).
  * @param new_quantity Số lượng mới (-1 nếu không thay đổi).
  * @param new_price Đơn giá mới (-1.0 nếu không thay đổi).
  * @return STATUS_SUCCESS nếu sửa thành công, hoặc mã lỗi STATUS_ERR_*.
  */
-int update_product(ProductList *list, const char *id, const char *new_name, const char *new_category, int new_quantity, double new_price);
+int update_product(ProductList *list, const char *id, const char *new_name, const char *new_category, const char *new_unit, int new_quantity, double new_price);
 
 /**
  * Xóa một sản phẩm khỏi danh sách theo mã ID.
