@@ -9,6 +9,8 @@ static Product make_product(const char *id, const char *name, int quantity, doub
     Product product = {0};
     snprintf(product.id, sizeof(product.id), "%s", id);
     snprintf(product.name, sizeof(product.name), "%s", name);
+    snprintf(product.category, sizeof(product.category), "DienTu");
+    snprintf(product.unit, sizeof(product.unit), "Cai");
     product.quantity = quantity;
     product.price = price;
     return product;
@@ -35,8 +37,8 @@ int main(void) {
     assert(inventory_init(&reloaded) == STATUS_SUCCESS);
     assert(load_products_from_file(&reloaded, output_path) == STATUS_SUCCESS);
     assert(reloaded.count == 1);
-    assert(strcmp(reloaded.products[0].id, "SP001") == 0);
-    assert(reloaded.products[0].quantity == 0);
+    assert(strcmp(reloaded.items[0].id, "SP001") == 0);
+    assert(reloaded.items[0].quantity == 0);
 
     inventory_free(&reloaded);
     inventory_free(&inventory);

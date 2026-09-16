@@ -4,6 +4,7 @@
 #include "../include/models.h"
 #include "../include/validation.h"
 #include "../include/product.h"
+#include "../include/inventory.h"
 #include "../include/utils.h"
 
 /* In danh sách sản phẩm đẹp mắt */
@@ -23,9 +24,9 @@ void print_product_list(const ProductList *list) {
 
 /* Sub-menu quản lý sản phẩm */
 void print_product_menu() {
-    printf("\n=======================================================\n");
-    printf("           SUB-MENU: QUAN LY SAN PHAM                  \n");
-    printf("=======================================================\n");
+    printf("\n____________________________________________________________________________________________________\n");
+    printf("                                SUB-MENU: QUAN LY SAN PHAM                  \n");
+    printf("______________________________________________________________________________________________________\n");
     printf("  1. Hien thi danh sach san pham\n");
     printf("  2. Them san pham moi\n");
     printf("  3. Sua thong tin san pham\n");
@@ -33,7 +34,7 @@ void print_product_menu() {
     printf("  5. Tim kiem san pham theo ID\n");
     printf("  6. Tim kiem san pham theo Ten\n");
     printf("  0. Quay lai Menu chinh\n");
-    printf("=======================================================\n");
+    printf("______________________________________________________________________________________________________\n");
 }
 
 /* Xử lý các chức năng Sub-menu Product */
@@ -148,7 +149,7 @@ void handle_product_management(ProductList *list) {
                 if (status == STATUS_SUCCESS) {
                     printf("[OK] Xoa san pham '%s' thanh cong!\n", id);
                 } else {
-                    printf("[ERR] Khong tim thay hoac xoa thất bai! (Ma loi: %d)\n", status);
+                    printf("[ERR] Khong tim thay hoac xoa that bai! (Ma loi: %d)\n", status);
                 }
                 break;
             }
@@ -162,7 +163,7 @@ void handle_product_management(ProductList *list) {
                     printf("[FOUND] ID: %s | Ten: %s | Loai: %s | Don vi: %s | SL: %d | Gia: %.3f $\n",
                            p->id, p->name, p->category, p->unit, p->quantity, p->price);
                 } else {
-                    printf("[!] Khong tim thay san pham co mã '%s'!\n", id);
+                    printf("[!] Khong tim thay san pham co ma '%s'!\n", id);
                 }
                 break;
             }
@@ -194,16 +195,159 @@ void handle_product_management(ProductList *list) {
     }
 }
 
+/* Sub-menu quản lý tồn kho */
+void print_inventory_menu() {
+    printf("\n______________________________________________________________________________________________________\n");
+    printf("                                SUB-MENU: QUAN LY TON KHO (INVENTORY)                 \n");
+    printf("______________________________________________________________________________________________________\n");
+    printf("  1. Hien thi danh sach ton kho san pham\n");
+    printf("  2. Nhap kho (Tang so luong ton kho)\n");
+    printf("  3. Xuat kho (Giam so luong ton kho)\n");
+    printf("  4. Cap nhat truc tiep so luong ton kho\n");
+    printf("  0. Quay lai Menu chinh\n");
+    printf("______________________________________________________________________________________________________\n");
+}
+
+/* Xử lý các chức năng Sub-menu Inventory */
+void handle_inventory_management(ProductList *list) {
+    char input_buf[128];
+    int choice = -1;
+
+    while (1) {
+        print_inventory_menu();
+        safe_read_line("Lua chon Inventory (0-4): ", input_buf, sizeof(input_buf));
+
+        if (is_empty_or_whitespace(input_buf)) {
+            printf("[!] Vui long nhap mot lua chon hop le.\n");
+            continue;
+        }
+
+        if (safe_str_to_int(input_buf, &choice) != STATUS_SUCCESS) {
+            printf("[!] Lua chon khong phai la so nguyen. Vui long thu lai!\n");
+            continue;
+        }
+
+        if (choice == 0) {
+            break; /* Quay lại Menu chính */
+        }
+
+        switch (choice) {
+            case 1: {
+                /* Hiển thị danh sách tồn kho */
+                print_product_list(list);
+                break;
+            }
+            case 2: {
+                /* Nhập kho (Import Stock) */
+                char id[MAX_ID_LEN];
+                int qty = 0;
+
+                printf("\n>>> NHAP KHO SAN PHAM (IMPORT STOCK) <<<\n");
+                safe_read_line("Nhap Ma SP (ID): ", id, sizeof(id));
+                const Product *p = find_product(list, id);
+                if (p == NULL) {
+                    printf("[ERR] Khong tim thay san pham co ma '%s'!\n", id);
+                    break;
+                }
+                printf("San pham: %s | Ton kho hien tai: %d %s\n", p->name, p->quantity, p->unit);
+
+                safe_read_line("Nhap so luong can NHAP THEM: ", input_buf, sizeof(input_buf));
+                if (safe_str_to_int(input_buf, &qty) != STATUS_SUCCESS || qty <= 0) {
+                    printf("[ERR] So luong nhap phai la so nguyen duong (> 0)!\n");
+                    break;
+                }
+
+                int status = import_stock(list, id, qty);
+                if (status == STATUS_SUCCESS) {
+                    const Product *updated_p = find_product(list, id);
+                    printf("[OK] Nhap kho thanh cong! Ton kho moi cua '%s': %d %s\n",
+                           id, updated_p ? updated_p->quantity : 0, updated_p ? updated_p->unit : "");
+                } else if (status == STATUS_ERR_OVERFLOW) {
+                    printf("[ERR] Loi tran so nguyen (Integer Overflow) khi nhap kho!\n");
+                } else {
+                    printf("[ERR] Nhap kho that bai! (Ma loi: %d)\n", status);
+                }
+                break;
+            }
+            case 3: {
+                /* Xuất kho (Export Stock) */
+                char id[MAX_ID_LEN];
+                int qty = 0;
+
+                printf("\n>>> XUAT KHO SAN PHAM (EXPORT STOCK) <<<\n");
+                safe_read_line("Nhap Ma SP (ID): ", id, sizeof(id));
+                const Product *p = find_product(list, id);
+                if (p == NULL) {
+                    printf("[ERR] Khong tim thay san pham co ma '%s'!\n", id);
+                    break;
+                }
+                printf("San pham: %s | Ton kho hien tai: %d %s\n", p->name, p->quantity, p->unit);
+
+                safe_read_line("Nhap so luong can XUAT: ", input_buf, sizeof(input_buf));
+                if (safe_str_to_int(input_buf, &qty) != STATUS_SUCCESS || qty <= 0) {
+                    printf("[ERR] So luong xuat phai la so nguyen duong (> 0)!\n");
+                    break;
+                }
+
+                int status = export_stock(list, id, qty);
+                if (status == STATUS_SUCCESS) {
+                    const Product *updated_p = find_product(list, id);
+                    printf("[OK] Xuat kho thanh cong! Ton kho moi cua '%s': %d %s\n",
+                           id, updated_p ? updated_p->quantity : 0, updated_p ? updated_p->unit : "");
+                } else if (status == STATUS_ERR_INSUFFICIENT_STOCK) {
+                    printf("[ERR] KHONG DU TON KHO! (Ton kho hien tai: %d, So luong yeu cau xuat: %d)\n",
+                           p->quantity, qty);
+                } else {
+                    printf("[ERR] Xuat kho that bai! (Ma loi: %d)\n", status);
+                }
+                break;
+            }
+            case 4: {
+                /* Cập nhật tồn kho trực tiếp (Update Stock) */
+                char id[MAX_ID_LEN];
+                int new_qty = 0;
+
+                printf("\n>>> CAP NHAT TRUC TIEP TON KHO <<<\n");
+                safe_read_line("Nhap Ma SP (ID): ", id, sizeof(id));
+                const Product *p = find_product(list, id);
+                if (p == NULL) {
+                    printf("[ERR] Khong tim thay san pham co ma '%s'!\n", id);
+                    break;
+                }
+                printf("San pham: %s | Ton kho hien tai: %d %s\n", p->name, p->quantity, p->unit);
+
+                safe_read_line("Nhap so luong ton kho MOI (>= 0): ", input_buf, sizeof(input_buf));
+                if (safe_str_to_int(input_buf, &new_qty) != STATUS_SUCCESS || new_qty < 0) {
+                    printf("[ERR] So luong ton kho phai la so nguyen >= 0!\n");
+                    break;
+                }
+
+                int status = update_stock(list, id, new_qty);
+                if (status == STATUS_SUCCESS) {
+                    printf("[OK] Cap nhat ton kho thanh cong! Ton kho moi cua '%s': %d %s\n",
+                           id, new_qty, p->unit);
+                } else {
+                    printf("[ERR] Cap nhat ton kho that bai! (Ma loi: %d)\n", status);
+                }
+                break;
+            }
+            default:
+                printf("[!] Lua chon '%d' khong hop le.\n", choice);
+                break;
+        }
+    }
+}
+
 /* Hiển thị Menu chính của hệ thống quản lý kho */
 void print_main_menu() {
-    printf("\n=======================================================\n");
-    printf("     HE THONG QUAN LY KHO (INVENTORY MANAGEMENT)       \n");
-    printf("=======================================================\n");
+    printf("\n______________________________________________________________________________________________________\n");
+    printf("                                  HE THONG QUAN LY KHO (INVENTORY MANAGEMENT)                             \n");
+    printf("______________________________________________________________________________________________________\n");
     printf("  1. Quan ly san pham (Product Management)\n");
     printf("  2. Quan ly ton kho (Inventory Management)\n");
     printf("  3. Doc / Ghi du lieu file (File I/O)\n");
     printf("  0. Thoat chuong trinh (Exit)\n");
-    printf("=======================================================\n");
+    printf("______________________________________________________________________________________________________\n");
 }
 
 int main() {
@@ -241,7 +385,8 @@ int main() {
                 handle_product_management(&product_list);
                 break;
             case 2:
-                printf("\n[MENU 2] Chuc nang Quan ly Ton kho (Inventory Management) - Dang tich hop...\n");
+                /* Gọi Sub-menu Quản lý tồn kho */
+                handle_inventory_management(&product_list);
                 break;
             case 3:
                 printf("\n[MENU 3] Chuc nang Doc/Ghi File (File I/O) - Dang tich hop...\n");

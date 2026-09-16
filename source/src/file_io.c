@@ -68,6 +68,8 @@ static int parse_product_line(char *line, Product *product) {
     memset(product, 0, sizeof(*product));
     memcpy(product->id, fields[0], strlen(fields[0]) + 1);
     memcpy(product->name, fields[1], strlen(fields[1]) + 1);
+    snprintf(product->category, sizeof(product->category), "ChuaPhanLoai");
+    snprintf(product->unit, sizeof(product->unit), "Cai");
     status = parse_int(fields[2], &product->quantity);
     if (status != STATUS_SUCCESS) {
         return status;
@@ -134,7 +136,7 @@ int save_products_to_file(const Inventory *inventory, const char *path) {
         return STATUS_ERR_FILE_IO;
     }
     for (i = 0; i < inventory->count; ++i) {
-        const Product *product = &inventory->products[i];
+        const Product *product = &inventory->items[i];
         if (fprintf(file, "%s|%s|%d|%.2f\n", product->id, product->name,
                     product->quantity, product->price) < 0) {
             fclose(file);
