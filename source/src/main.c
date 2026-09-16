@@ -102,6 +102,36 @@ int main() {
   /* Hiển thị danh sách sau khi xóa */
   print_product_list(&list);
 
+  /* 6. KIEM THU TASK 6: CHUC NANG TIM KIEM SAN PHAM */
+  printf("\n___________________________________________________________\n");
+  printf("  KIEM THU TASK 6: CHUC NANG TIM KIEM SAN PHAM\n");
+  printf("___________________________________________________________\n");
+
+  printf("1. Tim kiem theo ID 'SP001':\n");
+  Product *found_id = find_product_by_id(&list, "SP001");
+  if (found_id != NULL) {
+      printf("   Found -> ID: %s | Ten: %s | Loai: %s | SL: %d | Gia: %.3f\n",
+             found_id->id, found_id->name, found_id->category, found_id->quantity, found_id->price);
+  } else {
+      printf("   Not found!\n");
+  }
+
+  printf("2. Tim kiem theo ID khong ton tai 'SP999':\n");
+  Product *not_found_id = find_product_by_id(&list, "SP999");
+  printf("   Ket qua : %s\n", not_found_id == NULL ? "NULL" : "Co du lieu"); /*Ky vong NULL*/
+
+  printf("3. Tim kiem theo ten (tu khoa 'keychron'):\n");
+  Product search_results[10];
+  size_t found_count = 0;
+  if (search_products_by_name(&list, "keychron", search_results, 10, &found_count) == STATUS_SUCCESS) {
+      printf("   Tim thay %zu san pham phu hop:\n", found_count);
+      for (size_t i = 0; i < found_count; ++i) {
+          printf("   ID: %s | Ten: %s | Loai: %s | SL: %d\n",
+                 search_results[i].id, search_results[i].name, search_results[i].category, search_results[i].quantity);
+      }
+  }
+  printf("\n");
+
   /* Giải phóng bộ nhớ động */
   product_list_free(&list);
   printf("\n[OK] Giai phong bo nho thanh cong.\n");

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 /* Khởi tạo danh sách sản phẩm động */
 int product_list_init(ProductList *list) {
@@ -40,6 +41,29 @@ static void safe_strcpy(char *dest, const char *src, size_t dest_size) {
         return;
     }
     snprintf(dest, dest_size, "%s", src);
+}
+
+/* Hàm hỗ trợ so sánh chuỗi không phân biệt hoa thường */
+static int contains_ignore_case(const char *haystack, const char *needle) {
+    if (haystack == NULL || needle == NULL) return 0;
+    if (needle[0] == '\0') return 1;
+
+    char h_lower[MAX_NAME_LEN];
+    char n_lower[MAX_NAME_LEN];
+
+    size_t i = 0;
+    for (; haystack[i] != '\0' && i < sizeof(h_lower) - 1; ++i) {
+        h_lower[i] = (char)tolower((unsigned char)haystack[i]);
+    }
+    h_lower[i] = '\0';
+
+    size_t j = 0;
+    for (; needle[j] != '\0' && j < sizeof(n_lower) - 1; ++j) {
+        n_lower[j] = (char)tolower((unsigned char)needle[j]);
+    }
+    n_lower[j] = '\0';
+
+    return strstr(h_lower, n_lower) != NULL;
 }
 
 /* TASK 3: Cài đặt chức năng Thêm sản phẩm vào danh sách động */
@@ -182,8 +206,19 @@ Product* find_product_by_id(const ProductList *list, const char *id) {
     return NULL;
 }
 
+/* TASK 6: Tìm kiếm sản phẩm theo tên (tìm chuỗi con, không phân biệt hoa thường) */
 int search_products_by_name(const ProductList *list, const char *keyword, Product *results, size_t max_results, size_t *out_count) {
-    (void)list; (void)keyword; (void)results; (void)max_results;
-    if (out_count) *out_count = 0;
+    if (list == NULL || keyword == NULL || results == NULL || out_count == NULL) {
+        return STATUS_ERR_NULL_PTR;
+    }
+
+    *out_count = 0;
+    for (size_t i = 0; i < list->count && *out_count < max_results; ++i) {
+        if (contains_ignore_case(list->items[i].name, keyword)) {
+            results[*out_count] = list->items[i];
+            (*out_count)++;
+        }
+    }
+
     return STATUS_SUCCESS;
 }
