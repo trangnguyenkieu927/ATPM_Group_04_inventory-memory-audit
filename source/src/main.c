@@ -7,6 +7,7 @@
 #include "../include/product.h"
 #include "../include/validation.h"
 #include "../include/utils.h"
+#include "../include/report.h"
 
 /* =========================================================================
  * 1. QUẢN LÝ ĐƯỜNG DẪN TỆP DỮ LIỆU & LỊCH SỬ GIAO DỊCH
@@ -327,6 +328,29 @@ static void run_all_unit_tests() {
            find_product_by_id(&test_list, "TEST01") == NULL ? "[PASS]" : "[FAIL]");
     product_list_free(&test_list);
 
+    /* 4. Test module report */
+    printf("\n--- 4. Kiem thu Module Bao cao (report.h) ---\n");
+    ProductList rep_list;
+    product_list_init(&rep_list);
+    Product rp1 = {"R01", "Laptop Test", "Laptop", "Chiec", 0, 1200.0};
+    Product rp2 = {"R02", "Chuot Test", "Phu kien", "Con", 5, 25.0};
+    add_product(&rep_list, &rp1);
+    add_product(&rep_list, &rp2);
+    InventorySummary rep_sum;
+    int rep_st = calculate_inventory_summary(&rep_list, 10, &rep_sum);
+    printf("1. calculate_inventory_summary hop le      : %s\n",
+           rep_st == STATUS_SUCCESS ? "[PASS]" : "[FAIL]");
+    printf("2. Dem san pham het hang (SL = 0)          : %s\n",
+           rep_sum.out_of_stock_count == 1 ? "[PASS]" : "[FAIL]");
+    printf("3. Dem san pham sap het hang (SL <= 10)    : %s\n",
+           rep_sum.low_stock_count == 1 ? "[PASS]" : "[FAIL]");
+    CategorySummary cat_sums[8];
+    size_t cat_c = 0;
+    calculate_category_summaries(&rep_list, cat_sums, 8, &cat_c);
+    printf("4. calculate_category_summaries (2 loai)   : %s\n",
+           cat_c == 2 ? "[PASS]" : "[FAIL]");
+    product_list_free(&rep_list);
+
     printf("\n=========================================================================================\n");
     printf("                     TAT CA CAC MODULE DEU HOAN THANH KIEM THU [OK]                      \n");
     printf("=========================================================================================\n\n");
@@ -643,6 +667,74 @@ static void handle_export_stock(ProductList *list, const char *prod_file, const 
     printf("[*] Da ghi lich su giao dich va cap nhat tep kho hang.\n");
 }
 
+static void handle_report_menu(const ProductList *list) {
+    int rep_running = 1;
+    char rep_buf[32];
+
+    while (rep_running) {
+        printf("\n========================================================================\n");
+        printf("                        BAO CAO & THONG KE KHO HANG                     \n");
+        printf("========================================================================\n");
+        printf(" [1] Bao cao tong quan kho hang (Tong gia tri, so luong, SKU)\n");
+        printf(" [2] Canh bao san pham sap het hang (Ton kho <= nguong dinh muc)\n");
+        printf(" [3] Danh sach san pham da het hang (Ton kho = 0)\n");
+        printf(" [4] Co cau nganh hang & gia tri ton theo danh muc\n");
+        printf(" [5] Xuat toan bo bao cao ra tep van ban (inventory_report.txt)\n");
+        printf(" [0] Quay lai menu chinh\n");
+        printf("------------------------------------------------------------------------\n");
+
+        safe_read_line("Nhap lua chon cua ban [0-5]: ", rep_buf, sizeof(rep_buf));
+        trim_whitespace(rep_buf);
+
+        if (strlen(rep_buf) == 0) continue;
+
+        int rep_choice = -1;
+        if (safe_str_to_int(rep_buf, &rep_choice) != STATUS_SUCCESS) {
+            printf("[!] Lua chon khong hop le! Vui long nhap so tu 0 den 5.\n");
+            continue;
+        }
+
+        switch (rep_choice) {
+            case 1:
+                print_inventory_summary_report(list, DEFAULT_LOW_STOCK_THRESHOLD);
+                break;
+            case 2: {
+                char thresh_buf[16];
+                safe_read_line("Nhap nguong so luong canh bao (mac dinh: 10): ", thresh_buf, sizeof(thresh_buf));
+                trim_whitespace(thresh_buf);
+                int thresh = DEFAULT_LOW_STOCK_THRESHOLD;
+                if (strlen(thresh_buf) > 0) {
+                    safe_str_to_int(thresh_buf, &thresh);
+                    if (thresh < 0) thresh = DEFAULT_LOW_STOCK_THRESHOLD;
+                }
+                print_low_stock_report(list, thresh);
+                break;
+            }
+            case 3:
+                print_out_of_stock_report(list);
+                break;
+            case 4:
+                print_category_summary_report(list);
+                break;
+            case 5: {
+                const char *out_file = "inventory_report.txt";
+                if (export_inventory_report_to_file(list, out_file, DEFAULT_LOW_STOCK_THRESHOLD) == STATUS_SUCCESS) {
+                    printf("[+] Xuat bao cao thanh cong ra tep: %s\n", out_file);
+                } else {
+                    printf("[-] Xuat bao cao that bai!\n");
+                }
+                break;
+            }
+            case 0:
+                rep_running = 0;
+                break;
+            default:
+                printf("[!] Lua chon khong hop le! Vui long chon tu 0 den 5.\n");
+                break;
+        }
+    }
+}
+
 /* =========================================================================
  * 6. HÀM MAIN & VÒNG LẶP MENU TƯƠNG TÁC
  * ========================================================================= */
@@ -673,8 +765,11 @@ int main(int argc, char *argv[]) {
             display_and_validate_file(prod_file);
         } else if (strcmp(argv[1], "--history") == 0) {
             print_history(trans_file);
+        } else if (strcmp(argv[1], "--report") == 0) {
+            print_inventory_summary_report(&list, DEFAULT_LOW_STOCK_THRESHOLD);
+            print_category_summary_report(&list);
         } else {
-            fprintf(stderr, "Tham so khong hop le. Ho tro: --list, --test, --validate, --history\n");
+            fprintf(stderr, "Tham so khong hop le. Ho tro: --list, --test, --validate, --history, --report\n");
             exit_code = 1;
         }
         product_list_free(&list);
@@ -697,12 +792,13 @@ int main(int argc, char *argv[]) {
         printf(" [6] Nhap kho (Import Stock - Chuyen doi so luong, chong tran so)\n");
         printf(" [7] Xuat kho (Export Stock - Kiem tra ton kho, chong am kho)\n");
         printf(" [8] Xem lich su giao dich (transactions.txt)\n");
-        printf(" [9] Kiem toan du lieu tep tu dong (Validation File Audit)\n");
-        printf(" [10] Chay bo kiem thu tu dong (All Unit Tests: Utils, Valid, Product)\n");
+        printf(" [9] Bao cao & Thong ke kho hang (Tong quan, Canh bao ton, Xuat file)\n");
+        printf(" [10] Kiem toan du lieu tep tu dong (Validation File Audit)\n");
+        printf(" [11] Chay bo kiem thu tu dong (All Unit Tests: Utils, Valid, Product, Report)\n");
         printf(" [0] Thoat chuong trinh & Luu du lieu\n");
         printf("------------------------------------------------------------------------\n");
 
-        safe_read_line("Nhap lua chon cua ban [0-10]: ", input_buf, sizeof(input_buf));
+        safe_read_line("Nhap lua chon cua ban [0-11]: ", input_buf, sizeof(input_buf));
         trim_whitespace(input_buf);
 
         if (strlen(input_buf) == 0) {
@@ -711,7 +807,7 @@ int main(int argc, char *argv[]) {
 
         int choice = -1;
         if (safe_str_to_int(input_buf, &choice) != STATUS_SUCCESS) {
-            printf("[!] Lua chon khong hop le! Vui long nhap so tu 0 den 10.\n");
+            printf("[!] Lua chon khong hop le! Vui long nhap so tu 0 den 11.\n");
             continue;
         }
 
@@ -741,9 +837,12 @@ int main(int argc, char *argv[]) {
                 print_history(trans_file);
                 break;
             case 9:
-                display_and_validate_file(prod_file);
+                handle_report_menu(&list);
                 break;
             case 10:
+                display_and_validate_file(prod_file);
+                break;
+            case 11:
                 run_all_unit_tests();
                 break;
             case 0:
@@ -753,7 +852,7 @@ int main(int argc, char *argv[]) {
                 running = 0;
                 break;
             default:
-                printf("[!] Lua chon khong hop le! Vui long chon tu 0 den 10.\n");
+                printf("[!] Lua chon khong hop le! Vui long chon tu 0 den 11.\n");
                 break;
         }
     }

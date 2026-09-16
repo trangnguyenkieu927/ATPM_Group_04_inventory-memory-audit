@@ -1,0 +1,31 @@
+========================================================================
+               HE THONG QUAN LY KHO HANG - BAO CAO TONG HOP             
+========================================================================
+Thoi diem xuat bao cao: 2026-09-16 14:16:55
+Tong so mat hang (SKU)   : 10
+Tong so luong ton kho    : 250
+Tong gia tri ton kho     : 480077998.62 $
+So mat hang het hang     : 1
+So mat hang sap het hang : 1 (nguong <= 10)
+
+--- DANH MUC CO CAU NGANH HANG ---
+ + Laptop              : 2 mat hang | 62 sp ton | 480056999.62 $
+ + Phu kien            : 3 mat hang | 70 sp ton | 6257.50 $
+ + Man hinh            : 1 mat hang | 10 sp ton | 3500.00 $
+ + Am thanh            : 2 mat hang | 18 sp ton | 2142.00 $
+ + Linh kien           : 2 mat hang | 90 sp ton | 9099.50 $
+
+--- DANH SACH SAN PHAM CHI TIET ---
+MA SP    | TEN SAN PHAM                     | LOAI SP          | DON VI   | TON KHO  | DON GIA ($)
+-------------------------------------------------------------------------------------------------
+SP001    | Laptop Dell XPS 13               | Laptop           | Chiec    | 38       | 1499.99   
+SP002    | Chuot khong day Logitech MX Master | Phu kien         | Con      | 30       | 99.50     
+SP003    | Ban phim co Keychron K2          | Phu kien         | Chiec    | 15       | 85.00     
+SP004    | Man hinh LG UltraFine 27 inch    | Man hinh         | Chiec    | 10       | 350.00    
+SP005    | Tai nghe Sony WH-1000XM5         | Am thanh         | Chiec    | 0        | 399.00    
+SP006    | O cung SSD Samsung 980 Pro 1TB   | Linh kien        | Chiec    | 50       | 129.99    
+SP007    | RAM Corsair Vengeance 16GB DDR4  | Linh kien        | Thanh    | 40       | 65.00     
+SP008    | Webcam Logitech C920 Pro HD      | Phu kien         | Chiec    | 25       | 79.90     
+SP009    | Loa Bluetooth JBL Flip 6         | Am thanh         | Chiec    | 18       | 119.00    
+SP011    | Laptop LOQ                       | Laptop           | chiec    | 24       | 20000000.00
+========================================================================
