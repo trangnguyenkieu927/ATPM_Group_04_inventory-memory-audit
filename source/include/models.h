@@ -19,6 +19,13 @@ typedef struct {
     double price;
 } Product;
 
+/* Cấu trúc danh sách sản phẩm (mảng động quản lý bộ nhớ) */
+typedef struct {
+    Product *items;                 /* Mảng các sản phẩm cấp phát động */
+    size_t count;                   /* Số lượng sản phẩm hiện có */
+    size_t capacity;                /* Sức chứa tối đa hiện tại của mảng */
+} ProductList;
+
 /* Bảng mã lỗi / trạng thái xử lý */
 #define STATUS_SUCCESS                  0   /* Thao tác thành công, không có lỗi */
 #define STATUS_ERR_NULL_PTR            -1   /* Con trỏ NULL truyền vào hàm */
