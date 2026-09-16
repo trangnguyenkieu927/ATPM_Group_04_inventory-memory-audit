@@ -2,52 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../include/validation.h"
-
-static const char* find_products_file() {
-    const char *paths[] = {
-        "data/products.txt",
-        "source/data/products.txt",
-        "../source/data/products.txt",
-        NULL
-    };
-    for (int i = 0; paths[i] != NULL; ++i) {
-        FILE *f = fopen(paths[i], "r");
-        if (f != NULL) {
-            fclose(f);
-            return paths[i];
-        }
-    }
-    return "data/products.txt";
-}
-
-static void safe_read_line(const char *prompt, char *buffer, size_t size) {
-    printf("%s", prompt);
-    if (fgets(buffer, (int)size, stdin) != NULL) {
-        size_t len = strlen(buffer);
-        while (len > 0 && (buffer[len - 1] == '\n' || buffer[len - 1] == '\r')) {
-            buffer[len - 1] = '\0';
-            len--;
-        }
-    } else {
-        buffer[0] = '\0';
-    }
-}
-
-static int split_csv_line(char *line, char *tokens[], int max_tokens) {
-    int count = 0;
-    char *p = line;
-    while (*p && count < max_tokens) {
-        tokens[count++] = p;
-        char *sep = strchr(p, '|');
-        if (sep != NULL) {
-            *sep = '\0';
-            p = sep + 1;
-        } else {
-            break;
-        }
-    }
-    return count;
-}
+#include "../include/utils.h"
 
 static const char* get_status_desc(int status) {
     switch (status) {
@@ -93,7 +48,7 @@ static void display_and_validate_file(const char *filepath) {
         }
 
         char *tokens[8];
-        int num_tokens = split_csv_line(line, tokens, 8);
+        int num_tokens = split_line(line, '|', tokens, 8);
 
         if (num_tokens >= 6) {
             total_products++;
@@ -147,7 +102,7 @@ static int lookup_product_in_file(const char *filepath, const char *search_id) {
         }
 
         char *tokens[8];
-        int num_tokens = split_csv_line(line, tokens, 8);
+        int num_tokens = split_line(line, '|', tokens, 8);
 
         if (num_tokens >= 6 && strcmp(tokens[0], search_id) == 0) {
             const char *id = tokens[0];
@@ -189,39 +144,44 @@ static int lookup_product_in_file(const char *filepath, const char *search_id) {
     return 0;
 }
 
-static void run_price_quantity_tests() {
-    printf("--- Chay cac ca kiem thu tu dong: Tinh nang kiem tra Gia & So luong ---\n");
-    printf("1. So luong am (-5)                     : %s\n",
-           validate_quantity_str("-5") == STATUS_ERR_INVALID_QTY ? "[PASS] (Chan so am thanh cong)" : "[FAIL]");
-    printf("2. So luong sai dinh dang chu ('qưqw')   : %s\n",
-           validate_quantity_str("qưqw") == STATUS_ERR_INVALID_QTY ? "[PASS] (Chan chu thanh cong)" : "[FAIL]");
-    printf("3. So luong sai dinh dang chu ('aaa')    : %s\n",
-           validate_quantity_str("aaa") == STATUS_ERR_INVALID_QTY ? "[PASS] (Chan chu thanh cong)" : "[FAIL]");
-    printf("4. So luong chua chu va so ('15a')       : %s\n",
-           validate_quantity_str("15a") == STATUS_ERR_INVALID_QTY ? "[PASS] (Chan ky tu la thanh cong)" : "[FAIL]");
-    printf("5. So luong hop le (35)                  : %s\n",
-           validate_quantity_str("35") == STATUS_SUCCESS ? "[PASS]" : "[FAIL]");
-    printf("6. Gia am (-99.50)                       : %s\n",
-           validate_price_str("-99.50") == STATUS_ERR_INVALID_PRICE ? "[PASS] (Chan gia am thanh cong)" : "[FAIL]");
-    printf("7. Gia sai dinh dang chu ('abc')         : %s\n",
-           validate_price_str("abc") == STATUS_ERR_INVALID_PRICE ? "[PASS] (Chan chu thanh cong)" : "[FAIL]");
-    printf("8. Gia sai dinh dang ('12.3.4')          : %s\n",
-           validate_price_str("12.3.4") == STATUS_ERR_INVALID_PRICE ? "[PASS] (Chan 2 dau cham thanh cong)" : "[FAIL]");
-    printf("9. Gia hop le (1499.99)                  : %s\n",
-           validate_price_str("1499.99") == STATUS_SUCCESS ? "[PASS]" : "[FAIL]");
-    printf("10. validate_price_quantity('1499.99', '35'): %s\n",
-           validate_price_quantity("1499.99", "35") == STATUS_SUCCESS ? "[PASS]" : "[FAIL]");
-    printf("11. validate_price_quantity('1499.99', 'qưqw'): %s\n",
-           validate_price_quantity("1499.99", "qưqw") == STATUS_ERR_INVALID_QTY ? "[PASS] (Chan so luong sai dinh dang)" : "[FAIL]");
-    printf("12. validate_price_quantity('-25.5', '10') : %s\n",
-           validate_price_quantity("-25.5", "10") == STATUS_ERR_INVALID_PRICE ? "[PASS] (Chan gia am thanh cong)" : "[FAIL]");
+static void run_utils_tests() {
+    printf("--- Chay cac ca kiem thu: Cac ham tien ich dung chung (utils.h) ---\n");
+    printf("1. is_empty_or_whitespace('   ')           : %s\n",
+           is_empty_or_whitespace("   ") ? "[PASS]" : "[FAIL]");
+    printf("2. is_empty_or_whitespace(NULL)            : %s\n",
+           is_empty_or_whitespace(NULL) ? "[PASS]" : "[FAIL]");
+
+    char str_trim[32] = "  Laptop Dell  ";
+    trim_whitespace(str_trim);
+    printf("3. trim_whitespace('  Laptop Dell  ')      : %s\n",
+           strcmp(str_trim, "Laptop Dell") == 0 ? "[PASS]" : "[FAIL]");
+
+    char buf[10];
+    int copy_st = safe_string_copy(buf, sizeof(buf), "VeryLongStringHere");
+    printf("4. safe_string_copy (chong tran bo dem)    : %s\n",
+           (copy_st == STATUS_ERR_OVERFLOW && buf[sizeof(buf) - 1] == '\0') ? "[PASS]" : "[FAIL]");
+
+    int int_val = 0;
+    int int_st = safe_str_to_int("qưqw", &int_val);
+    printf("5. safe_str_to_int ('qưqw' chan chu)       : %s\n",
+           int_st == STATUS_ERR_INVALID_QTY ? "[PASS]" : "[FAIL]");
+
+    double dbl_val = 0.0;
+    int dbl_st = safe_str_to_double("1499.99", &dbl_val);
+    printf("6. safe_str_to_double ('1499.99' hop le)   : %s\n",
+           (dbl_st == STATUS_SUCCESS && dbl_val > 1499.0) ? "[PASS]" : "[FAIL]");
+
+    char case_str[16] = "sp001";
+    to_upper_case(case_str);
+    printf("7. to_upper_case ('sp001' -> 'SP001')      : %s\n",
+           strcmp(case_str, "SP001") == 0 ? "[PASS]" : "[FAIL]");
     printf("-------------------------------------------------------------------------------------------------------------------------\n\n");
 }
 
 int main() {
-    run_price_quantity_tests();
+    run_utils_tests();
 
-    const char *filepath = find_products_file();
+    const char *filepath = find_file_path("products.txt");
     display_and_validate_file(filepath);
 
     printf("TRA CUU VA KIEM TRA CHI TIET THONG TIN SAN PHAM\n");

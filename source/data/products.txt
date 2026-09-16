@@ -8,4 +8,4 @@ SP006|O cung SSD Samsung 980 Pro 1TB|Linh kien|Chiec|50|129.99
 SP007|RAM Corsair Vengeance 16GB DDR4|Linh kien|Thanh|40|65.00
 SP008|Webcam Logitech C920 Pro HD|Phu kien|Chiec|25|79.90
 SP009|Loa Bluetooth JBL Flip 6|Am thanh|Chiec|18|119.00
-SP010|Gia do laptop hop kim nhom |Phu kien|Chiec|qưqw|25.50
+SP010|Gia do laptop hop kim nhom |Phu kien|Chiec|54|25.50

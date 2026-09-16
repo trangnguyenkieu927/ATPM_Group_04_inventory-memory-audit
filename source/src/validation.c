@@ -1,20 +1,13 @@
 #include "../include/validation.h"
+#include "../include/utils.h"
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
 
 static int is_all_whitespace(const char *str) {
-    if (str == NULL) {
-        return 1;
-    }
-    while (*str) {
-        if (!isspace((unsigned char)*str)) {
-            return 0;
-        }
-        str++;
-    }
-    return 1;
+    return is_empty_or_whitespace(str);
 }
+
 
 // 1. Tính năng: Kiểm tra mã sản phẩm
 int validate_product_id(const char *product_id) {
