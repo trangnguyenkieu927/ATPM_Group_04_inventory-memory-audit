@@ -3,6 +3,9 @@
 #include <ctype.h>
 #include <limits.h>
 
+/**
+ * 1. Tính năng: Kiểm tra mã sản phẩm
+ */
 int validate_product_id(const char *product_id) {
     if (product_id == NULL) {
         return STATUS_ERR_NULL_PTR;
@@ -21,6 +24,10 @@ int validate_product_id(const char *product_id) {
     }
 
     return STATUS_SUCCESS;
+}
+
+int validate_id(const char *id) {
+    return validate_product_id(id);
 }
 
 int validate_quantity(int quantity) {

@@ -4,12 +4,13 @@
 #include "models.h"
 
 /**
- * Kiểm tra tính hợp lệ của mã sản phẩm (product_id):
+ * 1. Tính năng: Kiểm tra mã sản phẩm
  * - Không được NULL.
  * - Độ dài > 0 và < MAX_ID_LEN.
- * - Không chứa ký tự đặc biệt hoặc phân tách.
+ * - Không chứa ký tự đặc biệt, ký tự điều khiển, khoảng trắng hoặc ký tự phân cách (|, ,, ;).
  */
 int validate_product_id(const char *product_id);
+int validate_id(const char *id);
 
 /**
  * Kiểm tra tính hợp lệ của số lượng:
