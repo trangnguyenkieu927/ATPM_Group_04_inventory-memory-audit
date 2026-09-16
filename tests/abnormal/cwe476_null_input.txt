@@ -1,0 +1,24 @@
+# Test case input cho CWE-476: Du lieu chua gia tri rong, thieu truong, ky tu null hoac dinh dang sai
+# Dong hop le mau
+SP001|Laptop Dell XPS 13|Laptop|Chiec|38|1499.99
+
+# 1. Dong thieu truong (it hon 4 hoac 6 truong -> chuoi tro toi NULL sau split)
+SP002|Chuot Logitech
+
+# 2. Dong rong / chi toan khoang trang
+   
+   
+
+# 3. Dong co cac truong trong rong (empty/whitespace fields)
+|||||
+SP003| | | | |
+
+# 4. Dong khong co ky tu phan cach
+SP004LaptopDellKhongPhanCach
+
+# 5. Dong co so luong hoac gia trong rong
+SP005|Tai nghe Sony|Am thanh|Chiec||
+SP006|Ban phim co|Phu kien|Chiec|10|
+
+# 6. Dong chi co ky tu phan cach lien tiep
+||||||||||||||||||||
