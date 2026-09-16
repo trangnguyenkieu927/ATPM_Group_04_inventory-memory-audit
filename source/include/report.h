@@ -85,4 +85,23 @@ void print_category_summary_report(const ProductList *list);
  */
 int export_inventory_report_to_file(const ProductList *list, const char *filepath, int low_stock_threshold);
 
+/**
+ * Thống kê tồn kho và xuất tổng số lượng, giá trị cùng các chỉ số thống kê cần thiết.
+ * @param list Danh sách sản phẩm trong kho.
+ * @param total_quantity Con trỏ nhận tổng số lượng tồn (có thể NULL).
+ * @param total_value Con trỏ nhận tổng giá trị tồn kho (có thể NULL).
+ * @return STATUS_SUCCESS hoặc STATUS_ERR_NULL_PTR nếu con trỏ list không hợp lệ.
+ */
+int (report_statistics)(const ProductList *list, long long *total_quantity, double *total_value);
+
+/* Hàm hỗ trợ gọi nhanh thống kê với 1 tham số duy nhất */
+static inline int report_statistics_default(const ProductList *list) {
+    return (report_statistics)(list, NULL, NULL);
+}
+
+#define _REP_STAT_3(list, qty, val) (report_statistics)((list), (qty), (val))
+#define _REP_STAT_1(list)           report_statistics_default(list)
+#define _GET_REP_STAT_MACRO(_1, _2, _3, NAME, ...) NAME
+#define report_statistics(...) _GET_REP_STAT_MACRO(__VA_ARGS__, _REP_STAT_3, _REP_STAT_2_UNUSED, _REP_STAT_1)(__VA_ARGS__)
+
 #endif /* REPORT_H */

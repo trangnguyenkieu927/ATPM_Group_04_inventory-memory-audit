@@ -349,6 +349,10 @@ static void run_all_unit_tests() {
     calculate_category_summaries(&rep_list, cat_sums, 8, &cat_c);
     printf("4. calculate_category_summaries (2 loai)   : %s\n",
            cat_c == 2 ? "[PASS]" : "[FAIL]");
+    long long t_qty = 0;
+    double t_val = 0.0;
+    printf("5. report_statistics xuat so luong, gia tri: %s\n",
+           ((report_statistics)(&rep_list, &t_qty, &t_val) == STATUS_SUCCESS && t_qty == 5 && t_val == 125.0) ? "[PASS]" : "[FAIL]");
     product_list_free(&rep_list);
 
     printf("\n=========================================================================================\n");
@@ -675,7 +679,7 @@ static void handle_report_menu(const ProductList *list) {
         printf("\n========================================================================\n");
         printf("                        BAO CAO & THONG KE KHO HANG                     \n");
         printf("========================================================================\n");
-        printf(" [1] Bao cao tong quan kho hang (Tong gia tri, so luong, SKU)\n");
+        printf(" [1] Thong ke ton kho (Xuat tong so luong, gia tri - report_statistics)\n");
         printf(" [2] Canh bao san pham sap het hang (Ton kho <= nguong dinh muc)\n");
         printf(" [3] Danh sach san pham da het hang (Ton kho = 0)\n");
         printf(" [4] Co cau nganh hang & gia tri ton theo danh muc\n");
@@ -695,9 +699,12 @@ static void handle_report_menu(const ProductList *list) {
         }
 
         switch (rep_choice) {
-            case 1:
-                print_inventory_summary_report(list, DEFAULT_LOW_STOCK_THRESHOLD);
+            case 1: {
+                long long total_qty = 0;
+                double total_val = 0.0;
+                (report_statistics)(list, &total_qty, &total_val);
                 break;
+            }
             case 2: {
                 char thresh_buf[16];
                 safe_read_line("Nhap nguong so luong canh bao (mac dinh: 10): ", thresh_buf, sizeof(thresh_buf));
