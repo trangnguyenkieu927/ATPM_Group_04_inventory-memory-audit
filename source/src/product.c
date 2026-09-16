@@ -103,10 +103,51 @@ int add_product(ProductList *list, const Product *prod) {
     return STATUS_SUCCESS;
 }
 
-/* Các hàm tạm cho các Task tiếp theo */
+/* TASK 4: Sửa thông tin sản phẩm theo mã ID */
 int update_product(ProductList *list, const char *id, const char *new_name, const char *new_category, int new_quantity, double new_price) {
-    (void)list; (void)id; (void)new_name; (void)new_category; (void)new_quantity; (void)new_price;
-    return STATUS_ERR_NOT_FOUND;
+    if (list == NULL || id == NULL) {
+        return STATUS_ERR_NULL_PTR;
+    }
+
+    /* Tìm vị trí sản phẩm theo ID */
+    Product *target = find_product_by_id(list, id);
+    if (target == NULL) {
+        return STATUS_ERR_NOT_FOUND;
+    }
+
+    /* 1. Kiểm tra và cập nhật tên mới (nếu new_name != NULL) */
+    if (new_name != NULL) {
+        if (new_name[0] == '\0' || strlen(new_name) >= MAX_NAME_LEN) {
+            return STATUS_ERR_INVALID_NAME;
+        }
+        safe_strcpy(target->name, new_name, sizeof(target->name));
+    }
+
+    /* 2. Kiểm tra và cập nhật loại sản phẩm mới (nếu new_category != NULL) */
+    if (new_category != NULL) {
+        if (strlen(new_category) >= MAX_CATEGORY_LEN) {
+            return STATUS_ERR_INVALID_NAME;
+        }
+        safe_strcpy(target->category, new_category, sizeof(target->category));
+    }
+
+    /* 3. Kiểm tra và cập nhật số lượng mới (nếu new_quantity != -1) */
+    if (new_quantity != -1) {
+        int val_qty = validate_quantity(new_quantity);
+        if (val_qty != STATUS_SUCCESS) {
+            return val_qty;
+        }
+        target->quantity = new_quantity;
+    }
+
+    /* 4. Kiểm tra và cập nhật đơn giá mới (nếu new_price != -1.0) */
+    if (new_price >= 0.0) {
+        target->price = new_price;
+    } else if (new_price != -1.0) {
+        return STATUS_ERR_INVALID_PRICE;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 int delete_product(ProductList *list, const char *id) {
