@@ -268,3 +268,68 @@ int export_inventory_report_to_file(const ProductList *list, const char *filepat
     fclose(f);
     return STATUS_SUCCESS;
 }
+
+int (report_statistics)(const ProductList *list, long long *total_quantity, double *total_value) {
+    if (list == NULL) {
+        if (total_quantity != NULL) *total_quantity = 0;
+        if (total_value != NULL) *total_value = 0.0;
+        return STATUS_ERR_NULL_PTR;
+    }
+
+    InventorySummary summary;
+    int st = calculate_inventory_summary(list, DEFAULT_LOW_STOCK_THRESHOLD, &summary);
+    if (st != STATUS_SUCCESS) {
+        return st;
+    }
+
+    if (total_quantity != NULL) {
+        *total_quantity = summary.total_quantity;
+    }
+    if (total_value != NULL) {
+        *total_value = summary.total_inventory_value;
+    }
+
+    /* Tim mat hang co tong gia tri ton lon nhat (quantity * price) */
+    double max_item_value = -1.0;
+    const Product *highest_val_prod = NULL;
+    for (size_t i = 0; i < list->count; ++i) {
+        double item_val = (double)list->items[i].quantity * list->items[i].price;
+        if (item_val > max_item_value) {
+            max_item_value = item_val;
+            highest_val_prod = &list->items[i];
+        }
+    }
+
+    double avg_value_per_product = (summary.total_products > 0)
+        ? (summary.total_inventory_value / (double)summary.total_products)
+        : 0.0;
+
+    printf("\n========================================================================\n");
+    printf("                  THONG KE TON KHO (REPORT STATISTICS)                  \n");
+    printf("========================================================================\n");
+    printf(" 1. Tong so mat hang quan ly (SKU)       : %zu san pham\n", summary.total_products);
+    printf(" 2. Tong so luong ton kho (Quantity)     : %lld san pham\n", summary.total_quantity);
+    printf(" 3. Tong gia tri hang ton kho (Value)    : %.2f $\n", summary.total_inventory_value);
+    printf(" 4. Gia tri ton trung binh / mat hang    : %.2f $\n", avg_value_per_product);
+    printf(" 5. So mat hang da het hang (SL = 0)     : %zu san pham\n", summary.out_of_stock_count);
+    printf(" 6. So mat hang sap het hang (<= %d)     : %zu san pham\n", DEFAULT_LOW_STOCK_THRESHOLD, summary.low_stock_count);
+
+    if (highest_val_prod != NULL && max_item_value >= 0.0) {
+        printf(" 7. Mat hang co gia tri ton kho lon nhat : %s (%s) - %.2f $\n",
+               highest_val_prod->name, highest_val_prod->id, max_item_value);
+    }
+    if (summary.total_products > 0) {
+        printf(" 8. San pham co don gia cao nhat         : %s (%s) - %.2f $\n",
+               summary.most_expensive_product.name,
+               summary.most_expensive_product.id,
+               summary.most_expensive_product.price);
+        printf(" 9. San pham co don gia thap nhat        : %s (%s) - %.2f $\n",
+               summary.least_expensive_product.name,
+               summary.least_expensive_product.id,
+               summary.least_expensive_product.price);
+    }
+    printf("========================================================================\n\n");
+
+    return STATUS_SUCCESS;
+}
+
