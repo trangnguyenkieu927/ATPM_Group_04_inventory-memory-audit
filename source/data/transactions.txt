@@ -8,3 +8,5 @@
 2026-09-14 12:07:01 | IMPORT | SP001      | 20    | Balance: 57
 2026-09-14 12:07:02 | EXPORT | SP001      | 5     | Balance: 52
 2026-09-14 12:07:04 | IMPORT | SP002      | 1     | Balance: 32
+2026-09-16 14:01:07 | IMPORT | SP001      | 3     | Balance: 38
+2026-09-16 14:01:27 | EXPORT | SP002      | 1     | Balance: 30

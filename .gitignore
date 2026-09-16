@@ -1,16 +1,12 @@
-<<<<<<< HEAD
 # Build artifacts
 *.exe
 *.o
-
-# Windows accidental file
-nul
-=======
-# Local C build outputs
 source/*.o
 source/*.exe
 source/inventory_app
 source/inventory_tests
 source/src/*.o
 source/data/test_products_output.txt
->>>>>>> origin/main
+
+# Windows accidental file
+nul
