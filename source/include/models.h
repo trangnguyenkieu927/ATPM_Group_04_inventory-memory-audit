@@ -33,5 +33,7 @@ typedef struct {
 #define STATUS_ERR_INVALID_CATEGORY    -10  /* Loại sản phẩm không hợp lệ (rỗng, quá dài, chứa ký tự cấm) */
 #define STATUS_ERR_INVALID_UNIT        -11  /* Đơn vị tính không hợp lệ (rỗng, quá dài, chứa ký tự cấm) */
 #define STATUS_ERR_DUPLICATE_ID        -12  /* Mã sản phẩm đã tồn tại trong kho */
+#define STATUS_ERR_INVALID_PRICE       -13  /* Đơn giá không hợp lệ (âm, sai định dạng) */
 
 #endif /* MODELS_H */
+

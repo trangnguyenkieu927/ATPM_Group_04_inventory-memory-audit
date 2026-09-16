@@ -139,18 +139,159 @@ int validate_product_info(const char *name, const char *category, const char *un
     return STATUS_SUCCESS;
 }
 
-// 3. Tính năng: Kiểm tra số lượng
+// 3. Tính năng: Kiểm tra giá và số lượng
+int validate_price(double price) {
+    if (price < 0.0) {
+        return STATUS_ERR_INVALID_PRICE;
+    }
+    return STATUS_SUCCESS;
+}
+
 int validate_quantity(int quantity) {
-    if (quantity <= 0) {
+    if (quantity < 0) {
         return STATUS_ERR_INVALID_QTY;
     }
     return STATUS_SUCCESS;
 }
 
+int validate_quantity_str(const char *qty_str) {
+    if (qty_str == NULL) {
+        return STATUS_ERR_NULL_PTR;
+    }
+
+    while (isspace((unsigned char)*qty_str)) {
+        qty_str++;
+    }
+
+    if (*qty_str == '\0') {
+        return STATUS_ERR_INVALID_QTY;
+    }
+
+    // Chặn số âm
+    if (*qty_str == '-') {
+        return STATUS_ERR_INVALID_QTY;
+    }
+
+    if (*qty_str == '+') {
+        qty_str++;
+    }
+
+    if (*qty_str == '\0') {
+        return STATUS_ERR_INVALID_QTY;
+    }
+
+    long long val = 0;
+    const char *p = qty_str;
+    while (*p && !isspace((unsigned char)*p)) {
+        if (!isdigit((unsigned char)*p)) {
+            return STATUS_ERR_INVALID_QTY; // Chặn sai định dạng như "aaa", "qưqw", "12a", "3.5"
+        }
+        val = val * 10 + (*p - '0');
+        if (val > INT_MAX) {
+            return STATUS_ERR_OVERFLOW;
+        }
+        p++;
+    }
+
+    while (*p) {
+        if (!isspace((unsigned char)*p)) {
+            return STATUS_ERR_INVALID_QTY;
+        }
+        p++;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+int validate_price_str(const char *price_str) {
+    if (price_str == NULL) {
+        return STATUS_ERR_NULL_PTR;
+    }
+
+    while (isspace((unsigned char)*price_str)) {
+        price_str++;
+    }
+
+    if (*price_str == '\0') {
+        return STATUS_ERR_INVALID_PRICE;
+    }
+
+    // Chặn số âm
+    if (*price_str == '-') {
+        return STATUS_ERR_INVALID_PRICE;
+    }
+
+    if (*price_str == '+') {
+        price_str++;
+    }
+
+    if (*price_str == '\0') {
+        return STATUS_ERR_INVALID_PRICE;
+    }
+
+    int has_digits = 0;
+    int dot_count = 0;
+    const char *p = price_str;
+
+    while (*p && !isspace((unsigned char)*p)) {
+        if (isdigit((unsigned char)*p)) {
+            has_digits = 1;
+        } else if (*p == '.') {
+            dot_count++;
+            if (dot_count > 1) {
+                return STATUS_ERR_INVALID_PRICE;
+            }
+        } else {
+            return STATUS_ERR_INVALID_PRICE;
+        }
+        p++;
+    }
+
+    if (!has_digits) {
+        return STATUS_ERR_INVALID_PRICE;
+    }
+
+    while (*p) {
+        if (!isspace((unsigned char)*p)) {
+            return STATUS_ERR_INVALID_PRICE;
+        }
+        p++;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+int validate_price_quantity(const char *price_str, const char *qty_str) {
+    int price_st = validate_price_str(price_str);
+    if (price_st != STATUS_SUCCESS) {
+        return price_st;
+    }
+
+    int qty_st = validate_quantity_str(qty_str);
+    if (qty_st != STATUS_SUCCESS) {
+        return qty_st;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+int validate_price_quantity_values(double price, int quantity) {
+    int price_st = validate_price(price);
+    if (price_st != STATUS_SUCCESS) {
+        return price_st;
+    }
+
+    int qty_st = validate_quantity(quantity);
+    if (qty_st != STATUS_SUCCESS) {
+        return qty_st;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 int validate_export_quantity(int current_stock, int export_quantity) {
-    int qty_status = validate_quantity(export_quantity);
-    if (qty_status != STATUS_SUCCESS) {
-        return qty_status;
+    if (export_quantity <= 0) {
+        return STATUS_ERR_INVALID_QTY;
     }
 
     if (current_stock < 0 || export_quantity > current_stock) {
@@ -175,3 +316,4 @@ int check_addition_overflow(int current_stock, int add_quantity) {
 
     return STATUS_SUCCESS;
 }
+
