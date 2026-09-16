@@ -150,8 +150,23 @@ int update_product(ProductList *list, const char *id, const char *new_name, cons
     return STATUS_SUCCESS;
 }
 
+/* TASK 5: Xóa sản phẩm khỏi danh sách theo mã ID */
 int delete_product(ProductList *list, const char *id) {
-    (void)list; (void)id;
+    if (list == NULL || id == NULL) {
+        return STATUS_ERR_NULL_PTR;
+    }
+
+    for (size_t i = 0; i < list->count; ++i) {
+        if (strcmp(list->items[i].id, id) == 0) {
+            /* Dồn các phần tử phía sau lên 1 vị trí bằng memmove an toàn */
+            if (i < list->count - 1) {
+                memmove(&list->items[i], &list->items[i + 1], (list->count - i - 1) * sizeof(Product));
+            }
+            list->count--;
+            return STATUS_SUCCESS;
+        }
+    }
+
     return STATUS_ERR_NOT_FOUND;
 }
 

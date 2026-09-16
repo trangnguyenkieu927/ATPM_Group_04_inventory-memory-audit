@@ -86,6 +86,22 @@ int main() {
   /* Hiển thị danh sách sau khi cập nhật */
   print_product_list(&list);
 
+  /* 5. KIEM THU TASK 5: CHUC NANG XOA SAN PHAM */
+  printf("\n___________________________________________________________\n");
+  printf("  KIEM THU TASK 5: CHUC NANG XOA SAN PHAM\n");
+  printf("___________________________________________________________\n");
+  printf("Xoa san pham SP002:\n");
+  int res_del = delete_product(&list, "SP002");
+  printf("Ket qua xoa SP002: %s\n", res_del == STATUS_SUCCESS ? "Thanh cong" : "That bai");
+
+  /* Test xóa lại SP002 đã bị xóa */
+  int res_del_again = delete_product(&list, "SP002");
+  printf("Xoa lai SP002 da bi xoa: %d\n", res_del_again); /* Ky vong STATUS_ERR_NOT_FOUND = -4 */
+  printf("\n");
+
+  /* Hiển thị danh sách sau khi xóa */
+  print_product_list(&list);
+
   /* Giải phóng bộ nhớ động */
   product_list_free(&list);
   printf("\n[OK] Giai phong bo nho thanh cong.\n");
