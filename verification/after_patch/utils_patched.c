@@ -42,12 +42,25 @@ char* trim_whitespace(char *str) {
 }
 
 int safe_string_copy(char *dest, size_t dest_size, const char *src) {
-    if (dest == NULL || src == NULL || dest_size == 0) {
+    if (dest == NULL || dest_size == 0) {
         return STATUS_ERR_NULL_PTR;
     }
 
-    /* FAULT INJECTION: BEFORE PATCH - REQ-9 - F-UTIL-01 */
-    strcpy(dest, src);
+    if (src == NULL) {
+        dest[0] = '\0';
+        return STATUS_ERR_NULL_PTR;
+    }
+
+    size_t i = 0;
+    while (i + 1 < dest_size && src[i] != '\0') {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+
+    if (src[i] != '\0') {
+        return STATUS_ERR_OVERFLOW; /* Bị cắt ngắn do buffer đích nhỏ hơn chuỗi nguồn */
+    }
 
     return STATUS_SUCCESS;
 }
@@ -208,8 +221,7 @@ const char* find_file_path(const char *filename) {
     };
 
     for (int i = 0; prefixes[i] != NULL; ++i) {
-        /* FAULT INJECTION: BEFORE PATCH - REQ-10 - F-UTIL-02 */
-        sprintf(found_path, "%s%s", prefixes[i], filename);
+        snprintf(found_path, sizeof(found_path), "%s%s", prefixes[i], filename);
         FILE *f = fopen(found_path, "r");
         if (f != NULL) {
             fclose(f);

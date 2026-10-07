@@ -15,18 +15,13 @@ int validate_product_id(const char *product_id) {
         return STATUS_ERR_NULL_PTR;
     }
 
-    char temp[MAX_ID_LEN];
-
-    /* FAULT INJECTION: BEFORE PATCH - REQ-9 - F-VAL-01 */
-    strcpy(temp, product_id);
-
-    size_t len = strlen(temp);
+    size_t len = strlen(product_id);
     if (len == 0 || len >= MAX_ID_LEN) {
         return STATUS_ERR_INVALID_ID;
     }
 
     for (size_t i = 0; i < len; ++i) {
-        char c = temp[i];
+        char c = product_id[i];
         if (iscntrl((unsigned char)c) || isspace((unsigned char)c) || c == '|' || c == ',' || c == ';') {
             return STATUS_ERR_INVALID_ID;
         }
@@ -45,22 +40,17 @@ int validate_product_name(const char *name) {
         return STATUS_ERR_NULL_PTR;
     }
 
-    char local_name[MAX_NAME_LEN];
-
-    /* FAULT INJECTION: BEFORE PATCH - REQ-9/REQ-10 - F-VAL-02 */
-    strcpy(local_name, name);
-
-    size_t len = strlen(local_name);
+    size_t len = strlen(name);
     if (len == 0 || len >= MAX_NAME_LEN) {
         return STATUS_ERR_INVALID_NAME;
     }
 
-    if (is_all_whitespace(local_name)) {
+    if (is_all_whitespace(name)) {
         return STATUS_ERR_INVALID_NAME;
     }
 
     for (size_t i = 0; i < len; ++i) {
-        char c = local_name[i];
+        char c = name[i];
         if (iscntrl((unsigned char)c) || c == '|' || c == '\n' || c == '\r') {
             return STATUS_ERR_INVALID_NAME;
         }
