@@ -1,0 +1,9 @@
+============================================================
+ [SEEDED_VULNERABILITY] REALLOC LEAK DEMONSTRATION (CWE-401)
+============================================================
+Cấp phát khối nhớ 1024 bytes ban đầu: 0000026DCF8021B0
+Gọi ptr = realloc(ptr, SIZE_MAX) trực tiếp không qua biến tạm...
+[XÁC NHẬN LỖ HỔNG] realloc trả về NULL!
+Biến 'ptr' hiện tại là NULL. Địa chỉ khối nhớ cũ (0000026DCF8021B0) bị mất vĩnh viễn!
+Hậu quả: Không thể free() khối nhớ cũ -> RÒ RỈ BỘ NHỚ (Memory Leak - CWE-401).
+

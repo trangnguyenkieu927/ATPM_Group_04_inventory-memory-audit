@@ -1,0 +1,10 @@
+============================================================
+ SC-05 SIMULATION: POINTER LIFETIME & BORROWED REFERENCES   
+============================================================
+[PASS] TC-SC05-01: Borrowed pointer retrieved and valid for immediate read (000001B7AE273FC0)
+Heap base address: Old = 000001B7AE273FC0 -> New = 000001B7AE274CD0
+[PASS] TC-SC05-02: Refreshed lookup after realloc succeeded at current address (000001B7AE274CD0)
+[PASS] TC-SC05-03: NULL container or NULL search key safely returned NULL without crash
+------------------------------------------------------------
+SC-05 RESULT: 3/3 tests PASSED (SUCCESS)
+============================================================
