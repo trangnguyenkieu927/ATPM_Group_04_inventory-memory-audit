@@ -1,11 +1,11 @@
-Finding_ID,File,Line,Function,Severity,Risk_ID,CWE,Status,Description
-CR-001,source/src/product.c,42,add_product,LOW,RISK-001,CWE-190,REACHABILITY_UNPROVEN,Capacity doubling multiplication without overflow guard
-CR-002,source/src/product.c,44,add_product,MEDIUM,RISK-002,CWE-190,REACHABILITY_UNPROVEN,Realloc allocation byte calculation new_cap * sizeof(Product) without overflow guard
-CR-003,source/src/product.c,44,add_product,HIGH,RISK-003,CWE-401,GUARDED,Potential memory leak on realloc failure prevented by new_items temporary pointer guard
-CR-004,source/src/product.c,57-80,find_product_by_id,MEDIUM,RISK-004,CWE-416,REACHABILITY_UNPROVEN,Borrowed Product* pointer invalidated if realloc moves heap block; no invalid dereference in v0
-CR-005,source/src/product.c,16-25,product_list_free,HIGH,RISK-005,CWE-415,GUARDED,Double free prevented by list->items = NULL and list->count = 0 in product_list_free
-CR-006,source/src/utils.c,14-25,safe_string_copy,MEDIUM,RISK-006,CWE-120,GUARDED,Buffer overflow prevented by dest_size bounds check and explicit dest[dest_size - 1] = 0
-CR-007,source/src/file_io.c,31-48,load_products_from_file,MEDIUM,RISK-007,CWE-120,GUARDED,"Oversized lines in file handled by fgets(line, 512) and strchr newline check"
-CR-008,source/src/file_io.c,86-105,parse_product_line,MEDIUM,RISK-008,CWE-121,GUARDED,Token count overflow guarded by token_count < 8 check in strtok_r loop
-CR-009,source/src/file_io.c,80-140,parse_product_line,LOW,RISK-009,CWE-20,POTENTIALLY_REACHABLE,Legacy 4-field vs 6-field format handling; malformed data safely rejected with STATUS_ERR_INVALID_DATA
-CR-010,source/src/report.c,72-76,calculate_category_summaries,LOW,RISK-010,CWE-122,FALSE_POSITIVE,Category summary array overflow is guarded by (*out_count >= max_summaries) check returning STATUS_ERR_OVERFLOW
+﻿Finding_ID,File,Line,Function,Severity,Risk_ID,CWE,Status,Description
+CR-001,source/src/product.c,118,add_product,LOW,RISK-001,CWE-190,REACHABILITY_UNPROVEN,Capacity doubling multiplication without overflow guard; unreachable in practice due to RAM threshold
+CR-002,source/src/product.c,119,add_product,MEDIUM,RISK-002,CWE-190,REACHABILITY_UNPROVEN,Realloc allocation byte calculation new_cap * sizeof(Product) without overflow guard; OOM prevents reachability
+CR-003,source/src/product.c,119-124,add_product,HIGH,RISK-003,CWE-401,GUARDED,"Potential memory leak on realloc failure prevented by new_items temporary pointer guard (REQ-12, REQ-11)"
+CR-004,source/src/product.c,223-233,find_product_by_id,MEDIUM,RISK-004,CWE-416,REACHABILITY_UNPROVEN,Borrowed Product* pointer invalidated if realloc moves heap block; callers do not hold pointer across realloc in v0
+CR-005,source/src/product.c,27-34,product_list_free,HIGH,RISK-005,CWE-415,GUARDED,"Double free prevented by list->items = NULL and count=0 in product_list_free (REQ-13, REQ-11)"
+CR-006,source/src/utils.c,44-66,safe_string_copy,MEDIUM,RISK-006,CWE-120,GUARDED,Buffer overflow prevented by dest_size bounds check and explicit dest[i] = 0 (REQ-9)
+CR-007,source/src/file_io.c,"96, 107-114",load_products_from_file,MEDIUM,RISK-007,CWE-120,GUARDED,"Oversized lines in file handled by fgets(line, 512) and strchr newline check returning STATUS_ERR_FILE_IO (REQ-10, REQ-17)"
+CR-008,source/src/file_io.c,"47, 52-61",parse_product_line,MEDIUM,RISK-008,CWE-121,GUARDED,"Token count overflow guarded by token_count < 8 check in strchr('|') loop (REQ-16, REQ-17)"
+CR-009,source/src/file_io.c,63-91,parse_product_line,LOW,RISK-009,CWE-20,GUARDED,"Legacy 4-field vs 6-field format handling; safely rejects malformed counts, validates ranges (REQ-17, REQ-18)"
+CR-010,source/src/report.c,72-74,calculate_category_summaries,LOW,RISK-010,CWE-122,GUARDED,Category summary array overflow is guarded by (*out_count >= max_summaries) returning STATUS_ERR_OVERFLOW (REQ-16)

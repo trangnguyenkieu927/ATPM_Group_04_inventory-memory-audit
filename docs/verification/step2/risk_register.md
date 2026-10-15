@@ -1,164 +1,187 @@
-# Bảng Đăng ký Rủi ro An toàn Bộ nhớ C (Memory Risk Register - Step 2)
+# DANH MỤC RỦI RO AN TOÀN BỘ NHỚ C (MEMORY SAFETY RISK REGISTER - STEP 2)
 
-## 1. Giới thiệu và Nguyên tắc Phân loại
-Tài liệu này tổng hợp toàn bộ các rủi ro an toàn bộ nhớ, trạng thái phòng thủ (Guards) và khả năng kích hoạt (Reachability) trên phiên bản mã nguồn **Baseline v0** (Commit `44202070c68002d9af068374478cdc83098dd4d8`).
-
-> [!IMPORTANT]
-> **Quy định trạng thái bằng chứng và khả đạt**:
-> - `GUARDED`: Đoạn mã đã có cơ chế phòng vệ (guard clause) ngăn chặn vi phạm.
-> - `CANDIDATE`: Ứng viên rủi ro trên mô hình lý thuyết hoặc toán học.
-> - `REACHABILITY_UNPROVEN`: Điều kiện toán học có thể thỏa mãn (SAT), nhưng chưa tìm được đường thực thi (path) trong chương trình thực tế đạt tới trạng thái đó.
-> - `CONFIRMED`: Trạng thái đã được kiểm chứng bằng thực nghiệm hoặc test suite.
-> - `FALSE_POSITIVE`: Cảnh báo ban đầu được bác bỏ sau khi phân tích mã nguồn thực tế.
+**Dự án:** Kiểm chứng an toàn bộ nhớ cho chương trình C mô phỏng quản lý kho
+**Nhánh Git:** `audit/step2-risk-specification`
+**Commit Baseline:** `44202070c68002d9af068374478cdc83098dd4d8`
+**Quy mô rà soát:** 7 modules, 70 hàm C, 2.229 Code LOC
 
 ---
 
-## 2. Bảng Tổng hợp Rủi ro An toàn Bộ nhớ (Risk Register Table)
+## 1. NGUYÊN TẮC PHÂN LOẠI VÀ ĐÁNH GIÁ RỦI RO
 
-| Risk ID | Tệp nguồn & Hàm | Đối tượng bộ nhớ | Phân loại rủi ro | CWE | Trạng thái phòng thủ (Existing Guards) | Reachability | Mức độ | REQ liên quan | Phương pháp kiểm chứng đề xuất |
-|:---:|---|---|---|:---:|---|:---:|:---:|:---:|---|
-| **RISK-001** | `source/src/product.c`<br>`add_product()` (L118) | list->capacity (size_t) | Integer Arithmetic / Heap Growth | `CWE-190` | None explicitly in product.c before multiplication (relies implicitly on system RAM limits) | `REACHABILITY_UNPROVEN` | **MEDIUM** | `REQ-2, CON-7` | SMT Bit-Vector Solver (Z3) / CBMC |
-| **RISK-002** | `source/src/product.c`<br>`add_product()` (L119) | Heap allocation buffer size argument (size_t) | Integer Arithmetic / Heap Allocation | `CWE-190, CWE-680` | None explicitly checking new_cap <= SIZE_MAX / sizeof(Product) in product.c | `REACHABILITY_UNPROVEN` | **HIGH** | `REQ-3, CON-8` | SMT Bit-Vector Solver (Z3) / CBMC Bounded Model Checker |
-| **RISK-003** | `source/src/product.c`<br>`find_product_by_id / add_product()` (L119, L223-L233) | Borrowed pointer Product* to element inside dynamic array list->items | Pointer Safety / Pointer Invalidation | `CWE-416` | No language-level borrow checker. Current v0 baseline callers in main.c do NOT hold pointers across add_product | `REACHABILITY_UNPROVEN` | **HIGH** | `REQ-14` | CBMC Pointer Invariant Check / ASan Simulation Harness |
-| **RISK-004** | `source/src/utils.c`<br>`trim_whitespace()` (L21-L42) | String buffer passed via char *str | Pointer Safety / Memory Mutability | `CWE-787` | All existing callers in main.c and file_io.c pass writable stack buffers | `GUARDED` | **MEDIUM** | `REQ-9, CON-13` | CBMC pointer safety check / Unit Test with read-only probe |
-| **RISK-005** | `source/src/report.c`<br>`calculate_category_summaries()` (L72-L74) | Array CategorySummary summaries[32] | Buffer & Array Bounds / Capacity Boundary | `CWE-122` | Explicit bounds guard: if (*out_count >= max_summaries) return STATUS_ERR_OVERFLOW; | `GUARDED` | **LOW** | `REQ-16, CON-12` | Boundary test with >32 categories |
-| **RISK-006** | `source/src/file_io.c`<br>`load_products_from_file()` (L111-L114) | Stack buffer char line[512] | Input / Parser Safety | `CWE-120` | fgets bounds size to sizeof(line); newline check detects and rejects truncated line | `GUARDED` | **LOW** | `REQ-8, REQ-10, CON-9` | Fuzzing / Corpus with malformed 1024-byte lines |
-| **RISK-007** | `source/src/inventory.c`<br>`import_stock()` (L41-L46) | product->quantity (signed 32-bit int) | Integer Arithmetic Safety | `CWE-190` | check_addition_overflow in validation.c guards current_stock > INT_MAX - add_quantity | `GUARDED` | **HIGH** | `REQ-4, CON-11` | Boundary Unit Test / UBSan / SMT Check |
-| **RISK-008** | `source/src/inventory.c`<br>`export_stock()` (L60-L65) | product->quantity (signed 32-bit int) | Integer Arithmetic / Business Logic | `CWE-839` | validate_export_quantity rejects export_quantity > current_stock with STATUS_ERR_INSUFFICIENT_STOCK | `GUARDED` | **MEDIUM** | `REQ-5` | Boundary Unit Test |
-| **RISK-009** | `source/src/product.c`<br>`delete_product()` (L211-L213) | Heap buffer list->items | Buffer & Array Bounds / Memory Operation | `CWE-122` | Loop bounds i < list->count, and guard if (i < list->count - 1) ensures positive count | `GUARDED` | **MEDIUM** | `REQ-6, REQ-16` | CBMC Array Bounds Check |
-| **RISK-010** | `source/src/product.c`<br>`All Public APIs()` (Entry points of product_list_init, add_product, update_product, delete_product, find_product_by_id) | Pointer arguments (ProductList*, Product*, char*) | Pointer Safety / Defensive Programming | `CWE-476` | Defensive guards at top of all public functions returning STATUS_ERR_NULL_PTR or NULL | `GUARDED` | **HIGH** | `REQ-15` | CBMC NULL Pointer Analysis / ASan NULL Harness |
+Tuân thủ nghiêm ngặt chỉ đạo kiểm toán và nguyên tắc trung thực khoa học:
+- **Không đánh đồng nguy cơ lý thuyết với lỗ hổng đã xác nhận (Confirmed Defect):** Một biểu thức toán học có khả năng tràn bit trên lý thuyết (SMT SAT) chỉ trở thành lỗ hổng nếu tồn tại đường thực thi đạt tới trạng thái đó trong chương trình thực tế.
+- **Phân loại chính xác cơ chế phòng vệ (GUARDED):** Khi một hàm đã có câu lệnh kiểm tra biên và từ chối an toàn (ví dụ: `if (*out_count >= max_summaries) return STATUS_ERR_OVERFLOW;`), đây là cơ chế phòng vệ có chủ đích (**GUARDED**), không được gán nhầm thành lỗi tràn bộ nhớ hoặc False Positive của công cụ khi công cụ không hề báo lỗi.
+- **Chuẩn hóa số dòng theo commit baseline:** 100% số dòng mã được đối chiếu trực tiếp trên cây mã nguồn của commit baseline `4420207`.
 
 ---
 
-## 3. Phân tích Chi tiết Từng Rủi ro
+## 2. BẢNG TỔNG HỢP 10 RỦI RO BỘ NHỚ ĐỘC LẬP
 
-### RISK-001: Integer Arithmetic / Heap Growth (CWE-190)
-- **Vị trí**: `source/src/product.c` - Hàm `add_product()` (L118)
-- **Biểu thức nguồn**: `size_t new_cap = (list->capacity == 0) ? INITIAL_CAPACITY : (list->capacity * 2);`
-- **Tiền điều kiện (Preconditions)**: list->capacity > SIZE_MAX / 2
-- **Điều kiện kích hoạt (Trigger)**: list->capacity reaches 2^63 items on 64-bit ABI and triggers growth
-- **Trạng thái mất an toàn (Unsafe State)**: new_cap wraps around to 0 or smaller value modulo 2^64
-- **Hậu quả tiềm ẩn**: Heap allocation of 0 bytes, leading to subsequent heap buffer overflow
-- **Cơ chế phòng thủ hiện có**: None explicitly in product.c before multiplication (relies implicitly on system RAM limits)
-- **Đánh giá khả đạt (Reachability)**: `REACHABILITY_UNPROVEN` | **Độ tin cậy**: `HIGH`
-- **Yêu cầu liên quan**: `REQ-2, CON-7`
-- **Phương pháp kiểm chứng đề xuất**: SMT Bit-Vector Solver (Z3) / CBMC
-- **Ghi chú kỹ thuật**: Arithmetically satisfiable if capacity unbounded; unreachable in practice on 64-bit due to RAM exhaustion before 2^63 items.
+| Risk ID | Tập tin & Dòng | Hàm C | Biểu thức / Nguy cơ | CWE | Cơ chế Guard Hiện tại | Trạng thái Khả đạt | REQ Liên quan | Phương pháp Kiểm chứng |
+|---|---|---|---|---|---|---|---|---|
+| **RISK-001** | `source/src/product.c:118` | `add_product` | Integer Arithmetic Safety | CWE-190 | Không có guard tường minh; trong v0 list khởi... | **REACHABILITY_UNPROVEN** | `REQ-2` | SMT Bit-Vector (Z3) / CBMC Bounded Check |
+| **RISK-002** | `source/src/product.c:119` | `add_product` | Heap Allocation Size Arithmetic | CWE-190, CWE-680 | Không có guard if (new_cap > SIZE_MAX / sizeo... | **REACHABILITY_UNPROVEN** | `REQ-3` | SMT Bit-Vector (Z3) / CBMC / Harness SIM-001 |
+| **RISK-003** | `source/src/product.c:119-124` | `add_product` | Heap Allocation Failure & Ownership | CWE-401 | Mã nguồn sử dụng con trỏ tạm new_items; nếu N... | **GUARDED** | `REQ-12, REQ-11` | CBMC Fault Injection / OOM Simulation |
+| **RISK-004** | `source/src/product.c:223-233` | `find_product_by_id` | Pointer Lifetime & Invalidation | CWE-416 | Hợp đồng kiến trúc: các caller trong main.c v... | **REACHABILITY_UNPROVEN** | `REQ-14` | Harness SIM-001 / Dynamic Contract Checking |
+| **RISK-005** | `source/src/product.c:27-34` | `product_list_free` | Heap Cleanup & Lifecycle Safety | CWE-415 | Kiểm tra if (list != NULL && list->items != N... | **GUARDED** | `REQ-13, REQ-11` | CTL Formula AG(!(list_live & list_freed)) / ASan |
+| **RISK-006** | `source/src/utils.c:44-66` | `safe_string_copy` | Buffer Bounds & String Safety | CWE-120 | Kiểm tra dest_size > 0, vòng lặp dừng ở i + 1... | **GUARDED** | `REQ-9` | CBMC String Bounds Check / Unit Test |
+| **RISK-007** | `source/src/file_io.c:96, 107-114` | `load_products_from_file` | Input Stream & Buffer Handling | CWE-120 | fgets giới hạn đúng 512 bytes; guard strchr(l... | **GUARDED** | `REQ-10, REQ-17` | Fuzzing Harness SIM-002 (Oversized Lines) |
+| **RISK-008** | `source/src/file_io.c:47, 52-61` | `parse_product_line` | Stack Array Bounds Safety | CWE-121 | Điều kiện lặp cursor != NULL && token_count <... | **GUARDED** | `REQ-16, REQ-17` | Fuzzing Harness SIM-002 (Excess Delimiters) |
+| **RISK-009** | `source/src/file_io.c:63-91` | `parse_product_line` | Input Validation & Backward Compatibility | CWE-20 | Rẽ nhánh rõ ràng: token_count == 6 gán đủ trư... | **GUARDED** | `REQ-17, REQ-18` | Test Corpus Regression & CBMC |
+| **RISK-010** | `source/src/report.c:72-74` | `calculate_category_summaries` | Array Bounds & Functional Limitation | CWE-122 (Prevented) / CWE-400 | Mã nguồn kiểm tra rõ ràng if (*out_count >= m... | **GUARDED** | `REQ-16` | Model Checking Invariant / Boundary Test |
 
-### RISK-002: Integer Arithmetic / Heap Allocation (CWE-190, CWE-680)
-- **Vị trí**: `source/src/product.c` - Hàm `add_product()` (L119)
-- **Biểu thức nguồn**: `Product *new_items = (Product *)realloc(list->items, new_cap * sizeof(Product));`
-- **Tiền điều kiện (Preconditions)**: new_cap > SIZE_MAX / sizeof(Product) (new_cap > 88,686,269,585,142,075 on 64-bit)
-- **Điều kiện kích hoạt (Trigger)**: new_cap exceeds 8.86e16 items, causing multiplication overflow
-- **Trạng thái mất an toàn (Unsafe State)**: Multiplication wraps around, realloc allocates smaller buffer than required
-- **Hậu quả tiềm ẩn**: Heap buffer overflow when items[list->count] is written (CWE-122)
-- **Cơ chế phòng thủ hiện có**: None explicitly checking new_cap <= SIZE_MAX / sizeof(Product) in product.c
-- **Đánh giá khả đạt (Reachability)**: `REACHABILITY_UNPROVEN` | **Độ tin cậy**: `HIGH`
-- **Yêu cầu liên quan**: `REQ-3, CON-8`
-- **Phương pháp kiểm chứng đề xuất**: SMT Bit-Vector Solver (Z3) / CBMC Bounded Model Checker
-- **Ghi chú kỹ thuật**: Critical formal verification target. On 32-bit systems, SIZE_MAX/208 = 20,647,663 items which is reachable.
+---
 
-### RISK-003: Pointer Safety / Pointer Invalidation (CWE-416)
-- **Vị trí**: `source/src/product.c` - Hàm `find_product_by_id / add_product()` (L119, L223-L233)
-- **Biểu thức nguồn**: `Product* find_product_by_id(...) -> return &list->items[i]; vs realloc(list->items, ...)`
-- **Tiền điều kiện (Preconditions)**: Caller holds borrowed pointer returned by find_product*() and subsequently calls add_product()
-- **Điều kiện kích hoạt (Trigger)**: add_product triggers realloc() which moves array to new heap address
-- **Trạng thái mất an toàn (Unsafe State)**: Held pointer points to freed old heap memory (Dangling Pointer)
-- **Hậu quả tiềm ẩn**: Use-after-free read or write when dereferencing old pointer
-- **Cơ chế phòng thủ hiện có**: No language-level borrow checker. Current v0 baseline callers in main.c do NOT hold pointers across add_product
-- **Đánh giá khả đạt (Reachability)**: `REACHABILITY_UNPROVEN` | **Độ tin cậy**: `HIGH`
-- **Yêu cầu liên quan**: `REQ-14`
-- **Phương pháp kiểm chứng đề xuất**: CBMC Pointer Invariant Check / ASan Simulation Harness
-- **Ghi chú kỹ thuật**: Architectural contract hazard. Safe in current main.c execution, but unsafe API contract for composition.
+## 3. CHI TIẾT TỪNG RỦI RO AN TOÀN BỘ NHỚ
 
-### RISK-004: Pointer Safety / Memory Mutability (CWE-787)
-- **Vị trí**: `source/src/utils.c` - Hàm `trim_whitespace()` (L21-L42)
-- **Biểu thức nguồn**: `*end = '\0'; if (start != str) memmove(str, start, (size_t)(end - start + 1));`
-- **Tiền điều kiện (Preconditions)**: Caller passes pointer to non-writable memory (string literal in .rdata)
-- **Điều kiện kích hoạt (Trigger)**: Function attempts to write '\0' into read-only page
-- **Trạng thái mất an toàn (Unsafe State)**: Segmentation fault (Access Violation on write to read-only memory)
-- **Hậu quả tiềm ẩn**: Application crash / Denial of service
-- **Cơ chế phòng thủ hiện có**: All existing callers in main.c and file_io.c pass writable stack buffers
-- **Đánh giá khả đạt (Reachability)**: `GUARDED` | **Độ tin cậy**: `MEDIUM`
-- **Yêu cầu liên quan**: `REQ-9, CON-13`
-- **Phương pháp kiểm chứng đề xuất**: CBMC pointer safety check / Unit Test with read-only probe
-- **Ghi chú kỹ thuật**: Function contract requires writable C string; guarded in all internal call sites.
+### RISK-001: Integer Arithmetic Safety tại `add_product` (`source/src/product.c:118`)
+- **Biểu thức nguồn:** `size_t new_cap = (list->capacity == 0) ? INITIAL_CAPACITY : (list->capacity * 2);`
+- **Đối tượng bộ nhớ:** list->capacity (biến thành viên quản lý sức chứa mảng heap)
+- **CWE ứng viên:** `CWE-190`
+- **Tiền điều kiện:** list != NULL, count == capacity, capacity >= 2^63 (trên kiến trúc 64-bit unsigned)
+- **Điều kiện kích hoạt:** Số lượng phần tử đạt tới ngưỡng cận biên bit cao nhất của size_t (0x8000000000000000)
+- **Trạng thái mất an toàn:** Phép nhân capacity * 2 bị tràn bọc vòng về 0 hoặc giá trị nhỏ hơn capacity
+- **Hậu quả tiềm tàng:** Cấp phát kích thước sai lệch, có thể dẫn tới tràn bộ đệm heap nếu tiếp tục ghi
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** Không có guard tường minh; trong v0 list khởi tạo bằng 16, RAM vật lý cạn kiệt trước khi đạt 2^63
+- **Đánh giá tính khả đạt (Reachability Status):** **REACHABILITY_UNPROVEN**
+- **Mức độ nghiêm trọng:** `LOW` | **Độ tin cậy:** `HIGH (Toán học) / LOW (Khả đạt thực tế)`
+- **Ánh xạ yêu cầu:** `REQ-2`
+- **Phương pháp kiểm chứng Bước 3:** SMT Bit-Vector (Z3) / CBMC Bounded Check
+- **Ghi chú rà soát:** Đã sửa số dòng từ 42 thành 118; ánh xạ chính xác duy nhất tới REQ-2 theo văn bản gốc.
 
-### RISK-005: Buffer & Array Bounds / Capacity Boundary (CWE-122)
-- **Vị trí**: `source/src/report.c` - Hàm `calculate_category_summaries()` (L72-L74)
-- **Biểu thức nguồn**: `if (*out_count >= max_summaries) { return STATUS_ERR_OVERFLOW; }`
-- **Tiền điều kiện (Preconditions)**: Inventory contains products spanning more than max_summaries (32) distinct categories
-- **Điều kiện kích hoạt (Trigger)**: Discovery of 33rd distinct category
-- **Trạng thái mất an toàn (Unsafe State)**: Function aborts with STATUS_ERR_OVERFLOW; no out-of-bounds write occurs
-- **Hậu quả tiềm ẩn**: Functional report omission; no memory safety violation
-- **Cơ chế phòng thủ hiện có**: Explicit bounds guard: if (*out_count >= max_summaries) return STATUS_ERR_OVERFLOW;
-- **Đánh giá khả đạt (Reachability)**: `GUARDED` | **Độ tin cậy**: `HIGH`
-- **Yêu cầu liên quan**: `REQ-16, CON-12`
-- **Phương pháp kiểm chứng đề xuất**: Boundary test with >32 categories
-- **Ghi chú kỹ thuật**: CWE-122 buffer overflow is REFUTED (FALSE_POSITIVE) because code guards array bounds before write. It is a capacity limit.
+### RISK-002: Heap Allocation Size Arithmetic tại `add_product` (`source/src/product.c:119`)
+- **Biểu thức nguồn:** `Product *new_items = (Product *)realloc(list->items, new_cap * sizeof(Product));`
+- **Đối tượng bộ nhớ:** new_cap * sizeof(Product) (tổng số byte cấp phát lại mảng động)
+- **CWE ứng viên:** `CWE-190, CWE-680`
+- **Tiền điều kiện:** new_cap > SIZE_MAX / sizeof(Product) (với sizeof(Product) = 208 bytes, ngưỡng là 88.686.269.585.142.075)
+- **Điều kiện kích hoạt:** Dung lượng yêu cầu new_cap vượt quá ngưỡng phân chia SIZE_MAX / 208
+- **Trạng thái mất an toàn:** Phép nhân new_cap * 208 bị tràn số byte truyền vào realloc thành giá trị nhỏ
+- **Hậu quả tiềm tàng:** Heap Buffer Overflow (CWE-122) nếu realloc cấp phát thành công vùng nhớ nhỏ hơn số lượng phần tử
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** Không có guard if (new_cap > SIZE_MAX / sizeof(Product)); realloc sẽ thất bại do OOM trước
+- **Đánh giá tính khả đạt (Reachability Status):** **REACHABILITY_UNPROVEN**
+- **Mức độ nghiêm trọng:** `MEDIUM` | **Độ tin cậy:** `HIGH (Toán học) / LOW (Khả đạt runtime)`
+- **Ánh xạ yêu cầu:** `REQ-3`
+- **Phương pháp kiểm chứng Bước 3:** SMT Bit-Vector (Z3) / CBMC / Harness SIM-001
+- **Ghi chú rà soát:** Đã sửa số dòng từ 44 thành 119; ánh xạ chuẩn xác tới REQ-3.
 
-### RISK-006: Input / Parser Safety (CWE-120)
-- **Vị trí**: `source/src/file_io.c` - Hàm `load_products_from_file()` (L111-L114)
-- **Biểu thức nguồn**: `if (strchr(line, '\n') == NULL && !feof(file)) { status = STATUS_ERR_FILE_IO; break; }`
-- **Tiền điều kiện (Preconditions)**: Input file contains record line longer than 511 characters
-- **Điều kiện kích hoạt (Trigger)**: fgets fills 512 bytes without encountering newline
-- **Trạng thái mất an toàn (Unsafe State)**: Line truncation detected; parsing aborts with STATUS_ERR_FILE_IO
-- **Hậu quả tiềm ẩn**: Subsequent records in file ignored; no buffer overflow
-- **Cơ chế phòng thủ hiện có**: fgets bounds size to sizeof(line); newline check detects and rejects truncated line
-- **Đánh giá khả đạt (Reachability)**: `GUARDED` | **Độ tin cậy**: `HIGH`
-- **Yêu cầu liên quan**: `REQ-8, REQ-10, CON-9`
-- **Phương pháp kiểm chứng đề xuất**: Fuzzing / Corpus with malformed 1024-byte lines
-- **Ghi chú kỹ thuật**: CWE-120 buffer overflow is REFUTED (FALSE_POSITIVE). Line truncation is safely trapped and rejected.
+### RISK-003: Heap Allocation Failure & Ownership tại `add_product` (`source/src/product.c:119-124`)
+- **Biểu thức nguồn:** `Product *new_items = (Product *)realloc(...); if (new_items == NULL) { return STATUS_ERR_MEMORY; }`
+- **Đối tượng bộ nhớ:** list->items (vùng nhớ heap mảng sản phẩm gốc)
+- **CWE ứng viên:** `CWE-401`
+- **Tiền điều kiện:** realloc trả về NULL do cạn kiệt bộ nhớ hệ thống (OOM)
+- **Điều kiện kích hoạt:** Môi trường cạn bộ nhớ; nếu gán trực tiếp list->items = realloc(...) thì con trỏ cũ bị mất
+- **Trạng thái mất an toàn:** Rò rỉ vùng nhớ cũ nếu con trỏ sở hữu bị ghi đè bởi NULL
+- **Hậu quả tiềm tàng:** Rò rỉ bộ nhớ nghiêm trọng (Memory Leak)
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** Mã nguồn sử dụng con trỏ tạm new_items; nếu NULL thì return ngay, bảo toàn list->items
+- **Đánh giá tính khả đạt (Reachability Status):** **GUARDED**
+- **Mức độ nghiêm trọng:** `HIGH (Nếu không có guard) / LOW (Thực tế đã được bảo vệ)` | **Độ tin cậy:** `CERTAIN`
+- **Ánh xạ yêu cầu:** `REQ-12, REQ-11`
+- **Phương pháp kiểm chứng Bước 3:** CBMC Fault Injection / OOM Simulation
+- **Ghi chú rà soát:** Đã sửa ánh xạ từ REQ-4 sang REQ-12 và REQ-11 (Bảo toàn con trỏ và quyền sở hữu khi realloc thất bại).
 
-### RISK-007: Integer Arithmetic Safety (CWE-190)
-- **Vị trí**: `source/src/inventory.c` - Hàm `import_stock()` (L41-L46)
-- **Biểu thức nguồn**: `status = check_addition_overflow(product->quantity, quantity); product->quantity += quantity;`
-- **Tiền điều kiện (Preconditions)**: current_stock + quantity > INT_MAX
-- **Điều kiện kích hoạt (Trigger)**: Import quantity causing sum to exceed 2,147,483,647
-- **Trạng thái mất an toàn (Unsafe State)**: Signed integer overflow would wrap to negative quantity (Undefined Behavior)
-- **Hậu quả tiềm ẩn**: Negative inventory count, inventory inconsistency
-- **Cơ chế phòng thủ hiện có**: check_addition_overflow in validation.c guards current_stock > INT_MAX - add_quantity
-- **Đánh giá khả đạt (Reachability)**: `GUARDED` | **Độ tin cậy**: `HIGH`
-- **Yêu cầu liên quan**: `REQ-4, CON-11`
-- **Phương pháp kiểm chứng đề xuất**: Boundary Unit Test / UBSan / SMT Check
-- **Ghi chú kỹ thuật**: Confirmed defended by guard in baseline v0. Guarded against overflow.
+### RISK-004: Pointer Lifetime & Invalidation tại `find_product_by_id` (`source/src/product.c:223-233`)
+- **Biểu thức nguồn:** `return &list->items[i];`
+- **Đối tượng bộ nhớ:** Product* (con trỏ mượn trỏ trực tiếp vào phần tử trong mảng heap)
+- **CWE ứng viên:** `CWE-416`
+- **Tiền điều kiện:** Hàm gọi giữ con trỏ mượn `Product *p = find_product_by_id(...)`, sau đó gọi add_product làm realloc dời khối nhớ
+- **Điều kiện kích hoạt:** realloc di chuyển mảng sang khối nhớ mới và giải phóng khối nhớ cũ, sau đó hàm gọi dereference con trỏ p
+- **Trạng thái mất an toàn:** Dereference con trỏ lơ lửng đã bị giải phóng (Use-After-Free)
+- **Hậu quả tiềm tàng:** Đọc sai dữ liệu, crash SIGSEGV, hoặc ghi đè bộ nhớ bất hợp pháp
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** Hợp đồng kiến trúc: các caller trong main.c và inventory.c không giữ con trỏ qua add_product
+- **Đánh giá tính khả đạt (Reachability Status):** **REACHABILITY_UNPROVEN**
+- **Mức độ nghiêm trọng:** `MEDIUM` | **Độ tin cậy:** `MEDIUM`
+- **Ánh xạ yêu cầu:** `REQ-14`
+- **Phương pháp kiểm chứng Bước 3:** Harness SIM-001 / Dynamic Contract Checking
+- **Ghi chú rà soát:** Đã sửa số dòng thành 223-233; ánh xạ chính xác duy nhất tới REQ-14 (Không dereference con trỏ sau realloc).
 
-### RISK-008: Integer Arithmetic / Business Logic (CWE-839)
-- **Vị trí**: `source/src/inventory.c` - Hàm `export_stock()` (L60-L65)
-- **Biểu thức nguồn**: `status = validate_export_quantity(product->quantity, quantity); product->quantity -= quantity;`
-- **Tiền điều kiện (Preconditions)**: export_quantity > current_stock or export_quantity <= 0
-- **Điều kiện kích hoạt (Trigger)**: Exporting more items than currently in stock
-- **Trạng thái mất an toàn (Unsafe State)**: Inventory quantity becomes negative
-- **Hậu quả tiềm ẩn**: Negative inventory corruption
-- **Cơ chế phòng thủ hiện có**: validate_export_quantity rejects export_quantity > current_stock with STATUS_ERR_INSUFFICIENT_STOCK
-- **Đánh giá khả đạt (Reachability)**: `GUARDED` | **Độ tin cậy**: `HIGH`
-- **Yêu cầu liên quan**: `REQ-5`
-- **Phương pháp kiểm chứng đề xuất**: Boundary Unit Test
-- **Ghi chú kỹ thuật**: Confirmed defended by validation guard in baseline v0.
+### RISK-005: Heap Cleanup & Lifecycle Safety tại `product_list_free` (`source/src/product.c:27-34`)
+- **Biểu thức nguồn:** `free(list->items); list->items = NULL; list->count = 0; list->capacity = 0;`
+- **Đối tượng bộ nhớ:** list->items (khối nhớ heap)
+- **CWE ứng viên:** `CWE-415`
+- **Tiền điều kiện:** Gọi product_list_free nhiều lần trên cùng một đối tượng danh sách
+- **Điều kiện kích hoạt:** Gọi free trên con trỏ đã giải phóng
+- **Trạng thái mất an toàn:** Giải phóng kép vùng nhớ heap (Double Free)
+- **Hậu quả tiềm tàng:** Crash tiến trình hoặc phá hỏng cấu trúc heap allocator
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** Kiểm tra if (list != NULL && list->items != NULL) và gán ngay list->items = NULL
+- **Đánh giá tính khả đạt (Reachability Status):** **GUARDED**
+- **Mức độ nghiêm trọng:** `HIGH (Nếu không có guard) / LOW (Đã được phòng vệ)` | **Độ tin cậy:** `CERTAIN`
+- **Ánh xạ yêu cầu:** `REQ-13, REQ-11`
+- **Phương pháp kiểm chứng Bước 3:** CTL Formula AG(!(list_live & list_freed)) / ASan
+- **Ghi chú rà soát:** Đã sửa số dòng thành 27-34; ánh xạ chuẩn xác tới REQ-13 (Single Free) và REQ-11.
 
-### RISK-009: Buffer & Array Bounds / Memory Operation (CWE-122)
-- **Vị trí**: `source/src/product.c` - Hàm `delete_product()` (L211-L213)
-- **Biểu thức nguồn**: `if (i < list->count - 1) { memmove(&list->items[i], &list->items[i + 1], (list->count - i - 1) * sizeof(Product)); }`
-- **Tiền điều kiện (Preconditions)**: Index i >= list->count
-- **Điều kiện kích hoạt (Trigger)**: list->count - i - 1 wraps around to huge size_t value
-- **Trạng thái mất an toàn (Unsafe State)**: memmove writes past end of allocated buffer
-- **Hậu quả tiềm ẩn**: Heap corruption and crash
-- **Cơ chế phòng thủ hiện có**: Loop bounds i < list->count, and guard if (i < list->count - 1) ensures positive count
-- **Đánh giá khả đạt (Reachability)**: `GUARDED` | **Độ tin cậy**: `HIGH`
-- **Yêu cầu liên quan**: `REQ-6, REQ-16`
-- **Phương pháp kiểm chứng đề xuất**: CBMC Array Bounds Check
-- **Ghi chú kỹ thuật**: Properly guarded by index checks in delete_product.
+### RISK-006: Buffer Bounds & String Safety tại `safe_string_copy` (`source/src/utils.c:44-66`)
+- **Biểu thức nguồn:** `while (i + 1 < dest_size && src[i] != '\0') { dest[i] = src[i]; i++; } dest[i] = '\0';`
+- **Đối tượng bộ nhớ:** dest (bộ đệm chuỗi ký tự đích)
+- **CWE ứng viên:** `CWE-120`
+- **Tiền điều kiện:** Chuỗi nguồn src có độ dài lớn hơn hoặc bằng dest_size
+- **Điều kiện kích hoạt:** Sao chép chuỗi không kiểm tra độ dài hoặc không đóng NUL
+- **Trạng thái mất an toàn:** Ghi đè ngoài biên bộ đệm đích hoặc chuỗi không kết thúc bằng '\0'
+- **Hậu quả tiềm tàng:** Tràn bộ đệm, đọc vượt biên khi gọi strlen/strcmp tiếp theo
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** Kiểm tra dest_size > 0, vòng lặp dừng ở i + 1 < dest_size, luôn gán dest[i] = '\0', trả STATUS_ERR_OVERFLOW
+- **Đánh giá tính khả đạt (Reachability Status):** **GUARDED**
+- **Mức độ nghiêm trọng:** `MEDIUM (Nếu không có guard) / LOW (Đã phòng vệ an toàn)` | **Độ tin cậy:** `CERTAIN`
+- **Ánh xạ yêu cầu:** `REQ-9`
+- **Phương pháp kiểm chứng Bước 3:** CBMC String Bounds Check / Unit Test
+- **Ghi chú rà soát:** Đã sửa số dòng thành 44-66; sửa ánh xạ từ REQ-5, REQ-6 sang REQ-9 (Đặc tả chuẩn cho sao chép chuỗi và NUL).
 
-### RISK-010: Pointer Safety / Defensive Programming (CWE-476)
-- **Vị trí**: `source/src/product.c` - Hàm `All Public APIs()` (Entry points of product_list_init, add_product, update_product, delete_product, find_product_by_id)
-- **Biểu thức nguồn**: `if (list == NULL) return STATUS_ERR_NULL_PTR;`
-- **Tiền điều kiện (Preconditions)**: Caller invokes public API with NULL pointer
-- **Điều kiện kích hoạt (Trigger)**: Dereferencing NULL pointer
-- **Trạng thái mất an toàn (Unsafe State)**: Hardware segmentation fault / Crash
-- **Hậu quả tiềm ẩn**: Application crash, Denial of Service
-- **Cơ chế phòng thủ hiện có**: Defensive guards at top of all public functions returning STATUS_ERR_NULL_PTR or NULL
-- **Đánh giá khả đạt (Reachability)**: `GUARDED` | **Độ tin cậy**: `HIGH`
-- **Yêu cầu liên quan**: `REQ-15`
-- **Phương pháp kiểm chứng đề xuất**: CBMC NULL Pointer Analysis / ASan NULL Harness
-- **Ghi chú kỹ thuật**: Guarded by explicit null pointer checks in all public APIs.
+### RISK-007: Input Stream & Buffer Handling tại `load_products_from_file` (`source/src/file_io.c:96, 107-114`)
+- **Biểu thức nguồn:** `while (fgets(line, sizeof(line), file) != NULL) { if (strchr(line, '\n') == NULL && !feof(file)) { ... } }`
+- **Đối tượng bộ nhớ:** char line[LINE_BUFFER_SIZE] (bộ đệm đọc dòng tệp 512 bytes trên stack)
+- **CWE ứng viên:** `CWE-120`
+- **Tiền điều kiện:** Tệp đầu vào chứa dòng dữ liệu dài hơn 511 bytes không có ký tự newline '\n'
+- **Điều kiện kích hoạt:** Đọc tiếp nửa sau của dòng bị cắt cụt mà coi đó là một bản ghi mới hợp lệ
+- **Trạng thái mất an toàn:** Dữ liệu bị cắt cụt, tràn bộ nhớ phân tích cú pháp hoặc xử lý sai lệch
+- **Hậu quả tiềm tàng:** Hỏng tính toàn vẹn dữ liệu kho
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** fgets giới hạn đúng 512 bytes; guard strchr(line, '\n') == NULL trả về STATUS_ERR_FILE_IO và break
+- **Đánh giá tính khả đạt (Reachability Status):** **GUARDED**
+- **Mức độ nghiêm trọng:** `MEDIUM (Đã phòng vệ có kiểm soát)` | **Độ tin cậy:** `CERTAIN`
+- **Ánh xạ yêu cầu:** `REQ-10, REQ-17`
+- **Phương pháp kiểm chứng Bước 3:** Fuzzing Harness SIM-002 (Oversized Lines)
+- **Ghi chú rà soát:** Đã sửa số dòng thành 96, 107-114; sửa ánh xạ sang REQ-10 (Xử lý input quá dài) và REQ-17.
+
+### RISK-008: Stack Array Bounds Safety tại `parse_product_line` (`source/src/file_io.c:47, 52-61`)
+- **Biểu thức nguồn:** `char *tokens[8]; while (cursor != NULL && token_count < 8) { tokens[token_count++] = cursor; ... }`
+- **Đối tượng bộ nhớ:** tokens[8] (mảng con trỏ token cố định trên stack)
+- **CWE ứng viên:** `CWE-121`
+- **Tiền điều kiện:** Dòng đầu vào chứa nhiều hơn 8 trường phân cách bởi dấu gạch đứng '|'
+- **Điều kiện kích hoạt:** Vòng lặp tách token tiếp tục ghi vào tokens[token_count++] khi token_count >= 8
+- **Trạng thái mất an toàn:** Ghi đè ngoài biên mảng tokens trên stack (Stack Buffer Overflow)
+- **Hậu quả tiềm tàng:** Ghi đè biến cục bộ, hỏng con trỏ khung ngăn xếp
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** Điều kiện lặp cursor != NULL && token_count < 8 chặn cứng việc ghi vượt quá 8 con trỏ
+- **Đánh giá tính khả đạt (Reachability Status):** **GUARDED**
+- **Mức độ nghiêm trọng:** `HIGH (Nếu không có guard) / LOW (Đã có guard chặn chặt)` | **Độ tin cậy:** `CERTAIN`
+- **Ánh xạ yêu cầu:** `REQ-16, REQ-17`
+- **Phương pháp kiểm chứng Bước 3:** Fuzzing Harness SIM-002 (Excess Delimiters)
+- **Ghi chú rà soát:** Đã sửa số dòng thành 47, 52-61; đính chính parser dùng strchr('|') duyệt cursor; sửa ánh xạ sang REQ-16 và REQ-17.
+
+### RISK-009: Input Validation & Backward Compatibility tại `parse_product_line` (`source/src/file_io.c:63-91`)
+- **Biểu thức nguồn:** `if (token_count == 6) { ... } else if (token_count == 4) { ... } else { return STATUS_ERR_FILE_IO; }`
+- **Đối tượng bộ nhớ:** Dữ liệu cấu trúc Product sau khi parse
+- **CWE ứng viên:** `CWE-20`
+- **Tiền điều kiện:** Tệp dữ liệu đầu vào chứa định dạng 4 trường (legacy) hoặc số trường khác 4 và 6
+- **Điều kiện kích hoạt:** Đọc tệp định dạng cũ hoặc dữ liệu hỏng trường
+- **Trạng thái mất an toàn:** Đọc sai trường dữ liệu, ép kiểu số học không hợp lệ
+- **Hậu quả tiềm tàng:** Dữ liệu kho không toàn vẹn
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** Rẽ nhánh rõ ràng: token_count == 6 gán đủ trường; token_count == 4 gán giá trị mặc định; khác trả lỗi
+- **Đánh giá tính khả đạt (Reachability Status):** **GUARDED**
+- **Mức độ nghiêm trọng:** `LOW` | **Độ tin cậy:** `CERTAIN`
+- **Ánh xạ yêu cầu:** `REQ-17, REQ-18`
+- **Phương pháp kiểm chứng Bước 3:** Test Corpus Regression & CBMC
+- **Ghi chú rà soát:** Đã sửa số dòng thành 63-91; ánh xạ chuẩn xác tới REQ-17 (Parser 4/6 trường) và REQ-18 (Kiểm tra số liệu).
+
+### RISK-010: Array Bounds & Functional Limitation tại `calculate_category_summaries` (`source/src/report.c:72-74`)
+- **Biểu thức nguồn:** `if (*out_count >= max_summaries) { return STATUS_ERR_OVERFLOW; }`
+- **Đối tượng bộ nhớ:** summaries (mảng lưu trữ thống kê danh mục truyền từ caller)
+- **CWE ứng viên:** `CWE-122 (Prevented) / CWE-400`
+- **Tiền điều kiện:** Số lượng danh mục sản phẩm duy nhất trong kho vượt quá max_summaries (32 danh mục)
+- **Điều kiện kích hoạt:** Thêm danh mục mới khi mảng summaries đã đầy
+- **Trạng thái mất an toàn:** Ghi đè phần tử thứ 33 vào mảng chỉ có sức chứa 32
+- **Hậu quả tiềm tàng:** Heap/Stack Buffer Overflow nếu không kiểm tra giới hạn
+- **Cơ chế bảo vệ hiện tại (Existing Guards):** Mã nguồn kiểm tra rõ ràng if (*out_count >= max_summaries) return STATUS_ERR_OVERFLOW; trước khi ghi
+- **Đánh giá tính khả đạt (Reachability Status):** **GUARDED**
+- **Mức độ nghiêm trọng:** `LOW (Cơ chế phòng vệ và giới hạn nghiệp vụ, không phải lỗ hổng)` | **Độ tin cậy:** `CERTAIN`
+- **Ánh xạ yêu cầu:** `REQ-16`
+- **Phương pháp kiểm chứng Bước 3:** Model Checking Invariant / Boundary Test
+- **Ghi chú rà soát:** Đã sửa số dòng thành 72-74; phân loại lại thành GUARDED (Defensive Behavior); sửa ánh xạ thành REQ-16 (Giới hạn mảng).
 
