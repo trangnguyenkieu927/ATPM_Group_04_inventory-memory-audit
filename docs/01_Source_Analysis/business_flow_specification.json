@@ -1,0 +1,177 @@
+{
+  "project": "ATPM_Group_04_inventory-memory-audit",
+  "business_flow": {
+    "name": "Inventory Product Import and Management Pipeline",
+    "entry_point": "load_products_from_file",
+    "stages": [
+      {
+        "stage_id": 1,
+        "name": "File Opening and Line Reading",
+        "function": "load_products_from_file",
+        "source_file": "source/src/file_io.c",
+        "buffer_size": 512,
+        "error_code": "STATUS_ERR_FILE_IO (-7)"
+      },
+      {
+        "stage_id": 2,
+        "name": "Line Tokenization and Structural Parsing",
+        "function": "parse_product_line",
+        "source_file": "source/src/file_io.c",
+        "delimiters": [
+          ",",
+          "|"
+        ],
+        "accepted_field_counts": [
+          4,
+          6
+        ],
+        "stack_token_limit": 8,
+        "error_code": "STATUS_ERR_FILE_IO (-7)"
+      },
+      {
+        "stage_id": 3,
+        "name": "Field-Level Semantic Validation",
+        "function": "validate_product",
+        "source_file": "source/src/validation.c",
+        "sub_validations": [
+          {
+            "field": "id",
+            "validator": "validate_id",
+            "max_len": 19
+          },
+          {
+            "field": "name",
+            "validator": "validate_name",
+            "max_len": 99
+          },
+          {
+            "field": "category",
+            "validator": "validate_category",
+            "max_len": 49
+          },
+          {
+            "field": "unit",
+            "validator": "validate_unit",
+            "max_len": 19
+          },
+          {
+            "field": "quantity",
+            "validator": "validate_quantity",
+            "range": [
+              1,
+              2147483647
+            ]
+          },
+          {
+            "field": "price",
+            "validator": "validate_price",
+            "range": [
+              0.0,
+              "Infinity_excluded"
+            ]
+          }
+        ]
+      },
+      {
+        "stage_id": 4,
+        "name": "Container Membership and Growth",
+        "function": "add_product",
+        "source_file": "source/src/product.c",
+        "initial_capacity": 16,
+        "growth_factor": 2,
+        "allocation_function": "realloc",
+        "element_size": 208,
+        "oom_error_code": "STATUS_ERR_MEMORY (-8)"
+      },
+      {
+        "stage_id": 5,
+        "name": "Resource Cleanup and Deallocation",
+        "function": "product_list_free",
+        "source_file": "source/src/product.c",
+        "cleanup_pattern": "Idempotent (free items, set NULL, count=0, cap=0)"
+      }
+    ]
+  },
+  "memory_layout": {
+    "abi": "LLP64",
+    "pointer_size": 8,
+    "struct_Product": {
+      "total_size": 208,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "id",
+          "type": "char[20]",
+          "offset": 0,
+          "size": 20
+        },
+        {
+          "name": "name",
+          "type": "char[100]",
+          "offset": 20,
+          "size": 100
+        },
+        {
+          "name": "category",
+          "type": "char[50]",
+          "offset": 120,
+          "size": 50
+        },
+        {
+          "name": "unit",
+          "type": "char[20]",
+          "offset": 170,
+          "size": 20
+        },
+        {
+          "name": "padding_1",
+          "type": "padding",
+          "offset": 190,
+          "size": 2
+        },
+        {
+          "name": "quantity",
+          "type": "int",
+          "offset": 192,
+          "size": 4
+        },
+        {
+          "name": "padding_2",
+          "type": "padding",
+          "offset": 196,
+          "size": 4
+        },
+        {
+          "name": "price",
+          "type": "double",
+          "offset": 200,
+          "size": 8
+        }
+      ]
+    },
+    "struct_ProductList": {
+      "total_size": 24,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "items",
+          "type": "Product*",
+          "offset": 0,
+          "size": 8
+        },
+        {
+          "name": "count",
+          "type": "size_t",
+          "offset": 8,
+          "size": 8
+        },
+        {
+          "name": "capacity",
+          "type": "size_t",
+          "offset": 16,
+          "size": 8
+        }
+      ]
+    }
+  }
+}
