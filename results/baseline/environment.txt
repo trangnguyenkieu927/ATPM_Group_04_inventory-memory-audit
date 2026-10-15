@@ -1,0 +1,28 @@
+﻿=========================================================================
+MOI TRUONG THUC NGHIEM VA HE THONG - BASELINE V0
+=========================================================================
+Thoi diem ghi nhan : 2026-10-15 20:31:14 +07:00
+He dieu hanh       : Microsoft Windows NT 10.0.26200.0
+Kien truc CPU      : AMD64 (64-bit)
+
+THONG TIN GIT:
+Nhanh hien tai     : audit/prepare-v0
+Commit SHA goc     : d57e583270517dfcc6afcba071dd2621d75708aa
+
+CONG CU BIEN DICH VA XAY DUNG:
+GCC Version:
+gcc.exe (Rev5, Built by MSYS2 project) 16.1.0
+Copyright (C) 2026 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
+GNU Make Version:
+GNU Make 4.4.1
+Built for x86_64-w64-mingw32
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+=========================================================================
