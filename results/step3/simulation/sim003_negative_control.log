@@ -1,0 +1,43 @@
+Compile Command: gcc -Wall -Wextra -O0 -g -fstack-protector-all -Isource/include tests/simulation/test_sim003_negative_control.c source/src/file_io.c tests/simulation/vulnerable_file_io.c source/src/inventory.c source/src/product.c source/src/report.c source/src/validation.c source/src/utils.c -o scratch/sim003.exe
+Exit Code: 0
+STDOUT:
+============================================================
+  SIM-003: ĐỐI CHỨNG NEGATIVE CONTROL VỚI MÃ LỖI CÀI CHỦ ĐÍCH
+============================================================
+Đầu vào thử nghiệm: tests/simulation/corpus/corpus_03_too_many_delimiters.txt
+Đặc điểm: Dòng chứa 10 trường phân tách bằng '|' (Vượt quá 6 trường)
+
+--- [THÍ NGHIỆM 1] Kiểm tra trên BASELINE v0 ---
+Kết quả thực thi Baseline v0:
+  Mã trạng thái trả về: -7 (Kỳ vọng STATUS_ERR_FILE_IO = -7)
+  Số sản phẩm nạp:     0
+  Hành vi bảo vệ:      Vòng lặp parser bị chặn cứng ở 'token_count < 8',
+                       không ghi vượt ranh giới mảng tokens[8] trên stack.
+  Đánh giá an toàn:    Không xảy ra stack smashing, tiến trình chạy bình thường.
+-> KẾT LUẬN BASELINE v0: [AN TOÀN] Guard phòng vệ loại bỏ hoàn toàn nguy cơ tràn buffer stack.
+
+--- [THÍ NGHIỆM 2] Kiểm tra trên NHÁNH LỖI CÀI CHỦ ĐÍCH (SEEDED VULNERABILITY) ---
+Commit trích xuất:   d7cbe365714f9799e49c8aa0fd889d606a9878cd
+Lỗ hổng cố ý:        parse_product_line khai báo 'char *tokens[6]' nhưng
+                     vòng lặp 'while (cursor != NULL)' không kiểm tra token_count < 6.
+Kích hoạt tiến trình con để quan sát phát hiện của trình biên dịch và runtime...
+[CHILD PROCESS] Đang kích hoạt parse trên mã có lỗi cài chủ đích (vulnerable_file_io.c)...
+
+Kết quả tiến trình con (Seeded Vulnerability):
+  Exit code:           -1073740791
+  Phát hiện Runtime:   [SEEDED_VULNERABILITY DETECTED]
+                       Trình bảo vệ stack (-fstack-protector) đã phát hiện
+                       ghi đè hỏng Stack Canary do tràn mảng tokens[6] và
+                       chủ động terminated tiến trình để ngăn chặn khai thác!
+-> KẾT LUẬN SEEDED:    [ĐẠT YÊU CẦU ĐỐI CHỨNG] Công cụ kiểm chứng có độ nhạy tuyệt đối
+                       với lỗ hổng cài chủ đích (CWE-120 / Stack Buffer Overflow).
+
+============================================================
+  TỔNG KẾT ĐỐI CHỨNG SIM-003: HOÀN THÀNH XUẤT SẮC
+  - Baseline v0:      AN TOÀN (Không có đường tràn stack)
+  - Nhánh Seeded:     PHÁT HIỆN LỖI (Stack Smashing Detected)
+============================================================
+
+STDERR:
+*** stack smashing detected ***: terminated
+

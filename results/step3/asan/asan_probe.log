@@ -1,0 +1,5 @@
+TOOL: AddressSanitizer (ASan)
+STATUS: TOOL_UNAVAILABLE
+REASON: MSYS2 UCRT64 GCC 16.1.0 does not bundle libasan.a (cannot find -lasan).
+ENVIRONMENT: Windows 11 x64 / MSYS2 UCRT64
+NOTE: Replaced with Memory Tracker Runtime Canary Harness.

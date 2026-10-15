@@ -1,0 +1,21 @@
+Exit Code: 0
+STDOUT:
+[RUNNING] Bắt đầu kiểm tra rò rỉ bộ nhớ động và bảo vệ Canary trên Baseline v0...
+
+============================================================
+         BÁO CÁO THEO DÕI BỘ NHỚ VÀ RÒ RỈ (MEMORY AUDIT)     
+============================================================
+Tổng số lần cấp phát (malloc/calloc/realloc): 4
+Tổng số lần giải phóng (free):                4
+Tổng dung lượng đã phân bổ:                   26624 bytes
+Dung lượng bộ nhớ đỉnh điểm (Peak RAM):       19968 bytes
+Số khối bộ nhớ chưa giải phóng (Leaks):       0
+Số lần phát hiện Double-Free:                 0
+Số lần phát hiện tràn Canary (Overflow):      0
+
+[KẾT QUẢ AN TOÀN] Không phát hiện rò rỉ bộ nhớ (0 byte leak, 0 double free, 0 overflow).
+============================================================
+[SUCCESS] Bộ kiểm tra động hoàn thành an toàn: 0 rò rỉ, 0 tràn buffer canary!
+
+STDERR:
+

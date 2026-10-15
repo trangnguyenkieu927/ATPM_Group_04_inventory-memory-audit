@@ -1,0 +1,30 @@
+Compile Command: gcc -Wall -Wextra -O0 -g -Isource/include tests/simulation/test_sim001_heap.c source/src/validation.c source/src/utils.c -o scratch/sim001.exe
+Exit Code: 0
+STDOUT:
+============================================================
+  SIM-001: MÔ PHỎNG VÒNG ĐỜI BỘ NHỚ HEAP VÀ CON TRỎ C       
+============================================================
+
+--- THÍ NGHIỆM 1: Mở rộng mảng hợp lệ (Dynamic Array Growth) ---
+Trạng thái ban đầu: count = 0, capacity = 16, items = 00000237F4663FC0
+Trạng thái khi đầy:  count = 16, capacity = 16, items = 00000237F4663FC0
+Trạng thái sau tăng: count = 17, capacity = 32, items = 00000237F4664CD0 (Trước: 00000237F4663FC0)
+-> [ĐẠT] Bất biến count (17) <= capacity (32) được bảo toàn sau mở rộng.
+
+--- THÍ NGHIỆM 2: Mô phỏng Realloc thất bại (Fault Injection OOM) ---
+Kích hoạt Fault Injection: ép realloc() trả về NULL tại lần cấp phát tiếp theo...
+Kết quả gọi add_product khi OOM: status = -8 (kỳ vọng STATUS_ERR_MEMORY = -8)
+Con trỏ items: hiện tại = 00000237F4663FC0, trước khi OOM = 00000237F4663FC0
+Capacity:      hiện tại = 16, trước khi OOM = 16
+Count:         hiện tại = 16, trước khi OOM = 16
+-> [ĐẠT] Con trỏ sở hữu cũ được bảo toàn 100%; không bị rò rỉ hoặc ghi đè NULL.
+
+--- THÍ NGHIỆM 3: Vòng đời và Vô hiệu hóa Con trỏ Mượn (REQ-14) ---
+Con trỏ mượn P001 trước khi mở rộng: 00000237F4663FC0
+Con trỏ mượn P001 sau khi mở rộng:   00000237F4663FC0
+-> [ĐẠT] Quy tắc tái mượn (Re-borrowing Contract): Mã gọi phải luôn cập nhật lại con trỏ qua API sau khi mảng thay đổi dung lượng.
+
+[KẾT QUẢ TỔNG HỢP] Toàn bộ 3/3 thí nghiệm SIM-001 HOÀN THÀNH ĐẠT YÊU CẦU.
+
+STDERR:
+

@@ -1,0 +1,5 @@
+TOOL: UndefinedBehaviorSanitizer (UBSan)
+STATUS: TOOL_UNAVAILABLE
+REASON: MSYS2 UCRT64 GCC 16.1.0 does not bundle libubsan.a (cannot find -lubsan).
+ENVIRONMENT: Windows 11 x64 / MSYS2 UCRT64
+NOTE: Replaced with SMT bit-vector arithmetic verification and boundary assertions.
