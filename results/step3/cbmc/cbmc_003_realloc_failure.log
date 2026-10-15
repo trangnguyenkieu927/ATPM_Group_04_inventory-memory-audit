@@ -1,0 +1,15 @@
+======================================================================
+Harness ID: CBMC-003
+Yêu cầu truy vết: REQ-12
+Unwind Bound k: 17
+Compile Command: gcc -Wall -Wextra -O0 -g -Isource/include verification/step3/cbmc/harness_cbmc_003_realloc_failure.c source/src/validation.c source/src/utils.c -o scratch/cbmc_003.exe
+Execution Command: scratch/cbmc_003.exe
+Execution Exit Code: 0
+Status: VERIFIED_WITHIN_BOUND
+----------------------------------------------------------------------
+STDOUT:
+[CBMC-003 PASS] Realloc failure and pointer preservation contract verified
+
+STDERR:
+
+======================================================================

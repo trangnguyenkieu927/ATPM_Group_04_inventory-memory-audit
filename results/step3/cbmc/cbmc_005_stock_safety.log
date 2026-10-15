@@ -1,0 +1,15 @@
+======================================================================
+Harness ID: CBMC-005
+Yêu cầu truy vết: REQ-4, REQ-5
+Unwind Bound k: 10
+Compile Command: gcc -Wall -Wextra -O0 -g -Isource/include verification/step3/cbmc/harness_cbmc_005_stock_safety.c source/src/inventory.c source/src/product.c source/src/validation.c source/src/utils.c -o scratch/cbmc_005.exe
+Execution Command: scratch/cbmc_005.exe
+Execution Exit Code: 0
+Status: VERIFIED_WITHIN_BOUND
+----------------------------------------------------------------------
+STDOUT:
+[CBMC-005 PASS] Stock arithmetic overflow guard and conservation invariants verified
+
+STDERR:
+
+======================================================================
