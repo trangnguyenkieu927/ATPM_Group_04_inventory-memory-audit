@@ -1,0 +1,7 @@
+COMMAND: gcc -std=c17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow -Wformat=2 -Wnull-dereference -I./include -c src/file_io.c src/inventory.c src/main.c src/product.c src/report.c src/utils.c src/validation.c
+VERSION: gcc version 16.1.0 (Rev5, Built by MSYS2 project)
+EXIT CODE: 0
+STDOUT:
+
+STDERR:
+

@@ -1,0 +1,4 @@
+Z3 Command: z3 smt_004b_category_total_guard.smt2
+Exit Code: 0
+Output:
+unsat

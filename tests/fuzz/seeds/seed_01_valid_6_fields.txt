@@ -1,0 +1,2 @@
+SP01|Dell Precision 5570|Laptop|Chiec|15|2450.00
+SP02|Asus ROG Zephyrus|Gaming|Bo|8|1890.50

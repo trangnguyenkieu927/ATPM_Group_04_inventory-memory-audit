@@ -1,0 +1,18 @@
+Z3 Command: z3 smt_004a_category_total.smt2
+Exit Code: 0
+Output:
+sat
+(
+  (define-fun cat_total () (_ BitVec 32)
+    #x7fffffff)
+  (define-fun next_qty () (_ BitVec 32)
+    #x7fffffff)
+  (define-fun add_ext () (_ BitVec 33)
+    ((_ sign_extend 1) next_qty))
+  (define-fun int_max_33 () (_ BitVec 33)
+    ((_ sign_extend 1) #x7fffffff))
+  (define-fun sum_33 () (_ BitVec 33)
+    (bvadd ((_ sign_extend 1) cat_total) ((_ sign_extend 1) next_qty)))
+  (define-fun cur_ext () (_ BitVec 33)
+    ((_ sign_extend 1) cat_total))
+)
