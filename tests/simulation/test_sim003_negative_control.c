@@ -70,8 +70,8 @@ int main(int argc, char **argv) {
         printf("                       Trình bảo vệ stack (-fstack-protector) đã phát hiện\n");
         printf("                       ghi đè hỏng Stack Canary do tràn mảng tokens[6] và\n");
         printf("                       chủ động terminated tiến trình để ngăn chặn khai thác!\n");
-        printf("-> KẾT LUẬN SEEDED:    [ĐẠT YÊU CẦU ĐỐI CHỨNG] Công cụ kiểm chứng có độ nhạy tuyệt đối\n");
-        printf("                       với lỗ hổng cài chủ đích (CWE-120 / Stack Buffer Overflow).\n\n");
+        printf("-> KẾT LUẬN SEEDED:    [ĐẠT YÊU CẦU ĐỐI CHỨNG] Trình bảo vệ stack có khả năng phát hiện\n");
+        printf("                       lỗ hổng cài chủ đích (CWE-120 / Stack Buffer Overflow) trong kịch bản này.\n\n");
     } else {
         printf("  Tiến trình con không bị crash.\n");
     }

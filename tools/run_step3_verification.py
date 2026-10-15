@@ -111,7 +111,8 @@ def run_smt():
 
 def run_cbmc():
     print("\n" + "="*70)
-    print(" GIAI ĐOẠN 3: KIỂM CHỨNG BOUNDED MODEL CHECKING / HARNESSES")
+    print(" GIAI ĐOẠN 3: KIỂM TRA BẤT BIẾN HỢP ĐỒNG BẰNG GCC HARNESS TESTING")
+    print(" (CBMC Native engine is TOOL_UNAVAILABLE trên host hiện tại)")
     print("="*70)
     cbmc_dir = os.path.join(PROJECT_ROOT, "verification", "step3", "cbmc")
     src_dir = os.path.join(PROJECT_ROOT, "source", "src")
@@ -286,7 +287,8 @@ def run_simulation():
 
 def run_ctl():
     print("\n" + "="*70)
-    print(" GIAI ĐOẠN 6: KIỂM CHỨNG MÔ HÌNH TRẠNG THÁI VÀ 18 CÔNG THỨC CTL")
+    print(" GIAI ĐOẠN 6: KIỂM CHỨNG MÔ HÌNH TRẠNG THÁI VÀ 18 CTL BẰNG CUSTOM CTL CHECKER")
+    print(" (NuSMV/nuXmv Native binary is TOOL_UNAVAILABLE trên host hiện tại)")
     print("="*70)
     ctl_script = os.path.join(PROJECT_ROOT, "verification", "step3", "ctl", "verify_ctl.py")
     rc, out, err = run_command([sys.executable, ctl_script])
@@ -310,12 +312,12 @@ def run_coverage():
 def main():
     parser = argparse.ArgumentParser(description="Chạy tự động kiểm chứng Bước 3")
     parser.add_argument("--smt", action="store_true", help="Chạy kiểm chứng số học SMT Z3")
-    parser.add_argument("--cbmc", action="store_true", help="Chạy kiểm chứng Bounded Model Checking")
+    parser.add_argument("--cbmc", action="store_true", help="Chạy kiểm tra bất biến GCC Bounded Contract Harnesses")
     parser.add_argument("--sanitizers", action="store_true", help="Chạy phân tích động và kiểm tra rò rỉ")
     parser.add_argument("--simulation", action="store_true", help="Chạy mô phỏng rủi ro C (SIM-001, SIM-002, SIM-003)")
-    parser.add_argument("--ctl", action="store_true", help="Chạy kiểm chứng CTL và mô hình trạng thái")
+    parser.add_argument("--ctl", action="store_true", help="Chạy kiểm chứng Custom CTL Model Checker")
     parser.add_argument("--coverage", action="store_true", help="Đo độ phủ dòng lệnh và nhánh bằng gcov/gcovr")
-    parser.add_argument("--all", action="store_true", help="Chạy toàn bộ các nhóm kiểm chứng")
+    parser.add_argument("--all", action="store_true", help="Chạy toàn bộ các nhóm kiểm chứng khả dụng")
 
     args = parser.parse_args()
 
@@ -327,26 +329,28 @@ def main():
     results = {}
 
     if args.all or args.smt:
-        results["SMT"] = run_smt()
+        results["SMT (Z3)"] = run_smt()
     if args.all or args.cbmc:
-        results["CBMC"] = run_cbmc()
+        results["GCC Harnesses"] = run_cbmc()
     if args.all or args.sanitizers:
-        results["Sanitizers"] = run_sanitizers()
+        results["Canary Tracker"] = run_sanitizers()
     if args.all or args.simulation:
         results["Simulation"] = run_simulation()
     if args.all or args.ctl:
-        results["CTL"] = run_ctl()
+        results["Custom CTL"] = run_ctl()
     if args.all or args.coverage:
         results["Coverage"] = run_coverage()
 
     duration = time.time() - start_time
     print("\n" + "="*70)
-    print(" TỔNG HỢP KẾT QUẢ THỰC THI KIỂM CHỨNG BƯỚC 3")
+    print(" TỔNG HỢP KẾT QUẢ THỰC THI CÁC PHÉP KIỂM TRA KHẢ DỤNG TRÊN HOST")
     print(f" Thời gian thực thi: {duration:.2f} giây")
+    print(" (Lưu ý: Kết quả PASS nghĩa là các pipeline khả dụng đã chạy đạt yêu cầu;")
+    print("  không đồng nghĩa các công cụ native TOOL_UNAVAILABLE đã hoạt động)")
     print("="*70)
     for k, v in results.items():
         status_str = "THÀNH CÔNG (PASS)" if v else "CẦN LƯU Ý / FAIL"
-        print(f"  - {k:<15}: {status_str}")
+        print(f"  - {k:<18}: {status_str}")
     print("="*70)
 
 if __name__ == "__main__":

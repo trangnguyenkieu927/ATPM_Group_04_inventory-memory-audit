@@ -55,6 +55,7 @@ Mục tiêu của Giai đoạn 2 là sử dụng lý thuyết Bit-Vector (`QF_BV
   - **SMT-001A (Không ràng buộc biên trên):** Solver trả về `SAT`. Model nghiệm trích xuất: `capacity = #x8000000000000000` ($9,223,372,036,854,775,808$). Khi nhân 2, giá trị vượt quá biểu diễn 64-bit và quay vòng về 0 trong phép toán modulo $2^{64}$.
   - **SMT-001B (Ràng buộc tính khả đạt thực tế):** Khởi tạo `capacity` ban đầu bằng 4. Mỗi sản phẩm chiếm 208 byte (`sizeof(Product)`). Để đạt tới ngưỡng tràn $2^{63}$, hệ thống cần tối thiểu $2^{63} \times 208 \approx 1.9 \times 10^{21}$ byte RAM (gần 2 Zettabytes). Trên hệ thống thực tế tối đa 64GB RAM ($330,382,099$ sản phẩm), solver trả về `UNSAT`.
 - **Kết luận:** Lỗ hổng tràn số khi nhân đôi `capacity` là một rủi ro lý thuyết thuần túy số học, **không thể khả đạt trên phần cứng thực tế** trước khi `realloc()` bị từ chối do thiếu bộ nhớ (`OOM - Out Of Memory`).
+  - *Đối chiếu Baseline v0 & Nghiệm thu REQ-2*: Trong `source/src/product.c`, baseline chưa có guard tường minh `capacity <= SIZE_MAX / 2`. Yêu cầu REQ-2 được đánh dấu **`PARTIALLY_VERIFIED`** (SMT phân tích rủi ro hoàn tất; baseline chưa có guard; chuyển việc bổ sung guard sang Bước 4).
 
 ---
 
@@ -71,6 +72,7 @@ Mục tiêu của Giai đoạn 2 là sử dụng lý thuyết Bit-Vector (`QF_BV
 - **Kết quả thực nghiệm Z3:**
   - **SMT-002A (Không có guard kiểm tra):** Trả về `SAT`. Model nghiệm: `new_cap = #xeea85800eaaaaaaa`. Tích số vượt quá $2^{64}-1$, dẫn đến giá trị truyền vào `realloc` bị wraps-around về một số nhỏ, gây cấp phát thiếu bộ nhớ và heap buffer overflow nghiêm trọng.
   - **SMT-002B (Có guard `new_cap <= SIZE_MAX / sizeof(Product)`):** Trả về `UNSAT`. Chứng minh rằng cơ chế kiểm tra biên trước khi gọi allocator là điều kiện đủ để triệt tiêu hoàn toàn rủi ro tràn số cấp phát.
+  - *Đối chiếu Baseline v0 & Nghiệm thu REQ-3*: Trong `source/src/product.c`, baseline chưa có guard tường minh `new_cap <= SIZE_MAX / sizeof(Product)`. Yêu cầu REQ-3 được đánh dấu **`PARTIALLY_VERIFIED`** (SMT phân tích rủi ro hoàn tất; baseline chưa có guard; chuyển việc bổ sung guard sang Bước 4).
 
 ---
 

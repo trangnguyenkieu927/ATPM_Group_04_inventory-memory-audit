@@ -23,11 +23,11 @@ Thực hiện theo chỉ đạo kiểm toán nghiêm ngặt trước khi thực 
    - Bài toán SMT-001A (Tràn số khi nhân đôi capacity 64-bit): Z3 5.1.0 tìm thấy mô hình nghiệm thỏa mãn `capacity = 0x8000000000000000` ($2^{63}$) làm phép nhân $2 \times capacity$ quay vòng về $0$ (**SAT**).
    - Bài toán SMT-001B (Khả đạt trong RAM vật lý $\le 1$TB): **UNSAT** (Chứng minh bất khả đạt trong điều kiện vận hành thực tế).
    - Bài toán SMT-003B (Nhập kho có guard `check_addition_overflow()`): **UNSAT** (Chứng minh toán học guard loại bỏ hoàn toàn nguy cơ tràn số nguyên có dấu).
-   - Bài toán SMT-004B (Xuất kho có guard tồn kho): **UNSAT** (Chứng minh tồn kho không bao giờ âm).
-   - Bài toán SMT-005B (Giới hạn token `token_count < 8`): **UNSAT** (Chứng minh không bao giờ ghi quá mảng `tokens[8]`).
+   - Bài toán SMT-004B (Xuất kho có guard tồn kho): **UNSAT** (Chứng minh tồn kho không bị âm khi thỏa guard).
+   - Bài toán SMT-005B (Giới hạn token `token_count < 8`): **UNSAT** (Chứng minh loại bỏ nguy cơ ghi vượt mảng `tokens[8]` khi có guard `token_count < 8`).
 
-2. **CPROVER Contract Assertion Harnesses qua GCC**:
-   - 5 harness kiểm chứng bất biến bộ nhớ (`harness_cbmc_001` đến `005`) liên kết trực tiếp với mã nguồn C gốc, thực thi với các bound $k=10 \dots 40$ đều đạt kết quả **PASS**:
+2. **GCC Harness Testing (Bounded Contract Assertions)**:
+   - 5 harness kiểm tra bất biến bộ nhớ (`harness_cbmc_001` đến `005`) liên kết trực tiếp với mã nguồn C gốc, thực thi với các bound $k=10 \dots 40$ bằng trình biên dịch GCC đều đạt kết quả **PASS**:
      - `count <= capacity` được bảo toàn sau mọi thao tác thêm/xóa.
      - Vòng lặp duyệt mảng không vượt quá `count`.
      - Gọi `product_list_free()` liên tiếp không gây double-free (Idempotent cleanup).
@@ -101,22 +101,24 @@ Nhóm ghi nhận trung thực hiện trạng công cụ trên môi trường Win
 
 | Công cụ | Tình trạng | Phương pháp thay thế thực tế đã sử dụng | Giới hạn so với công cụ chuẩn |
 | :--- | :--- | :--- | :--- |
-| **CBMC Native Binary** | `TOOL_UNAVAILABLE` | CPROVER Contract Assertion Harness thực thi qua GCC Test Oracle | Kiểm tra bất biến trong bound hữu hạn ($k=10 \dots 40$), không phải symbolic execution vô hạn. |
-| **NuSMV / nuXmv Binary** | `TOOL_UNAVAILABLE` | Custom Kripke Structure Model Verifier (`verify_ctl.py`) | Đánh giá 18 CTL trên mô hình 21 trạng thái trừu tượng; không kiểm chứng trực tiếp mã máy C. |
-| **AddressSanitizer (ASan)** | `TOOL_UNAVAILABLE` | Canary Memory Tracker & GCC `-fstack-protector-strong` | Bắt được tràn mảng stack và heap boundary; không bắt được use-after-free ngoài canary. |
-| **UndefinedBehaviorSanitizer** | `TOOL_UNAVAILABLE` | SMT Bit-Vector Integer Overflow Guards | Chứng minh toán học guard loại bỏ UB; không phát hiện runtime UB động. |
-| **LeakSanitizer / Valgrind** | `TOOL_UNAVAILABLE` | Canary Memory Allocation Ledger nội bộ | Đo lượng cấp phát/giải phóng trong test suite; không can thiệp sâu vào allocator hệ thống. |
+| **CBMC Native Binary** | `TOOL_UNAVAILABLE` | GCC Harness Testing (Bounded Contract Assertions) | Kiểm tra bất biến trong bound hữu hạn ($k=10 \dots 40$), không phải symbolic execution vô hạn; không gọi là kiểm chứng CBMC chính thức. |
+| **NuSMV / nuXmv Binary** | `TOOL_UNAVAILABLE` | Custom CTL Model Checker (`verify_ctl.py`) | Đánh giá 18 CTL trên mô hình 21 trạng thái trừu tượng; là script Python nội bộ, không gọi là kết quả NuSMV chính thức. |
+| **AddressSanitizer (ASan)** | `TOOL_UNAVAILABLE` | Canary Memory Tracker & GCC `-fstack-protector-strong` | Bắt được tràn mảng stack và heap boundary tuyến tính; không bắt được use-after-free ngoài canary. Hoàn toàn không tương đương ASan. |
+| **UndefinedBehaviorSanitizer** | `TOOL_UNAVAILABLE` | SMT Bit-Vector Integer Overflow Guards | Chứng minh toán học guard loại bỏ UB; không phát hiện runtime UB động. Hoàn toàn không tương đương UBSan. |
+| **LeakSanitizer / Valgrind** | `TOOL_UNAVAILABLE` | Canary Memory Allocation Ledger nội bộ | Đo lượng cấp phát/giải phóng trong test suite; không can thiệp sâu vào allocator hệ thống. Hoàn toàn không tương đương LSan/Valgrind. |
 
 ---
 
 ### 5. MA TRẬN 18 REQ SAU KHI HIỆU CHỈNH
 
-Toàn bộ 18 REQ đã được phân loại trạng thái nghiệm thu minh bạch:
-- **`VERIFIED_WITHIN_SCOPE`**: 12 REQ (REQ-2, REQ-4, REQ-5, REQ-8, REQ-9, REQ-10, REQ-12, REQ-13, REQ-14, REQ-15, REQ-16, REQ-17, REQ-18).
-- **`VERIFIED_WITHIN_HARNESS_SCOPE`**: 2 REQ (REQ-1, REQ-6 – Kiểm chứng đạt trong phạm vi bound hữu hạn của harness; CBMC native là `TOOL_UNAVAILABLE`).
-- **`VERIFIED_WITHIN_MODEL_SCOPE`**: 1 REQ (REQ-7 – Kiểm chứng đạt trên mô hình trạng thái giao thức; chưa bao hàm phân tích WCET cấp vi xử lý).
-- **`VERIFIED_WITHIN_TEST_SCOPE`**: 1 REQ (REQ-11 – Đạt 0 bytes leak trên kịch bản kiểm thử; LSan native là `TOOL_UNAVAILABLE`).
-- **`PARTIALLY_VERIFIED`**: 1 REQ (REQ-3 – Đã chứng minh rủi ro số học qua SMT Z3; baseline v0 thiếu guard tường minh `new_cap <= SIZE_MAX / 208`, cần vá ở Bước 4).
+Toàn bộ 18 REQ đã được phân loại trạng thái nghiệm thu minh bạch và đối chiếu với mã nguồn C:
+- **`VERIFIED_WITHIN_SCOPE`**: 12 REQ (REQ-4, REQ-5, REQ-8, REQ-9, REQ-10, REQ-12, REQ-13, REQ-14, REQ-15, REQ-16, REQ-17, REQ-18).
+- **`VERIFIED_WITHIN_HARNESS_SCOPE`**: 2 REQ (REQ-1, REQ-6 – Kiểm chứng đạt trong phạm vi bound hữu hạn của GCC Harness Testing; CBMC native là `TOOL_UNAVAILABLE`).
+- **`VERIFIED_WITHIN_MODEL_SCOPE`**: 1 REQ (REQ-7 – Kiểm chứng đạt trên mô hình trạng thái giao thức qua Custom CTL Model Checker; NuSMV native là `TOOL_UNAVAILABLE`).
+- **`VERIFIED_WITHIN_TEST_SCOPE`**: 1 REQ (REQ-11 – Đạt 0 bytes leak trên kịch bản kiểm thử của Canary Tracker; LSan/Valgrind native là `TOOL_UNAVAILABLE`).
+- **`PARTIALLY_VERIFIED`**: 2 REQ:
+  - **REQ-2**: Đã phân tích rủi ro số học toán học bằng SMT Z3 (SMT-001A SAT, SMT-001B UNSAT với RAM $\le 1$TB); đối chiếu mã nguồn `source/src/product.c` cho thấy baseline v0 **chưa có guard tường minh** `capacity <= SIZE_MAX / 2`. Yêu cầu chưa được đáp ứng đầy đủ trong baseline; chuyển việc bổ sung guard sang Bước 4.
+  - **REQ-3**: Đã phân tích rủi ro số học toán học bằng SMT Z3 (SMT-002A SAT khi thiếu guard, SMT-002B UNSAT khi có guard); đối chiếu mã nguồn `source/src/product.c` cho thấy baseline v0 **chưa có guard tường minh** `new_cap <= SIZE_MAX / sizeof(Product)`. Yêu cầu chưa được đáp ứng đầy đủ trong baseline; chuyển việc bổ sung guard sang Bước 4.
 
 ---
 
@@ -130,22 +132,41 @@ Dựa trên kết quả rà soát độc lập, nhóm đề xuất danh mục c�
    - Viết thêm unit tests cho các nhánh xử lý lỗi I/O trong `file_io.c` (`fopen == NULL`).
    - Viết test suite bao quát các hàm in ấn bảng biểu console trong `report.c` để nâng độ phủ từ 11% lên $\ge 60\%$.
    - Bổ sung test cho các hàm tiện ích xâu ký tự trong `utils.c`.
-3. **Môi trường Linux/WSL2 cho Native Sanitizers**:
-   - Khi được cấp quyền, thiết lập môi trường Linux (Ubuntu 22.04 LTS) để chạy thử nghiệm với native `cbmc`, `NuSMV`, `gcc -fsanitize=address,undefined` và `valgrind --leak-check=full` để bổ sung bằng chứng đối sánh đa nền tảng.
+3. **Môi trường Linux cho Native Formal Tools & Sanitizers**:
+   - Khi thiết lập môi trường Linux (Ubuntu 22.04 LTS), chạy kiểm chứng đối sánh với native `cbmc`, `NuSMV`, `gcc -fsanitize=address,undefined` và `valgrind --leak-check=full`.
 
 ---
 
-### 7. ĐÁNH GIÁ MỨC ĐỘ SẴN SÀNG NGHIỆM THU (READINESS ASSESSMENT)
+### 7. CÁC KIỂM CHỨNG CÒN THIẾU TRƯỚC KHI HOÀN THIỆN NGHIÊN CỨU
+
+Nhằm đảm bảo sự minh bạch khoa học, các khoảng trống kiểm chứng sau cần được ghi nhận rõ trước khi hoàn thiện toàn bộ công trình:
+1. **CBMC Native Symbolic Verification**: Bounded Model Checking trực tiếp trên AST C bằng binary `cbmc` native chưa được thực hiện do hạn chế môi trường Windows.
+2. **NuSMV Native Temporal Verification**: BDD/SAT Model Checking chuẩn công nghiệp trên binary `NuSMV`/`nuXmv` native chưa được thực hiện; hiện mới sử dụng Custom CTL Checker viết bằng Python.
+3. **Native Sanitizers (ASan, UBSan, LSan) và Valgrind**: Các công cụ dò lỗi động chuẩn công nghiệp chưa thể biên dịch và liên kết trên Windows MSYS2 UCRT64 GCC 16.1.0; hiện phụ thuộc vào Canary Tracker và Stack Protector nội bộ.
+4. **Các nhánh mã nguồn C chưa được phủ (Uncovered Branches theo Gcov 36.4% Line, 32.2% Branch)**:
+   - Nhánh xử lý `realloc == NULL` trong `product.c` (chưa phủ trong luồng build gcov thông thường).
+   - Nhánh lỗi I/O tệp tin (`fopen == NULL`) trong `file_io.c`.
+   - Các nhánh định dạng in ấn bảng biểu console trong `report.c`.
+   - Các hàm tiện ích thao tác chuỗi trong `utils.c`.
+5. **Cài đặt Guard tường minh cho REQ-2 và REQ-3**: Cần triển khai các guard số học thực tế vào `source/src/product.c` trong Bước 4.
+
+---
+
+### 8. ĐÁNH GIÁ MỨC ĐỘ SẴN SÀNG NGHIỆM THU (READINESS ASSESSMENT)
 
 | Tiêu chí | Trạng thái | Đánh giá độc lập |
 | :--- | :--- | :--- |
 | **Bảo vệ mã nguồn Baseline v0** | `source/` giữ nguyên vẹn | **100% ĐẠT** (git diff trống) |
-| **Khả năng tái lập (Reproducibility)** | `python tools/run_step3_verification.py --all` | **100% ĐẠT** (Chạy thành công trong 6.5s) |
+| **Khả năng tái lập (Reproducibility)** | `python tools/run_step3_verification.py --all` | **100% ĐẠT** (Chạy thành công các bước khả dụng trong 6.5s) |
 | **Tính minh bạch công cụ** | Khai báo đúng `TOOL_UNAVAILABLE` cho CBMC, NuSMV, ASan | **100% ĐẠT** |
+| **Chuẩn hóa tên công cụ** | GCC Harness Testing, Custom CTL Checker, Canary Tracker | **100% ĐẠT** |
 | **Độ chính xác toán học SMT** | Đúng nghiệm Z3 `#xeea85800eaaaaaaa` và ngưỡng $88,686,269,585,142,075$ | **100% ĐẠT** |
 | **Khớp 100% đặc tả Step 2** | Nguyên văn 18 REQ, đúng ánh xạ hàm và thuộc tính | **100% ĐẠT** |
+| **Hiệu chỉnh REQ-2 và REQ-3** | Đánh dấu `PARTIALLY_VERIFIED`, chuyển bổ sung guard sang Bước 4 | **100% ĐẠT** |
 | **Xác thực mã lỗi thực tế** | Ghi nhận đúng `STATUS_ERR_MEMORY = -8` | **100% ĐẠT** |
 | **Chất lượng Git Commits** | Commits tiếng Việt có dấu, working tree sạch | **100% ĐẠT** |
 
 **KẾT LUẬN CUỐI CÙNG**:
-Hồ sơ Bước 3 sau đợt kiểm toán độc lập đã **hoàn toàn loại bỏ các nhận định chủ quan hoặc sai lệch số liệu**, bảo đảm tính trung thực khoa học cao nhất và đạt chuẩn nghiệm thu chuyên môn.
+- Hồ sơ Bước 3 sau đợt kiểm toán độc lập đã **loại bỏ các nhận định chủ quan hoặc khẳng định quá mức**, chuẩn hóa chính xác tên và bản chất công cụ, phân định rành mạch giữa kết quả toán học SMT và tính khả đạt trên mã C baseline v0.
+- **Lưu ý quan trọng**: Lệnh `python tools/run_step3_verification.py --all` chạy thành công minh chứng pipeline đã hoàn thành các bước kiểm tra khả dụng trên host hiện tại; điều này không đồng nghĩa tất cả các công cụ kiểm chứng formal native (CBMC, NuSMV, ASan, UBSan, Valgrind) đều đã hoạt động.
+- Trạng thái: **SẴN SÀNG NGHIỆM THU BƯỚC 3** và chuyển giao các hạng mục vá sang Bước 4.

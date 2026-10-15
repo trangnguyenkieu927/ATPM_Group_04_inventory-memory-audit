@@ -119,7 +119,7 @@ Nhóm kiểm chứng tuân thủ nghiêm ngặt nguyên tắc **Trung thực kho
         return false;
     }
     ```
-  - Z3 xác nhận truy vấn `smt_003b_stock_addition_guard.smt2` là **UNSAT**, và bài toán assertion harness `harness_cbmc_005_stock_safety.c` đã kiểm chứng thành công rằng phép cộng sau guard **tuyệt đối không bao giờ tràn số**.
+  - Z3 xác nhận truy vấn `smt_003b_stock_addition_guard.smt2` là **UNSAT**, và bài toán assertion harness `harness_cbmc_005_stock_safety.c` đã kiểm chứng thành công rằng phép cộng sau guard ngăn chặn được nguy cơ tràn số nguyên có dấu trong phạm vi kiểm chứng.
 
 ---
 
@@ -160,7 +160,7 @@ Nhóm kiểm chứng tuân thủ nghiêm ngặt nguyên tắc **Trung thực kho
       ```
   - Khi chạy cùng tệp corpus này trên Baseline v0 (`test_sim002_parser.c`):
     - Hàm nhận diện `token_count = 10 != 6 && token_count != 4`, từ chối dòng và trả về mã lỗi `STATUS_ERR_FILE_IO = -7`.
-    - Stack hoàn toàn nguyên vẹn, bộ nhớ an toàn 100%, chương trình hoàn thành với exit code 0.
+    - Stack và bộ đệm nguyên vẹn, không phát sinh tràn mảng trong kịch bản này, chương trình hoàn thành với exit code 0.
 - **Ý nghĩa kiểm chứng**: 
   - Thí nghiệm đối chứng chứng minh cơ chế `-fstack-protector-strong` có khả năng phát hiện lỗi tràn mảng stack buffer (CWE-120) trong kịch bản này.
   - Tuy nhiên, nhóm ghi nhận rõ rằng **một phép thử đơn lẻ không thể xem là bằng chứng công cụ có độ nhạy tuyệt đối đối với mọi loại lỗ hổng an toàn bộ nhớ**.

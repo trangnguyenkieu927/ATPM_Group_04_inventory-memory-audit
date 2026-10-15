@@ -3,7 +3,7 @@
 **Học phần:** An toàn phần mềm (CSE703093)  
 **Đề tài:** Kiểm chứng an toàn bộ nhớ cho chương trình C mô phỏng nghiệp vụ quản lý kho  
 **Phụ trách chính:** Hà Văn Đô – Kỹ sư Đặc tả hình thức & Kiểm chứng Mô hình trạng thái  
-**Công cụ thực thi:** Kripke/CTL Model Checker Engine (Phenikaa SoftSec Toolkit) kết hợp NuSMV Model Definition  
+**Công cụ thực thi:** Custom CTL Model Checker (`verify_ctl.py`; NuSMV/nuXmv native là `TOOL_UNAVAILABLE`)<br>
 **Tệp mô hình NuSMV:** `verification/step3/ctl/inventory_model.smv`  
 **Tệp script kiểm chứng:** `verification/step3/ctl/verify_ctl.py`  
 **Tệp kết quả JSON:** `results/step3/ctl/ctl_verification_results.json`  
@@ -14,6 +14,8 @@
 ## 1. Mục tiêu và cơ sở hình thức hóa Kripke
 
 Kiểm chứng thời gian nhánh (Computation Tree Logic - CTL) cho phép kiểm tra các thuộc tính an toàn (Safety) và sống còn (Liveness) trên cây tính toán vô hạn của hệ thống quản lý kho.
+
+*Lưu ý về công cụ*: Do binary NuSMV / nuXmv native là `TOOL_UNAVAILABLE` trên môi trường Windows host, việc đánh giá mô hình Kripke và 18 công thức CTL được thực thi bằng Custom CTL Model Checker (`verify_ctl.py`). Đây là công cụ Python tự kiểm tra mô hình CTL, không gọi là kết quả NuSMV chính thức. Tệp `inventory_model.smv` được giữ chuẩn cú pháp để có thể tái lập trên NuSMV native khi chuyển sang môi trường Linux.
 
 Cấu trúc Kripke của hệ thống được hình thức hóa dưới dạng bộ $M = (S, S_0, R, L)$:
 - $S$: Tập hợp 21 trạng thái rời rạc đại diện cho 5 phân hệ nghiệp vụ và quản lý bộ nhớ.
@@ -88,7 +90,7 @@ Trong kiểm chứng mô hình thời gian, bẫy logic nguy hiểm nhất xảy
    - Với `CTL-03`: Trạng thái `ptr_invalid` có xuất hiện thực tế tại `S04_list_growth_ok` (khi realloc di dời mảng heap) và tại `S07_list_freed` (khi mảng bị giải phóng). Cả hai trạng thái đều được BFS chứng minh là khả đạt từ $S_0$.
    - Với `CTL-04` và `CTL-18`: Trạng thái `realloc_failed` là khả đạt thực sự tại `S05_list_growth_failed`, chứng minh nhánh lỗi OOM không bị dead-code.
 2. **Không áp đặt tiên đề loại trừ giả tạo (No Axiomatic Assumption):**
-   - Trong bảng `LoaiTruLanNhau` của workbook gốc có cặp `(ptr_deref, ptr_invalid)`. Nhóm đã tuyệt đối **không sử dụng lệnh `TRANS !(ptr_deref & ptr_invalid)` trong NuSMV**. Thuộc tính an toàn `AG(ptr_invalid -> !ptr_deref)` đạt được là do chính quy tắc chuyển tiếp của caller code C: khi con trỏ bị vô hiệu hóa, caller không bao giờ thực hiện hành động dereference mà phải tái mượn con trỏ mới.
+   - Trong bảng `LoaiTruLanNhau` của workbook gốc có cặp `(ptr_deref, ptr_invalid)`. Nhóm **không sử dụng lệnh `TRANS !(ptr_deref & ptr_invalid)` trong NuSMV**. Thuộc tính an toàn `AG(ptr_invalid -> !ptr_deref)` đạt được là do chính quy tắc chuyển tiếp của caller code C: khi con trỏ bị vô hiệu hóa, caller không bao giờ thực hiện hành động dereference mà phải tái mượn con trỏ mới.
 
 ---
 

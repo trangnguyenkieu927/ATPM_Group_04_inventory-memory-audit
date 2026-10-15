@@ -58,13 +58,13 @@ Toàn bộ các phép đo và thực nghiệm được tiến hành trên môi t
 | **SMT-001A** | REQ-2 | `capacity * 2` (size_t 64-bit) | **SAT** | `capacity = 0x8000000000000000` ($2^{63}$), `new_cap = 0` | **KHÔNG KHẢ ĐẠT** (Vượt quá dung lượng RAM vật lý toàn cầu) | `smt_001a.log` |
 | **SMT-001B** | REQ-2 | `capacity * 2` (RAM $\le$ 1TB) | **UNSAT** | Không tồn tại cấu hình tràn bit trong RAM khả thi | **AN TOÀN** trong điều kiện vận hành thực tế | `smt_001b.log` |
 | **SMT-002A** | REQ-3 | `new_cap * sizeof(Product)` (208B) | **SAT** | `new_cap = #xeea85800eaaaaaaa` ($17,197,091,938,074,536,618 > 88,686,269,585,142,075$) | **KHÔNG KHẢ ĐẠT** tự nhiên từ kích thước khởi tạo 16 | `smt_002a.log` |
-| **SMT-002B** | REQ-3 | `new_cap * 208` có Guard | **UNSAT** | Guard `new_cap <= SIZE_MAX / 208` loại trừ 100% rủi ro | **ĐƯỢC BẢO VỆ TUYỆT ĐỐI** nếu có guard | `smt_002b.log` |
+| **SMT-002B** | REQ-3 | `new_cap * 208` có Guard | **UNSAT** | Guard `new_cap <= SIZE_MAX / 208` ngăn ngừa tràn số bit-vector | **AN TOÀN NẾU CÓ GUARD** (Cần bổ sung guard ở Bước 4) | `smt_002b.log` |
 | **SMT-003A** | REQ-4 | `p->quantity += add` (không guard) | **SAT** | `stock = 2,147,483,647 (INT_MAX)`, `add = 1` $\rightarrow$ âm | Rủi ro nếu bỏ qua hàm kiểm tra tràn | `smt_003a.log` |
 | **SMT-003B** | REQ-4 | `p->quantity += add` (có guard) | **UNSAT** | Guard `check_addition_overflow()` trong `validation.c` chặn | **AN TOÀN TRÊN BASELINE v0** (Đã có sẵn guard) | `smt_003b.log` |
 | **SMT-004A** | REQ-5 | `p->quantity -= export` | **SAT** | `export > stock` $\rightarrow$ tồn kho âm nếu không guard | Rủi ro nếu không kiểm tra lượng xuất kho | `smt_004a.log` |
 | **SMT-004B** | REQ-5 | `p->quantity -= export` (có guard) | **UNSAT** | `inventory.c` kiểm tra `stock < quantity` $\rightarrow$ chặn | **AN TOÀN TRÊN BASELINE v0** | `smt_004b.log` |
 | **SMT-005A** | REQ-16 | Đếm tokens bộ đệm stack | **SAT** | `token_count > 8` nếu không giới hạn vòng lặp | Rủi ro Stack Buffer Overflow | `smt_005a.log` |
-| **SMT-005B** | REQ-16 | Đếm tokens có `token_count < 8` | **UNSAT** | Không bao giờ ghi vượt mảng `tokens[8]` trên stack | **AN TOÀN TRÊN BASELINE v0** | `smt_005b.log` |
+| **SMT-005B** | REQ-16 | Đếm tokens có `token_count < 8` | **UNSAT** | Bảo vệ mảng `tokens[8]` không bị ghi vượt trong phạm vi kiểm chứng | **AN TOÀN TRÊN BASELINE v0** | `smt_005b.log` |
 
 **Phân tích kỹ thuật SMT-002A**:
 - Ngưỡng tối đa an toàn trước khi tràn 64-bit: $\lfloor (2^{64}-1)/208 \rfloor = \mathbf{88,686,269,585,142,075}$.
@@ -74,11 +74,11 @@ Toàn bộ các phép đo và thực nghiệm được tiến hành trên môi t
 
 ---
 
-### 4. KẾT QUẢ BOUNDED VERIFICATION / CPROVER CONTRACT HARNESS (PHASE 3)
+### 4. KẾT QUẢ KIỂM TRA BẤT BIẾN HỢP ĐỒNG BẰNG GCC HARNESS TESTING (PHASE 3)
 
-Do công cụ CBMC native là `TOOL_UNAVAILABLE` trên môi trường Windows host, nhóm đã xây dựng 5 harness tuân thủ đặc tả CPROVER assertions và thực thi kiểm tra bounded invariant thông qua GCC test oracle với các giới hạn vòng lặp $k$:
+Do công cụ CBMC native là `TOOL_UNAVAILABLE` trên môi trường Windows host, nhóm đã xây dựng 5 harness tuân thủ đặc tả CPROVER assertions và thực thi kiểm tra bounded contract assertions thông qua **GCC Harness Testing** với các giới hạn vòng lặp $k$ (không gọi là kiểm chứng CBMC native):
 
-| Harness ID | REQ liên quan | Thuộc tính & Bất biến kiểm chứng | Bound $k$ | Kết quả | Counterexample | Ghi chú & Giới hạn |
+| Harness ID | REQ liên quan | Thuộc tính & Bất biến kiểm chứng | Bound $k$ | Kết quả GCC Harness | Counterexample | Ghi chú & Giới hạn |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **CBMC-001** | REQ-1, REQ-2 | $0 \le \text{count} \le \text{capacity}$; `items != NULL` khi khởi tạo thành công | $k=20$ | **PASS** | 0 | Giới hạn trong bound $k=20$ thao tác |
 | **CBMC-002** | REQ-6, REQ-16 | Ranh giới mảng `tokens[8]`, `summaries[32]`; không out-of-bounds | $k=40$ | **PASS** | 0 | Kiểm tra kích thước mảng tĩnh |
@@ -95,10 +95,10 @@ Do công cụ CBMC native là `TOOL_UNAVAILABLE` trên môi trường Windows ho
   - Gắn 8-byte Canary Guard (`0xDEADBEEFCAFEFACEULL`) ở cả hai đầu tiền tố và hậu tố của mọi khối heap.
   - Bảng kế toán Allocation Ledger theo dõi con trỏ và phát hiện rò rỉ khi thoát.
   - Bật cờ bảo vệ stack `-fstack-protector-strong`.
-  - *Lưu ý*: Nhóm ghi nhận rõ đây là công cụ đo kiểm nội bộ phục vụ test suite, **không phải là sự thay thế tương đương cho AddressSanitizer/Valgrind**.
+  - *Lưu ý*: Nhóm ghi nhận rõ Canary Memory Tracker là cơ chế wrapper kiểm tra nội bộ trong phạm vi test suite, **hoàn toàn không tương đương với AddressSanitizer (ASan), UndefinedBehaviorSanitizer (UBSan) hay LeakSanitizer (LSan)/Valgrind**; các công cụ chính thức này giữ nguyên trạng thái `TOOL_UNAVAILABLE` trên môi trường Windows host.
 - **Kết quả thực nghiệm**:
   - `test_memory_audit.c`: 50 sản phẩm, tăng capacity 16 $\rightarrow$ 32 $\rightarrow$ 64, xóa 10 sản phẩm.
-  - Số byte rò rỉ: **0 bytes** (`Active allocations: 0`).
+  - Số byte rò rỉ: **0 bytes** (`Active allocations: 0` trong phạm vi test suite).
   - Vi phạm Canary: **0 vụ** (Không phát hiện tràn bộ đệm heap tuyến tính).
   - Double-free: **0 lỗi**.
   - 17/17 Smoke Tests nghiệp vụ: **17/17 PASS**.
@@ -112,7 +112,7 @@ Do công cụ CBMC native là `TOOL_UNAVAILABLE` trên môi trường Windows ho
 - **Thí nghiệm 2 (Fault Injection ép OOM - REQ-12)**:
   - Ép `realloc()` trả về `NULL` khi danh sách đầy 16 phần tử.
   - **Mã lỗi hàm C trả về**: `STATUS_ERR_MEMORY = -8` (theo định nghĩa `source/include/models.h:41`).
-  - **Mã kết thúc tiến trình test**: `0` (PASS, do harness assert đúng mã `-8` và xác nhận `list.items` cùng 16 phần tử cũ được bảo toàn 100%).
+  - **Mã kết thúc tiến trình test**: `0` (PASS, do harness assert đúng mã `-8` và xác nhận `list.items` cùng 16 phần tử cũ được bảo toàn).
 - **Thí nghiệm 3 (Borrowed Pointer Contract - REQ-14)**:
   - Khi `realloc()` di chuyển vùng nhớ, con trỏ mượn cũ mất hiệu lực.
   - Harness xác nhận quy trình re-borrowing qua `find_product_by_id()` đảm bảo truy cập hợp lệ.
@@ -135,9 +135,9 @@ Thực thi kiểm thử biên trên 10 tệp corpus độc lập (`tests/simulat
 
 ---
 
-### 7. KẾT QUẢ KIỂM CHỨNG TEMPORAL LOGIC CTL VÀ MÔ HÌNH TRẠNG THÁI (PHASE 6)
+### 7. KẾT QUẢ KIỂM CHỨNG TEMPORAL LOGIC CTL BẰNG CUSTOM CTL MODEL CHECKER (PHASE 6)
 
-Được thực thi qua Custom Kripke Structure Model Verifier (`verify_ctl.py`) dựa trên đặc tả SMV (`inventory_model.smv`):
+Được thực thi qua Custom CTL Model Checker (`verify_ctl.py`) dựa trên đặc tả SMV (`inventory_model.smv`) do NuSMV/nuXmv native là `TOOL_UNAVAILABLE` (đây là chương trình Python tự kiểm tra mô hình CTL, không gọi là kết quả NuSMV chính thức):
 - **Độ phủ trạng thái (State Reachability Coverage)**: **21/21 trạng thái KHẢ ĐẠT (100.0%)**.
 - **Kết quả 18 công thức CTL**: **18/18 công thức đạt giá trị TRUE**.
 - **Kiểm tra bẫy chân lý rỗng (Vacuous Truth Analysis)**:
@@ -189,23 +189,23 @@ Chi tiết đầy đủ với 21 cột tiêu chuẩn tại `docs/verification/st
 
 | REQ ID | Nội dung Đặc tả Nguyên văn (Step 2 Spec) | Phương pháp & Công cụ | Trạng thái Nghiệm thu |
 | :--- | :--- | :--- | :--- |
-| **REQ-1** | ProductList luôn thỏa count <= capacity; khi count > 0 thì items khác NULL và trỏ tới vùng nhớ còn hiệu lực. | GCC Contract Harness ($k=20$) | **VERIFIED_WITHIN_HARNESS_SCOPE** |
-| **REQ-2** | Trước khi mở rộng ProductList bằng capacity * 2, phải kiểm tra capacity <= SIZE_MAX / 2 để tránh tràn số size_t. | Z3 SMT Solver (QF_BV) | **VERIFIED_WITHIN_SCOPE** |
-| **REQ-3** | Trước realloc, phải kiểm tra new_cap <= SIZE_MAX / sizeof(Product) để phép nhân kích thước cấp phát không bị tràn. | Z3 SMT Solver (QF_BV) | **PARTIALLY_VERIFIED** (Cần vá guard ở Bước 4) |
-| **REQ-4** | Trong import_stock, chỉ cộng khi add_quantity > 0, tồn kho hiện tại hợp lệ và current_stock <= INT_MAX - add_quantity; nếu không phải từ chối trước khi cập nhật. | Z3 SMT & GCC Harness | **VERIFIED_WITHIN_SCOPE** (Đã có sẵn guard) |
-| **REQ-5** | Trong export_stock, số lượng xuất phải > 0 và <= tồn kho hiện tại; không được tạo ra tồn kho âm hoặc cập nhật khi điều kiện không thỏa. | GCC Contract Harness & SMT | **VERIFIED_WITHIN_SCOPE** |
-| **REQ-6** | Mọi truy cập ProductList.items[i] trong thêm/sửa/xóa/tìm kiếm/báo cáo phải thỏa i < count <= capacity và items còn hiệu lực. | GCC Contract Harness ($k=40$) | **VERIFIED_WITHIN_HARNESS_SCOPE** |
-| **REQ-7** | Với đầu vào hữu hạn và thao tác I/O trả về, mọi thao tác thêm/sửa/xóa/nhập/xuất đã bắt đầu phải kết thúc ở trạng thái thành công hoặc từ chối có kiểm soát; không lặp vô hạn. | Custom Kripke Verifier (CTL-07) | **VERIFIED_WITHIN_MODEL_SCOPE** |
-| **REQ-8** | Với tệp hữu hạn và thao tác đọc trả về, quá trình đọc/phân tích dữ liệu sản phẩm phải kết thúc ở trạng thái chấp nhận hoặc từ chối có kiểm soát; không lặp vô hạn. | Custom Kripke Verifier (CTL-08) & SIM-002 | **VERIFIED_WITHIN_SCOPE** |
-| **REQ-9** | Các trường chuỗi cố định của Product (id, name, category, unit) phải được kiểm tra độ dài trước sao chép, không ghi vượt buffer và luôn kết thúc bằng ký tự \0. | Unit Test & Canary Tracker | **VERIFIED_WITHIN_SCOPE** |
-| **REQ-10**| Input bàn phím và dòng tệp vượt kích thước buffer phải được tiêu thụ/từ chối có kiểm soát mà không phát sinh đọc/ghi ngoài vùng nhớ hợp lệ. | SIM-002 Harness (Corpus 05) | **VERIFIED_WITHIN_SCOPE** |
-| **REQ-11**| Allocation động do ProductList/Inventory sở hữu phải có vòng đời rõ ràng; không làm mất con trỏ sở hữu còn sống và phải giải phóng ở thời điểm kết thúc vòng đời. | Canary Allocation Ledger | **VERIFIED_WITHIN_TEST_SCOPE** |
-| **REQ-12**| Khi realloc thất bại, allocation cũ phải được giữ nguyên quyền sở hữu; khi thành công, con trỏ sở hữu và capacity phải cập nhật đúng vùng nhớ mới. | Fault Injection SIM-001.2 & GCC Harness | **VERIFIED_WITHIN_SCOPE** (Mã lỗi C: -8) |
-| **REQ-13**| Một allocation chỉ được free tối đa một lần; cleanup phải cập nhật trạng thái/con trỏ để ngăn double-free khi gọi lại. | GCC Contract Harness & Canary | **VERIFIED_WITHIN_SCOPE** |
-| **REQ-14**| Không được dereference con trỏ Product/vùng nhớ ProductList sau free hoặc sau khi realloc làm con trỏ cũ mất hiệu lực. | Custom Kripke Verifier (CTL-03) & SIM-001.3 | **VERIFIED_WITHIN_SCOPE** |
-| **REQ-15**| API ProductList/Inventory phải kiểm tra con trỏ NULL theo hợp đồng hàm trước khi dereference đối tượng hoặc buffer vào/ra. | GCC Contract Harness ($k=17$) | **VERIFIED_WITHIN_SCOPE** |
-| **REQ-16**| Mảng tokens, results, summaries và vùng nhớ dùng với memmove phải kiểm soát số phần tử, số byte, giới hạn nguồn/đích; không truy cập ngoài vùng nhớ đã cấp phát. | Negative Control SIM-003 & GCC Harness | **VERIFIED_WITHIN_SCOPE** |
-| **REQ-17**| Parser phải chấp nhận đúng định dạng 6 trường hoặc định dạng tương thích 4 trường; các dòng sai số trường/độ dài/định dạng phải bị từ chối mà không gây hỏng bộ nhớ Inventory. | SIM-002 Harness (10 Corpus) | **VERIFIED_WITHIN_SCOPE** |
+| **REQ-1** | ProductList luôn thỏa count <= capacity; khi count > 0 thì items khác NULL và trỏ tới vùng nhớ còn hiệu lực. | GCC Harness Testing (Bounded Contract Assertions) ($k=20$) | **VERIFIED_WITHIN_HARNESS_SCOPE** |
+| **REQ-2** | Trước khi mở rộng ProductList bằng capacity * 2, phải kiểm tra capacity <= SIZE_MAX / 2 để tránh tràn số size_t. | SMT Bit-Vector Arithmetic Solver (Z3) | **PARTIALLY_VERIFIED** (SMT phân tích rủi ro; baseline v0 chưa có guard tường minh; chuyển việc vá sang Bước 4) |
+| **REQ-3** | Trước realloc, phải kiểm tra new_cap <= SIZE_MAX / sizeof(Product) để phép nhân kích thước cấp phát không bị tràn. | SMT Bit-Vector Arithmetic Solver (Z3) | **PARTIALLY_VERIFIED** (SMT phân tích rủi ro; baseline v0 chưa có guard tường minh; chuyển việc vá sang Bước 4) |
+| **REQ-4** | Trong import_stock, chỉ cộng khi add_quantity > 0, tồn kho hiện tại hợp lệ và current_stock <= INT_MAX - add_quantity; nếu không phải từ chối trước khi cập nhật. | SMT Bit-Vector & GCC Harness Testing | **VERIFIED_WITHIN_SCOPE** (Đã có sẵn guard) |
+| **REQ-5** | Trong export_stock, số lượng xuất phải > 0 và <= tồn kho hiện tại; không được tạo ra tồn kho âm hoặc cập nhật khi điều kiện không thỏa. | GCC Harness Testing & SMT Z3 | **VERIFIED_WITHIN_SCOPE** |
+| **REQ-6** | Mọi truy cập ProductList.items[i] trong thêm/sửa/xóa/tìm kiếm/báo cáo phải thỏa i < count <= capacity và items còn hiệu lực. | GCC Harness Testing (Bounded Contract Assertions) ($k=40$) | **VERIFIED_WITHIN_HARNESS_SCOPE** |
+| **REQ-7** | Với đầu vào hữu hạn và thao tác I/O trả về, mọi thao tác thêm/sửa/xóa/nhập/xuất đã bắt đầu phải kết thúc ở trạng thái thành công hoặc từ chối có kiểm soát; không lặp vô hạn. | Custom CTL Model Checker (`verify_ctl.py`) | **VERIFIED_WITHIN_MODEL_SCOPE** |
+| **REQ-8** | Với tệp hữu hạn và thao tác đọc trả về, quá trình đọc/phân tích dữ liệu sản phẩm phải kết thúc ở trạng thái chấp nhận hoặc từ chối có kiểm soát; không lặp vô hạn. | Custom CTL Model Checker & C Simulation SIM-002 | **VERIFIED_WITHIN_SCOPE** |
+| **REQ-9** | Các trường chuỗi cố định của Product (id, name, category, unit) phải được kiểm tra độ dài trước sao chép, không ghi vượt buffer và luôn kết thúc bằng ký tự \0. | Unit Test Suite & Canary Tracker | **VERIFIED_WITHIN_SCOPE** |
+| **REQ-10**| Input bàn phím và dòng tệp vượt kích thước buffer phải được tiêu thụ/từ chối có kiểm soát mà không phát sinh đọc/ghi ngoài vùng nhớ hợp lệ. | C Boundary Simulation SIM-002 (Corpus 05) | **VERIFIED_WITHIN_SCOPE** |
+| **REQ-11**| Allocation động do ProductList/Inventory sở hữu phải có vòng đời rõ ràng; không làm mất con trỏ sở hữu còn sống và phải giải phóng ở thời điểm kết thúc vòng đời. | Custom Canary Memory Tracker (Allocation Ledger) | **VERIFIED_WITHIN_TEST_SCOPE** |
+| **REQ-12**| Khi realloc thất bại, allocation cũ phải được giữ nguyên quyền sở hữu; khi thành công, con trỏ sở hữu và capacity phải cập nhật đúng vùng nhớ mới. | Mock Allocator Fault Injection (SIM-001.2) & GCC Harness Testing | **VERIFIED_WITHIN_SCOPE** (Mã lỗi C: -8) |
+| **REQ-13**| Một allocation chỉ được free tối đa một lần; cleanup phải cập nhật trạng thái/con trỏ để ngăn double-free khi gọi lại. | GCC Harness Testing & Canary Tracker | **VERIFIED_WITHIN_SCOPE** |
+| **REQ-14**| Không được dereference con trỏ Product/vùng nhớ ProductList sau free hoặc sau khi realloc làm con trỏ cũ mất hiệu lực. | Custom CTL Model Checker & C Simulation SIM-001.3 | **VERIFIED_WITHIN_SCOPE** |
+| **REQ-15**| API ProductList/Inventory phải kiểm tra con trỏ NULL theo hợp đồng hàm trước khi dereference đối tượng hoặc buffer vào/ra. | GCC Harness Testing (Bounded Contract Assertions) ($k=17$) | **VERIFIED_WITHIN_SCOPE** |
+| **REQ-16**| Mảng tokens, results, summaries và vùng nhớ dùng với memmove phải kiểm soát số phần tử, số byte, giới hạn nguồn/đích; không truy cập ngoài vùng nhớ đã cấp phát. | Negative Control SIM-003 & GCC Harness Testing | **VERIFIED_WITHIN_SCOPE** |
+| **REQ-17**| Parser phải chấp nhận đúng định dạng 6 trường hoặc định dạng tương thích 4 trường; các dòng sai số trường/độ dài/định dạng phải bị từ chối mà không gây hỏng bộ nhớ Inventory. | C Simulation Harness SIM-002 (10 Corpus) | **VERIFIED_WITHIN_SCOPE** |
 | **REQ-18**| Quantity/price không hợp lệ, vượt miền số hoặc không hữu hạn (NaN/Infinity) phải bị từ chối trước cập nhật kho và trước phép tính báo cáo có liên quan. | SIM-002 & Unit Test Suite | **VERIFIED_WITHIN_SCOPE** |
 
 ---
@@ -213,10 +213,10 @@ Chi tiết đầy đủ với 21 cột tiêu chuẩn tại `docs/verification/st
 ### 10. DANH MỤC PHÁT HIỆN VÀ PHÂN LOẠI KHOA HỌC
 
 1. **Lỗ hổng đã xác nhận trên Baseline v0**: **0 lỗ hổng có thể khai thác trực tiếp**.
-2. **Rủi ro tiềm ẩn ở mức số học lý thuyết (SMT SAT)**:
-   - REQ-2: `capacity * 2` thiếu guard `capacity > SIZE_MAX / 2`.
-   - REQ-3: `new_cap * sizeof(Product)` thiếu guard `new_cap > SIZE_MAX / 208`.
-   - *Ghi chú*: Cả hai rủi ro này không khả đạt tự nhiên trong RAM vật lý hiện tại, nhưng cần bổ sung defensive checks ở Bước 4.
+2. **Rủi ro tiềm ẩn ở mức số học lý thuyết (SMT SAT) và trạng thái Guard trong Baseline v0**:
+   - **REQ-2**: `capacity * 2` có nguy cơ tràn số size_t toán học khi `capacity > SIZE_MAX / 2` (SMT-001A SAT). Đối chiếu thực tế `source/src/product.c`, baseline v0 **chưa có guard tường minh** này. Đánh dấu: **`PARTIALLY_VERIFIED`**.
+   - **REQ-3**: `new_cap * sizeof(Product)` có nguy cơ tràn số 64-bit toán học khi `new_cap > SIZE_MAX / 208` (SMT-002A SAT). Đối chiếu thực tế `source/src/product.c`, baseline v0 **chưa có guard tường minh** này. Đánh dấu: **`PARTIALLY_VERIFIED`**.
+   - *Phân biệt khoa học*: Kết quả SMT chứng minh tính khả thi của mô hình tràn số khi đầu vào tự do; trong điều kiện vận hành với RAM thực tế $\le 1$TB (SMT-001B UNSAT) và khởi tạo từ 16 phần tử, các giá trị này không khả đạt tự nhiên. Tuy nhiên, theo nguyên tắc phòng vệ theo chiều sâu, việc bổ sung guard tường minh là bắt buộc và được chuyển sang Bước 4.
 3. **Cơ chế phòng vệ đã kiểm chứng an toàn trên Baseline v0**:
    - Guard `check_addition_overflow()` bảo vệ phép cộng tồn kho (REQ-4).
    - Guard `token_count < 8` bảo vệ bộ đệm đọc tệp trên stack frame (REQ-16).
@@ -228,11 +228,41 @@ Chi tiết đầy đủ với 21 cột tiêu chuẩn tại `docs/verification/st
 
 ---
 
-### 11. KẾT LUẬN VÀ KẾ HOẠCH BÀN GIAO BƯỚC 4
+### 11. CÁC KIỂM CHỨNG CÒN THIẾU TRƯỚC KHI HOÀN THIỆN NGHIÊN CỨU
+
+Nhằm bảo đảm tính trung thực khoa học và định hướng hoàn thiện cho giai đoạn sau, nhóm kiểm chứng tổng hợp danh mục các bài kiểm chứng và kiểm nghiệm còn thiếu:
+
+1. **Kiểm chứng mô hình phần mềm chính thức bằng CBMC native (`cbmc`)**:
+   - *Hiện trạng Bước 3*: Mới chỉ thực thi 5 harness dưới dạng GCC Bounded Contract Assertions testing ($k=10 \dots 40$).
+   - *Khoảng trống*: Chưa thực hiện symbolic execution trên AST C đầy đủ với SAT/SMT backend của công cụ CBMC native để chứng minh tính thỏa mãn bất biến toán học độc lập với dữ liệu test cụ thể.
+2. **Kiểm chứng mô hình thời gian CTL bằng NuSMV / nuXmv native chính thức**:
+   - *Hiện trạng Bước 3*: Mới chỉ kiểm tra 18 công thức CTL bằng Custom CTL Model Checker nội bộ (`verify_ctl.py`).
+   - *Khoảng trống*: Chưa nạp tệp mô hình `inventory_model.smv` vào binary NuSMV / nuXmv native để tận dụng các thuật toán BDD (Binary Decision Diagrams) và Bounded Model Checking chuẩn công nghiệp.
+3. **Phân tích động chính thức với Runtime Sanitizers và Valgrind**:
+   - *Hiện trạng Bước 3*: Mới chỉ sử dụng Canary Memory Tracker nội bộ (8-byte canary guard & allocation ledger) và GCC `-fstack-protector-strong`.
+   - *Khoảng trống*:
+     - **AddressSanitizer (ASan)**: Chưa kiểm tra tràn bộ đệm heap động ngoài phạm vi canary guard, use-after-free phức tạp ở cấp allocator hệ điều hành.
+     - **UndefinedBehaviorSanitizer (UBSan)**: Chưa phát hiện hành vi không xác định động (misaligned pointer access, bitshift ngoài miền, signed integer overflow trong runtime).
+     - **LeakSanitizer (LSan) / Valgrind Memcheck**: Chưa rà soát rò rỉ bộ nhớ toàn diện trên toàn bộ tiến trình hệ điều hành.
+4. **Các nhánh mã nguồn C chưa được kiểm thử bao phủ (Uncovered Branches)**:
+   - Theo kết quả Gcov thực tế (Line coverage: 36.4%, Branch coverage: 32.2%), các nhánh sau còn thiếu kịch bản kiểm thử:
+     - Nhánh `realloc == NULL` trong `source/src/product.c`: Mới chỉ được kiểm tra trong harness fault injection độc lập (`test_sim001_heap.c`), chưa được phủ trong bản build gcov thông thường.
+     - Nhánh lỗi I/O trong `source/src/file_io.c`: Các nhánh `fopen() == NULL` khi đọc file không tồn tại hoặc ghi file vào đường dẫn không có quyền ghi.
+     - Toàn bộ các nhánh định dạng bảng và in ấn console trong `source/src/report.c` (độ phủ dòng 11%, nhánh 6%).
+     - Các hàm tiện ích xâu trong `source/src/utils.c` (độ phủ dòng 12%, nhánh 19%: `to_upper_case`, `to_lower_case`, `trim_whitespace`, `find_file_path`).
+5. **Bổ sung các Guard phòng vệ chưa có trong baseline (chuyển sang Bước 4)**:
+   - REQ-2: Bổ sung guard `if (list->capacity > SIZE_MAX / 2) return STATUS_ERR_MEMORY;` trước phép nhân đôi capacity trong `source/src/product.c`.
+   - REQ-3: Bổ sung guard `if (new_cap > SIZE_MAX / sizeof(Product)) return STATUS_ERR_MEMORY;` trước `realloc` trong `source/src/product.c`.
+
+---
+
+### 12. KẾT LUẬN VÀ KẾ HOẠCH BÀN GIAO BƯỚC 4
 
 - Toàn bộ 18 REQ đã được đối chiếu chuẩn xác với tài liệu nguồn Bước 2.
 - Hồ sơ kiểm chứng đã được rà soát độc lập, loại bỏ các kết luận phóng đại hoặc nhầm lẫn số học/mã lỗi.
-- Đề xuất nhiệm vụ trọng tâm Bước 4 (Hardening & Fixes):
+- **Lưu ý về thực thi pipeline**: Lệnh `python tools/run_step3_verification.py --all` thực thi thành công nghĩa là pipeline đã chạy trọn vẹn các bài kiểm tra khả dụng trên host hiện tại; điều này **không chứng minh** rằng tất cả các công cụ formal native (như CBMC, NuSMV, ASan, UBSan, Valgrind) đều đã hoạt động.
+- Đề xuất nhiệm vụ trọng tâm Bước 4 (Hardening & Complete Verification):
   1. Thêm guard chống tràn số cho `capacity` và `new_cap` trong `source/src/product.c` (REQ-2, REQ-3).
   2. Bổ sung tài liệu hợp đồng con trỏ mượn trong `source/include/product.h` (REQ-14).
-  3. Mở rộng test coverage cho các nhánh in ấn báo cáo trong `report.c` và các hàm xâu trong `utils.c`.
+  3. Mở rộng test coverage cho các nhánh in ấn báo cáo trong `report.c` và các hàm tiện ích trong `utils.c`.
+  4. Chuẩn bị môi trường Linux (Ubuntu) để thực thi các công cụ native (CBMC, NuSMV, ASan/UBSan, Valgrind) nhằm hoàn thiện nghiên cứu.

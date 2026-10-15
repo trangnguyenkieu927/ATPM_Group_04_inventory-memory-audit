@@ -42,22 +42,24 @@ Tại thư mục gốc của repository, thực thi:
 ```bash
 python tools/run_step3_verification.py --all
 ```
-Script sẽ tuần tự kích hoạt 6 giai đoạn:
+Script sẽ tuần tự kích hoạt 6 giai đoạn khả dụng trên host:
 1. **SMT Arithmetic**: Giải 10 bài toán SMT với Z3 (SAT / UNSAT).
-2. **CBMC Bounded Verification**: Biên dịch và chạy 5 harness kiểm chứng bất biến với GCC contract assertions ($k=10 \dots 40$).
-3. **Dynamic Memory Tracker**: Kiểm tra rò rỉ bộ nhớ, heap canary corruption, double-free.
+2. **GCC Harness Testing (Bounded Contract Assertions)**: Biên dịch và chạy 5 harness kiểm tra bất biến hợp đồng với GCC assertions ($k=10 \dots 40$).
+3. **Dynamic Memory Tracker**: Kiểm tra rò rỉ bộ nhớ, heap canary corruption, double-free qua Canary Tracker nội bộ.
 4. **C Risk Simulations**: Thực thi SIM-001 (Heap lifecycle/OOM), SIM-002 (Parser buffer limits với 10 corpus), SIM-003 (Negative control đối chứng với nhánh lỗi cài chủ đích).
-5. **CTL Model Checking**: Kiểm chứng 21 trạng thái khả đạt và 18 công thức CTL bằng NuSMV logic checker.
-6. **Code Coverage**: Đo lường và báo cáo độ phủ dòng lệnh và độ phủ nhánh.
+5. **Custom CTL Model Checker**: Kiểm chứng 21 trạng thái khả đạt và 18 công thức CTL bằng bộ kiểm tra Python nội bộ (`verify_ctl.py`).
+6. **Code Coverage**: Đo lường và báo cáo độ phủ dòng lệnh và độ phủ nhánh bằng Gcov/Gcovr.
+
+*Lưu ý quan trọng*: Lệnh `--all` chạy thành công có nghĩa là pipeline đã chạy trọn vẹn các bài kiểm tra khả dụng trên host hiện tại; điều này **không chứng minh** rằng tất cả các công cụ formal native (CBMC, NuSMV, ASan, UBSan, Valgrind) đều đã hoạt động.
 
 #### 3.2. Chạy riêng lẻ từng nhóm kiểm chứng
 | Mục tiêu kiểm chứng | Lệnh thực thi | Mô tả kết quả kỳ vọng |
 | :--- | :--- | :--- |
 | **Kiểm chứng số học SMT** | `python tools/run_step3_verification.py --smt` | 10 bài toán được Z3 giải: SAT (có phản ví dụ số học) hoặc UNSAT (được bảo vệ) |
-| **Bounded Model Checking** | `python tools/run_step3_verification.py --cbmc` | 5 harness chạy thành công, không vi phạm bất biến trong bound $k$ |
-| **Kiểm tra rò rỉ động** | `python tools/run_step3_verification.py --sanitizers` | 0 leaks, 0 double-free, 0 canary corrupted |
-| **Mô phỏng rủi ro C** | `python tools/run_step3_verification.py --simulation` | SIM-001 PASS, SIM-002 PASS (10/10), SIM-003 phát hiện stack smashing trên seeded code |
-| **Kiểm chứng mô hình CTL** | `python tools/run_step3_verification.py --ctl` | 21/21 trạng thái khả đạt, 18/18 công thức CTL đạt TRUE |
+| **GCC Harness Testing** | `python tools/run_step3_verification.py --cbmc` | 5 harness chạy bằng GCC thành công, không vi phạm bất biến trong bound $k$ |
+| **Kiểm tra rò rỉ động** | `python tools/run_step3_verification.py --sanitizers` | 0 bytes rò rỉ, 0 double-free, 0 canary corrupted trong kịch bản test |
+| **Mô phỏng rủi ro C** | `python tools/run_step3_verification.py --simulation` | SIM-001 PASS, SIM-002 PASS (10/10), SIM-003 bắt được stack smashing trên seeded code |
+| **Kiểm chứng mô hình CTL** | `python tools/run_step3_verification.py --ctl` | 21/21 trạng thái khả đạt, 18/18 công thức CTL đạt TRUE bằng Custom CTL Checker |
 | **Đo độ phủ Coverage** | `python tools/run_step3_verification.py --coverage` | Xuất bảng tỷ lệ phần trăm dòng lệnh và nhánh đã được thực thi |
 
 ---
@@ -71,7 +73,7 @@ z3 verification/step3/smt/smt_001a_capacity_growth.smt2
 z3 verification/step3/smt/smt_001b_capacity_growth_reach.smt2
 ```
 
-#### 4.2. Thực thi Harness CBMC độc lập
+#### 4.2. Thực thi GCC Harness độc lập
 ```bash
 gcc -O0 -g -Isource/include verification/step3/cbmc/harness_cbmc_001_product_list_invariant.c \
     source/src/product.c source/src/inventory.c source/src/validation.c source/src/utils.c \
@@ -92,7 +94,7 @@ gcc -O1 -g -fstack-protector-strong -Isource/include \
 - Thí nghiệm 1 (Baseline v0): An toàn, không tràn stack.
 - Thí nghiệm 2 (Seeded Branch): Trình phát hiện `*** stack smashing detected ***` và tiến trình con bị terminated với mã `0xC0000409`.
 
-#### 4.4. Thực thi NuSMV Model Checking
+#### 4.4. Thực thi Custom CTL Model Checker độc lập
 ```bash
 python verification/step3/ctl/verify_ctl.py
 ```

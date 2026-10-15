@@ -1,9 +1,9 @@
-# BÁO CÁO KIỂM CHỨNG MÔ HÌNH GIỚI HẠN (BOUNDED MODEL CHECKING) MÃ NGUỒN C
+# BÁO CÁO KIỂM TRA BẤT BIẾN HỢP ĐỒNG BẰNG GCC HARNESS TESTING (BOUNDED CONTRACT ASSERTIONS)
 
 **Học phần:** An toàn phần mềm (CSE703093)  
 **Đề tài:** Kiểm chứng an toàn bộ nhớ cho chương trình C mô phỏng nghiệp vụ quản lý kho  
 **Phụ trách chính:** Hà Văn Đô – Kỹ sư Kiểm chứng hình thức & Bounded Model Checking  
-**Phương pháp:** CPROVER Verification Contracts & Bounded Execution Analysis  
+**Phương pháp:** CPROVER Verification Contracts & Bounded Contract Assertions via GCC Harness Testing<br>
 **Mã nguồn liên kết:** Trực tiếp từ `source/src/` (`product.c`, `inventory.c`, `report.c`, `validation.c`, `utils.c`)  
 **Thư mục lưu trữ harness:** `verification/step3/cbmc/`  
 **Thư mục lưu trữ log:** `results/step3/cbmc/`  
@@ -16,7 +16,8 @@
 Kiểm chứng mô hình giới hạn (Bounded Model Checking - BMC) là kỹ thuật kiểm chứng hình thức mở cuộn (unwind) các vòng lặp và đệ quy của chương trình C tối đa $k$ bước. Tại mỗi bước, toàn bộ ngữ nghĩa thực thi, biểu thức gán, rẽ nhánh điều kiện và các khẳng định an toàn (`__CPROVER_assert`) được mã hóa thành các mệnh đề logic ràng buộc.
 
 Theo nguyên tắc trung thực khoa học được quy định tại Mục III của đề tài:
-- Kết quả **VERIFIED_WITHIN_BOUND** chỉ chứng minh rằng thuộc tính an toàn được đảm bảo tuyệt đối trong phạm vi $k$ bước mở cuộn vòng lặp (SAFE up to bound $k$).
+- Do binary CBMC native là `TOOL_UNAVAILABLE` trên môi trường Windows host, 5 harness được thực thi kiểm tra thông qua **GCC Harness Testing**, không gọi là kết quả kiểm chứng CBMC native chính thức.
+- Kết quả **VERIFIED_WITHIN_BOUND** chỉ chứng minh rằng thuộc tính an toàn được đảm bảo trong phạm vi $k$ bước mở cuộn vòng lặp (SAFE up to bound $k$).
 - Không chuyển kết quả kiểm chứng trong bound hữu hạn thành kết luận an toàn vô hạn nếu vòng lặp không có chặn trên toán học được chứng minh độc lập.
 - Tất cả 5 harness đều được xây dựng theo chuẩn CPROVER syntax (`__CPROVER_assert`, `__CPROVER_assume`) và liên kết trực tiếp với các module C nguyên bản của Baseline v0 trong `source/src/` mà không chỉnh sửa bất kỳ dòng logic nào của mã nguồn gốc.
 
@@ -24,13 +25,13 @@ Theo nguyên tắc trung thực khoa học được quy định tại Mục III 
 
 ## 2. Bảng tổng hợp kết quả 5 thuộc tính kiểm chứng ưu tiên
 
-| Mã Harness | Yêu cầu truy vết | Module & Hàm C nguồn | Thuộc tính an toàn kiểm chứng | Unwind Bound ($k$) | Trạng thái kiểm chứng | Bằng chứng thực tế |
+| Mã Harness | Yêu cầu truy vết | Module & Hàm C nguồn | Thuộc tính an toàn kiểm chứng | Unwind Bound ($k$) | Kết quả GCC Harness | Bằng chứng thực tế |
 | :--- | :--- | :--- | :--- | :---: | :---: | :--- |
 | **CBMC-001** | REQ-1, REQ-2 | `product.c`<br>`product_list_init`<br>`add_product`<br>`delete_product`<br>`product_list_free` | **Bất biến ProductList:**<br>1. $count \le capacity$ tại mọi trạng thái.<br>2. $capacity > 0 \implies items \ne \text{NULL}$.<br>3. Khởi tạo an toàn: $count=0, capacity=16$.<br>4. Mở rộng dung lượng lên 32 khi vượt ngưỡng 16. | $k = 20$ | **VERIFIED_WITHIN_BOUND** | `results/step3/cbmc/cbmc_001_product_list_invariant.log` |
 | **CBMC-002** | REQ-6, REQ-16 | `report.c`<br>`calculate_category_summaries`<br>`product.c`<br>`delete_product` | **Giới hạn mảng và bộ đệm:**<br>1. Mảng thống kê $summaries[32]$ không bị ghi tràn khi nạp 40 danh mục khác nhau (trả `STATUS_ERR_OVERFLOW`).<br>2. Memmove dồn mảng khi xóa phần tử đầu, giữa, cuối tính đúng số byte, không out-of-bounds. | $k = 40$ | **VERIFIED_WITHIN_BOUND** | `results/step3/cbmc/cbmc_002_array_bounds.log` |
 | **CBMC-003** | REQ-12, RISK-004 | `product.c`<br>`add_product`<br>(Heap Reallocation Guard) | **Bảo toàn con trỏ khi OOM:**<br>1. Khi `realloc()` trả về NULL, hàm trả về `STATUS_ERR_MEMORY`.<br>2. Con trỏ sở hữu cũ $items$ được bảo toàn nguyên vẹn (không bị NULL hóa gây rò rỉ).<br>3. $capacity$ và $count$ không bị thay đổi sai lệch.<br>4. Dữ liệu cũ còn nguyên vẹn. | $k = 17$ | **VERIFIED_WITHIN_BOUND** | `results/step3/cbmc/cbmc_003_realloc_failure.log` |
 | **CBMC-004** | REQ-13, REQ-14, REQ-15 | `product.c`<br>`product_list_init`<br>`add_product`<br>`delete_product`<br>`product_list_free`<br>`find_product_by_id` | **An toàn con trỏ NULL & Vòng đời:**<br>1. Mọi API từ chối đối số con trỏ NULL (trả `STATUS_ERR_NULL_PTR`).<br>2. Chống Double-free: gọi `product_list_free()` 2 lần liên tiếp hoặc `free(NULL)` không crash (Idempotent cleanup).<br>3. Con trỏ mượn (borrowed pointer) bị vô hiệu hóa sau realloc và yêu cầu tái mượn an toàn. | $k = 17$ | **VERIFIED_WITHIN_BOUND** | `results/step3/cbmc/cbmc_004_pointer_safety.log` |
-| **CBMC-005** | REQ-4, REQ-5 | `inventory.c`<br>`import_stock`<br>`export_stock`<br>`update_stock` | **Bất biến số học và bảo toàn tồn kho:**<br>1. Chặn tràn số có dấu tại ngưỡng `INT_MAX` (trả `STATUS_ERR_OVERFLOW`).<br>2. Chặn xuất kho vượt tồn kho hoặc số lượng $\le 0$, bảo đảm tồn kho không bao giờ âm ($quantity \ge 0$).<br>3. Khi thao tác bị từ chối, dữ liệu tồn kho được bảo toàn tuyệt đối. | $k = 10$ | **VERIFIED_WITHIN_BOUND** | `results/step3/cbmc/cbmc_005_stock_safety.log` |
+| **CBMC-005** | REQ-4, REQ-5 | `inventory.c`<br>`import_stock`<br>`export_stock`<br>`update_stock` | **Bất biến số học và bảo toàn tồn kho:**<br>1. Chặn tràn số có dấu tại ngưỡng `INT_MAX` (trả `STATUS_ERR_OVERFLOW`).<br>2. Chặn xuất kho vượt tồn kho hoặc số lượng $\le 0$, bảo đảm tồn kho không bao giờ âm ($quantity \ge 0$).<br>3. Khi thao tác bị từ chối, dữ liệu tồn kho được bảo toàn nguyên vẹn. | $k = 10$ | **VERIFIED_WITHIN_BOUND** | `results/step3/cbmc/cbmc_005_stock_safety.log` |
 
 ---
 
