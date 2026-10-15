@@ -72,9 +72,9 @@ Nhóm ATPM_Group_04 đã hoàn thành **10/10 công đoạn thực nghiệm kỹ
 
 ## 9. KẾT QUẢ ĐO ĐỘ PHỦ MÃ NGUỒN (COVERAGE)
 Đo bằng `GCC --coverage` và `Gcovr 8.6`:
-- **Độ phủ dòng lệnh:** **46.1% (355 / 770 dòng)** (tăng từ 36.4% ở mốc Bước 3).
-- **Độ phủ nhánh:** **41.5%**.
-- Module trọng tâm luồng nghiệp vụ đạt mức bao phủ vượt trội: `file_io.c` đạt **87.0%**, `inventory.c` đạt **88.4%**, `product.c` đạt **60.7%**.
+- **Độ phủ dòng lệnh toàn bộ mã nguồn C (`source/src/`):** **45.84% (353 / 770 dòng)** (tăng từ mốc 36.4% ở Bước 3).
+- **Độ phủ nhánh điều kiện:** **36.02% (219 / 608 nhánh)** trên `source/src/` (hoặc 39.72% khi tính cả harness kiểm thử).
+- Module trọng tâm luồng nghiệp vụ đạt mức bao phủ vượt trội: `file_io.c` đạt **81.0%** (81/100 dòng, 56.5% nhánh), `inventory.c` đạt **67.4%** (29/43 dòng, 41.7% nhánh), `product.c` đạt **76.3%** (103/135 dòng, 55.3% nhánh).
 
 ## 10. KHẮC PHỤC BẢN VÁ v1 VÀ KIỂM CHỨNG HỒI QUY
 - **Bản vá phòng vệ:** Bổ sung guard `list->capacity > SIZE_MAX / 2` (REQ-2) và `new_cap > SIZE_MAX / sizeof(Product)` (REQ-3) trong `source/src/product.c`.

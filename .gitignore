@@ -10,3 +10,5 @@ source/data/test_products_output.txt
 
 # Windows accidental file
 nul
+~$*.xlsx
+*.tmp
