@@ -1,0 +1,6 @@
+Command: C:/Du_an/ATPM/lab5_sat_smt_verification/.deps/bin/z3.exe --version
+Exit Code: 0
+STDOUT:
+Z3 version 5.1.0 - 64 bit
+STDERR:
+

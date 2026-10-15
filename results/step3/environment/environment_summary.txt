@@ -1,0 +1,47 @@
+Hệ điều hành: Windows-10-10.0.26200-SP0
+Python: 3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)] (C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\python.exe)
+============================================================
+Công cụ: gcc
+  Lệnh: gcc --version
+  Trạng thái: AVAILABLE (Exit code: 0)
+  Chi tiết: gcc (Rev5, Built by MSYS2 project) 16.1.0
+----------------------------------------
+Công cụ: make
+  Lệnh: make --version
+  Trạng thái: AVAILABLE (Exit code: 0)
+  Chi tiết: GNU Make 4.4.1
+----------------------------------------
+Công cụ: gcov
+  Lệnh: gcov --version
+  Trạng thái: AVAILABLE (Exit code: 0)
+  Chi tiết: gcov (Rev5, Built by MSYS2 project) 16.1.0
+----------------------------------------
+Công cụ: gcovr
+  Lệnh: gcovr --version
+  Trạng thái: AVAILABLE (Exit code: 0)
+  Chi tiết: gcovr 8.6
+----------------------------------------
+Công cụ: cppcheck
+  Lệnh: cppcheck --version
+  Trạng thái: AVAILABLE (Exit code: 0)
+  Chi tiết: Cppcheck 2.21.0
+----------------------------------------
+Công cụ: z3
+  Lệnh: C:/Du_an/ATPM/lab5_sat_smt_verification/.deps/bin/z3.exe --version
+  Trạng thái: AVAILABLE (Exit code: 0)
+  Chi tiết: Z3 version 5.1.0 - 64 bit
+----------------------------------------
+Công cụ: cbmc
+  Lệnh: cbmc --version
+  Trạng thái: UNAVAILABLE (Exit code: -1)
+  Chi tiết: [WinError 2] The system cannot find the file specified
+----------------------------------------
+Công cụ: nusmv
+  Lệnh: NuSMV -version
+  Trạng thái: UNAVAILABLE (Exit code: -1)
+  Chi tiết: [WinError 2] The system cannot find the file specified
+----------------------------------------
+Thăm dò Sanitizers (ASan/UBSan trên GCC UCRT64):
+  Trạng thái: UNAVAILABLE (Thiếu runtime libasan/libubsan)
+  Chi tiết lỗi: C:/msys64/ucrt64/bin/../lib/gcc/x86_64-w64-mingw32/16.1.0/../../../../x86_64-w64-mingw32/bin/ld.exe: cannot find -lasan: No such file or directory
+============================================================

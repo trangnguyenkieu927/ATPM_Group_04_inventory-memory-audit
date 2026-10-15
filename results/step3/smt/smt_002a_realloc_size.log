@@ -1,0 +1,20 @@
+Command: C:/Du_an/ATPM/lab5_sat_smt_verification/.deps/bin/z3.exe -smt2 verification/step3/smt\smt_002a_realloc_size.smt2
+Exit Code: 0
+Output:
+sat
+(
+  (define-fun new_cap () (_ BitVec 64)
+    #xeea85800eaaaaaaa)
+  (define-fun size_128 () (_ BitVec 128)
+    ((_ zero_extend 64) #x00000000000000d0))
+  (define-fun sizeof_product () (_ BitVec 64)
+    #x00000000000000d0)
+  (define-fun max_size_t_128 () (_ BitVec 128)
+    ((_ zero_extend 64) #xffffffffffffffff))
+  (define-fun alloc_bytes_128 () (_ BitVec 128)
+    (bvmul ((_ zero_extend 64) new_cap) ((_ zero_extend 64) #x00000000000000d0)))
+  (define-fun cap_128 () (_ BitVec 128)
+    ((_ zero_extend 64) new_cap))
+)
+Error:
+

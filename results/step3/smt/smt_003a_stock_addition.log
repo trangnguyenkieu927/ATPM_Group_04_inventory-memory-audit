@@ -1,0 +1,20 @@
+Command: C:/Du_an/ATPM/lab5_sat_smt_verification/.deps/bin/z3.exe -smt2 verification/step3/smt\smt_003a_stock_addition.smt2
+Exit Code: 0
+Output:
+sat
+(
+  (define-fun current_stock () (_ BitVec 32)
+    #x7fffffff)
+  (define-fun add_quantity () (_ BitVec 32)
+    #x7fffffff)
+  (define-fun add_ext () (_ BitVec 33)
+    ((_ sign_extend 1) add_quantity))
+  (define-fun int_max_33 () (_ BitVec 33)
+    ((_ sign_extend 1) #x7fffffff))
+  (define-fun sum_33 () (_ BitVec 33)
+    (bvadd ((_ sign_extend 1) current_stock) ((_ sign_extend 1) add_quantity)))
+  (define-fun cur_ext () (_ BitVec 33)
+    ((_ sign_extend 1) current_stock))
+)
+Error:
+

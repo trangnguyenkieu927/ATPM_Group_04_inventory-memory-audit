@@ -1,0 +1,19 @@
+Command: C:/Du_an/ATPM/lab5_sat_smt_verification/.deps/bin/z3.exe -smt2 verification/step3/smt\smt_001a_capacity_growth.smt2
+Exit Code: 0
+Output:
+sat
+(
+  (define-fun capacity () (_ BitVec 64)
+    #x8000000000000000)
+  (define-fun mult_65 () (_ BitVec 65)
+    (bvmul ((_ zero_extend 1) capacity)
+       #b00000000000000000000000000000000000000000000000000000000000000010))
+  (define-fun two_ext () (_ BitVec 65)
+    #b00000000000000000000000000000000000000000000000000000000000000010)
+  (define-fun cap_ext () (_ BitVec 65)
+    ((_ zero_extend 1) capacity))
+  (define-fun max_64_ext () (_ BitVec 65)
+    ((_ zero_extend 1) #xffffffffffffffff))
+)
+Error:
+
