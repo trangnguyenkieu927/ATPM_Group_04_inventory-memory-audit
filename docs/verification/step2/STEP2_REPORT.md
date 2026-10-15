@@ -1,295 +1,240 @@
-# BÁO CÁO TỔNG KẾT BƯỚC 2: PHÂN TÍCH VÀ ĐẶC TẢ RỦI RO AN TOÀN BỘ NHỚ C
+# BÁO CÁO NGHIỆM THU HOÀN THÀNH BƯỚC 2: PHÂN TÍCH VÀ ĐẶC TẢ RỦI RO AN TOÀN BỘ NHỚ C
 
-**Đề tài môn học:** An toàn phần mềm  
-**Dự án:** Kiểm chứng an toàn bộ nhớ cho chương trình C mô phỏng nghiệp vụ quản lý kho  
-**Repository:** [ATPM_Group_04_inventory-memory-audit](https://github.com/trangnguyenkieu927/ATPM_Group_04_inventory-memory-audit)  
-**Nhóm thực hiện (Nhóm 04):**  
-- **Nguyễn Kiều Trang** – Nhóm trưởng, phụ trách tích hợp hệ thống, kiến trúc và QA  
-- **Hà Văn Đô** – Phụ trách đặc tả, mô hình bộ nhớ, thuộc tính an toàn và kiểm chứng hình thức  
-- **Nguyễn Quang Thọ** – Phụ trách công cụ, môi trường thực nghiệm, build/test và bằng chứng kiểm chứng  
-**Thời điểm thực hiện:** Học kỳ I / 2026-10-15  
-**Nhánh Git làm việc:** `audit/step2-risk-specification`  
-**Commit Baseline (Đã xác minh):** `44202070c68002d9af068374478cdc83098dd4d8`  
+**Đề tài môn học:** An toàn phần mềm
+**Dự án:** Kiểm chứng an toàn bộ nhớ cho chương trình C mô phỏng nghiệp vụ quản lý kho
+**Repository:** [https://github.com/trangnguyenkieu927/ATPM_Group_04_inventory-memory-audit](https://github.com/trangnguyenkieu927/ATPM_Group_04_inventory-memory-audit)
+**Nhóm thực hiện (Nhóm 04):**
+- **Nguyễn Kiều Trang** – Nhóm trưởng, phụ trách tích hợp hệ thống, kiến trúc và QA
+- **Hà Văn Đô** – Phụ trách đặc tả, mô hình bộ nhớ, thuộc tính an toàn và kiểm chứng hình thức
+- **Nguyễn Quang Thọ** – Phụ trách công cụ, môi trường thực nghiệm, build/test và bằng chứng kiểm chứng
+**Nhánh Git làm việc:** `audit/step2-risk-specification`
+**Commit Baseline cố định:** `44202070c68002d9af068374478cdc83098dd4d8`
+**Thời điểm hoàn thành:** Học kỳ I / 2026-10-15
 
 ---
 
-## 1. GIỚI THIỆU VÀ ĐỊNH VỊ HỌC THUẬT
+## 1. TỔNG QUAN VÀ BỐI CẢNH DỰ ÁN
 
 ### 1.1. Nhận xét Trọng tâm của Giảng viên Hướng dẫn
-Báo cáo này được xây dựng bám sát chỉ đạo trực tiếp của Giảng viên hướng dẫn:
+Báo cáo này được triển khai nhằm đáp ứng chuẩn mực học thuật và phương pháp luận do Giảng viên chỉ đạo:
 > *"Xuất phát từ source code → compile time → error + warning → tổng hợp + đặc tả để hình thức hóa (tính phủ các trường hợp có thể xảy ra) → xây dựng code C mô phỏng lại rủi ro. Xây dựng đặc tả cho bài toán rủi ro an toàn."*
 
-### 1.2. Mục tiêu của Bước 2
-Bước 2 là bước chuyển tiếp cốt lõi từ mã nguồn baseline đã chuẩn hóa ở Bước 1 sang giai đoạn kiểm chứng hình thức và thực nghiệm ở Bước 3. Mục tiêu 100% của Bước 2 bao gồm:
-1. **Rà soát toàn diện mã nguồn C v0:** Thống kê chi tiết từng module, hàm, đối tượng bộ nhớ và luồng con trỏ.
-2. **Thu thập và phân loại kết quả Compile Time:** Khám phá cảnh báo với cờ biên dịch tăng cường của GCC.
-3. **Thực thi phân tích tĩnh (Static Code Analysis):** Đánh giá hiện trạng công cụ Cppcheck/Clang Analyzer trên môi trường thực tế.
-4. **Rà soát chuyên sâu 5 nhóm rủi ro an toàn bộ nhớ C:** Heap allocation, Pointer lifetime, Buffer & array bounds, Integer safety, và Input parser.
-5. **Chuẩn hóa Danh mục Rủi ro (Risk Register):** Phân loại rủi ro dựa trên khả năng đạt tới thực tế (*Reachability*), không suy đoán cảm tính.
-6. **Đặc tả hình thức toàn diện 18 REQ:** Chuyển đổi toàn bộ 18 yêu cầu từ workbook học thuật gốc thành đặc tả tiền điều kiện, hậu điều kiện, bất biến CTL và điều kiện vi phạm.
-7. **Chuẩn bị mô hình hình thức hóa:** Xây dựng hệ thống 5 mô hình trạng thái rời rạc, nhận diện bẫy logic đúng hiển nhiên (*Vacuous Truth*) từ các tiên đề loại trừ lẫn nhau (*LoaiTruLanNhau*), và thiết lập các bài toán SMT Bit-Vector (Z3/SMT-LIB v2).
-8. **Đánh giá tính phủ đa chiều (Coverage Assessment):** Đo lường độ phủ đặc tả, độ phủ rà soát mã nguồn, và tuyên bố minh bạch các chỉ số chưa đo (*NOT_MEASURED*).
-9. **Lập kế hoạch mô phỏng rủi ro bằng C Test Harness (SIM-001, SIM-002):** Sẵn sàng cho Bước 3.
-10. **Lưu trữ bằng chứng có thể kiểm chứng độc lập:** Tạo Evidence Manifest với mã băm SHA-256 thực tế.
+### 1.2. Mục tiêu Nghiệm thu của Bước 2
+Bước 2 là giai đoạn phân tích mã nguồn và chuyển giao đặc tả hình thức từ baseline v0 đã hoàn thành ở Bước 1. Mục tiêu bao gồm:
+1. Rà soát toàn bộ 7 module C nghiệp vụ, thống kê chính xác 70 hàm và 2.229 dòng Code LOC.
+2. Thu thập kết quả chẩn đoán biên dịch tăng cường của trình biên dịch GCC C17 (0 lỗi, 0 cảnh báo).
+3. Thực thi công cụ phân tích tĩnh mã nguồn Cppcheck 2.21.0 thực tế trên môi trường MSYS2 UCRT64, phân loại toàn diện 67 cảnh báo.
+4. Rà soát chuyên sâu 5 nhóm rủi ro an toàn bộ nhớ C (Heap, Pointer, Buffer, Integer, Parser) với số dòng chuẩn xác trên commit baseline `4420207`.
+5. Chuẩn hóa Danh mục Rủi ro (Risk Register) gồm 10 rủi ro độc lập với tính khả đạt thực tế.
+6. Đặc tả toàn bộ 18 REQ theo đúng văn bản nguyên văn của tài liệu nguồn `Spec_Inventory_Memory_Safety_Audit_18REQ_CHUAN.xlsx`.
+7. Lập mô hình 5 hệ thống trạng thái rời rạc (21 trạng thái), rà soát 18 công thức CTL và phân tích bẫy logic đúng hiển nhiên (*Vacuous Truth*).
+8. Chuẩn bị 3 bài toán SMT Bit-Vector (QF_BV) cho kiến trúc 64-bit LLP64.
+9. Đánh giá tính phủ 4 chiều, ghi nhận trung thực các chỉ số runtime là `CHƯA ĐO (NOT_MEASURED)`.
+10. Lập kế hoạch mô phỏng rủi ro bằng C test harness (SIM-001, SIM-002) cho Bước 3.
+11. Thiết lập công cụ tự động kiểm tra tính nhất quán `tools/check_step2_consistency.py` đạt kết quả PASS 100%.
 
 ---
 
-## 2. PHIÊN BẢN MÃ NGUỒN VÀ MÔI TRƯỜNG THỰC NGHIỆM
+## 2. KẾT QUẢ RÀ SOÁT VÀ KHẮC PHỤC CÁC TỒN TẠI TRƯỚC ĐÓ
 
-### 2.1. Mã nguồn Baseline v0
-- **Repository:** `ATPM_Group_04_inventory-memory-audit`
-- **Commit Baseline:** `44202070c68002d9af068374478cdc83098dd4d8` (Nhánh `audit/prepare-v0`)
-- **Tình trạng:** Baseline đã nghiệm thu 100% ở Bước 1, không chứa code tạm, sạch build.
-- **Quy mô mã nguồn:**
-  - **7 module C nghiệp vụ:** `models.h`, `product.c`, `inventory.c`, `file_io.c`, `validation.c`, `utils.c`, `report.c`, `main.c`.
-  - **Quy mô dòng mã thực tế:**
-    - C Source Files (`source/src/*.c`): **1.809 Code LOC** (2.181 Total Lines).
-    - C Header Files (`source/include/*.h`): **139 Code LOC** (329 Total Lines).
-    - C Test Harnesses (`tests/` & `source/tests/`): **281 Code LOC** (357 Total Lines).
-    - **Tổng cộng dự án:** **2.229 Code LOC** (2.867 Total Lines).
-  - **Tổng số hàm C được rà soát:** **70 hàm** (chi tiết tại [source_inventory.md](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/docs/verification/step2/source_inventory.md)).
+Theo yêu cầu kiểm tra độc lập, nhóm đã đối chiếu toàn diện hồ sơ và khắc phục triệt để các sai lệch trước đây:
 
-### 2.2. Khám phá Môi trường Thực nghiệm và ABI
-Thực nghiệm biên dịch và chạy file thăm dò [probe_env.c](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/results/step2/compiler/environment.txt) với GCC:
-- **Hệ điều hành:** Windows 11 Enterprise (Build 10.0.26100)
-- **Môi trường:** MSYS2 / UCRT64
-- **Trình biên dịch:** GCC 16.1.0 (`x86_64-w64-mingw32`, C17 Standard `__STDC_VERSION__ = 201710L`)
-- **Công cụ Build:** GNU Make 4.4.1
-- **Mô hình Dữ liệu (Data Model):** LLP64 (Chuẩn 64-bit Windows)
-  - `sizeof(int) = 4` bytes (32-bit, `INT_MAX = 2,147,483,647`)
-  - `sizeof(long) = 4` bytes (32-bit trên Windows LLP64)
-  - `sizeof(long long) = 8` bytes (64-bit)
-  - `sizeof(size_t) = 8` bytes (64-bit unsigned, `SIZE_MAX = 18,446,744,073,709,551,615`)
-  - `sizeof(void*) = 8` bytes (64-bit pointer)
-  - `sizeof(Product) = 208` bytes (Gồm 190 bytes chuỗi + 4 bytes `int quantity` + 6 bytes padding căn lề 8-byte + 8 bytes `double price`).
+| STT | Vấn đề ban đầu | File liên quan | Nguyên nhân | Mức độ | Nội dung đã sửa & Bằng chứng |
+|---|---|---|---|---|---|
+| 1 | `RISK-003` (realloc failure) ánh xạ sang `REQ-4` | `risk_register.csv`, `req_traceability.csv` | REQ-4 thực chất là tràn số nhập kho `import_stock`. REQ đúng cho bảo toàn con trỏ realloc là REQ-12 và REQ-11. | Nghiêm trọng | Đã chuyển ánh xạ sang `REQ-12, REQ-11`. Xác minh tại [risk_register.csv](risk_register.csv). |
+| 2 | `RISK-006` (sao chép chuỗi) ánh xạ sang `REQ-5, REQ-6` | `risk_register.csv`, `req_traceability.csv` | REQ-5 là xuất kho, REQ-6 là truy cập items[i]. REQ chuẩn cho sao chép chuỗi đóng NUL là REQ-9. | Nghiêm trọng | Đã chuyển ánh xạ sang `REQ-9`. Xác minh tại [req_traceability.csv](req_traceability.csv). |
+| 3 | `RISK-007` (dòng file quá dài) ánh xạ `REQ-16, REQ-17` | `risk_register.csv`, `req_traceability.csv` | Dòng dài vượt 512 bytes trực tiếp thuộc REQ-10 (Xử lý input quá dài) và REQ-17 (Parser an toàn). | Trung bình | Đã cập nhật ánh xạ sang `REQ-10, REQ-17`. |
+| 4 | `RISK-008` (mảng token) ánh xạ thiếu `REQ-16` | `risk_register.csv`, `req_traceability.csv` | Giới hạn mảng `tokens[8]` thuộc phạm vi REQ-16 (Giới hạn mảng) và REQ-17. | Trung bình | Đã cập nhật ánh xạ sang `REQ-16, REQ-17`. |
+| 5 | `RISK-009` (parser tương thích) ánh xạ thiếu `REQ-18` | `risk_register.csv`, `req_traceability.csv` | Parser chấp nhận định dạng 4/6 trường kết hợp kiểm tra số liệu thuộc REQ-17 và REQ-18. | Trung bình | Đã cập nhật ánh xạ sang `REQ-17, REQ-18`. |
+| 6 | `RISK-010` bị xếp loại `FALSE_POSITIVE` và gán `REQ-11` | `risk_register.csv`, `req_traceability.csv` | `calculate_category_summaries` có guard `if (*out_count >= max_summaries) return STATUS_ERR_OVERFLOW;` tại `report.c:72-74`. Đây là cơ chế phòng vệ có chủ đích (GUARDED), không phải lỗi công cụ báo sai. REQ đúng là REQ-16. | Nghiêm trọng | Đã phân loại lại thành **`GUARDED`** (Defensive Behavior / Capacity Limit), ánh xạ duy nhất tới `REQ-16`. |
+| 7 | Số dòng trong Risk Register bị lệch so với baseline | `risk_register.csv`, `code-review-findings.csv` | Trích dẫn từ bản nháp cũ (ví dụ ghi dòng 42 thay vì dòng 118 cho realloc trong product.c). | Nghiêm trọng | Đo đạc lại 100% số dòng trên commit baseline `4420207`: `product.c:118` (`capacity * 2`), `119` (`new_cap * 208`), `223-233` (`find_product_by_id`), `report.c:72-74`, `file_io.c:47, 52-61`. |
+| 8 | Mô tả parser dùng `strtok_r` sai thực tế mã nguồn | `risk_register.md`, `c_simulation_plan.md` | Mã nguồn thực tế tại `file_io.c:54` dùng `char *pipe = strchr(cursor, '\|');` duyệt và cắt chuỗi. | Trung bình | Đã đính chính toàn bộ mô tả kỹ thuật phản ánh đúng cơ chế `strchr('\|')`. |
+| 9 | Cppcheck ghi nhận `TOOL_UNAVAILABLE` | `results/step2/cppcheck/*` | Cppcheck chưa có trong PATH hệ thống. | Nghiêm trọng | Được người dùng phê duyệt, đã cài đặt thành công `Cppcheck 2.21.0` qua MSYS2 pacman và chạy thực tế 100%. |
+| 10 | Yêu cầu tiếng Việt có dấu cho toàn bộ commit và báo cáo | Git history, tài liệu báo cáo | Commit và báo cáo trước đây có phần tiếng Anh. | Bắt buộc | Biên soạn toàn bộ commit message và báo cáo kỹ thuật bằng Tiếng Việt có dấu chuẩn UTF-8. |
+
+---
+
+## 3. MÔI TRƯỜNG THỰC NGHIỆM VÀ CẤU HÌNH TOOLCHAIN
+
+Thực nghiệm đo đạc thực tế bằng chương trình thăm dò ABI trên môi trường kiểm toán:
+- **Hệ điều hành:** Windows 11 Enterprise 64-bit (Build 10.0.26100).
+- **Môi trường Unix:** MSYS2 / UCRT64.
+- **Trình biên dịch:** GCC 16.1.0 (`x86_64-w64-mingw32`), C17 Standard (`__STDC_VERSION__ = 201710L`).
+- **Trình quản lý Build:** GNU Make 4.4.1.
+- **Công cụ Phân tích tĩnh:** Cppcheck 2.21.0 (Đã cài đặt tại `C:\msys64\ucrt64\bin\cppcheck.exe`).
+- **Mô hình Dữ liệu ABI (LLP64 Windows):**
+  - `sizeof(int) = 4` bytes (`INT_MAX = 2.147.483.647`)
+  - `sizeof(long) = 4` bytes
+  - `sizeof(size_t) = 8` bytes (`SIZE_MAX = 18.446.744.073.709.551.615`)
+  - `sizeof(void*) = 8` bytes
+  - `sizeof(Product) = 208` bytes (190 bytes dữ liệu chuỗi + 4 bytes `int quantity` + 6 bytes padding căn lề 8-byte + 8 bytes `double price`).
   - `sizeof(ProductList) = 24` bytes
   - `sizeof(CategorySummary) = 80` bytes
   - `sizeof(InventorySummary) = 456` bytes
 
-> [!NOTE]
-> **PHÁT HIỆN QUAN TRỌNG VỀ ABI:**  
-> Kích thước thực tế của `Product` đo được là **208 bytes**, khác với một số tài liệu cũ ước lượng 184 bytes do compiler căn lề struct theo `double price` (8-byte alignment). Điều này làm thay đổi ngưỡng tràn số học lý thuyết của `new_cap * sizeof(Product)` sang $\lfloor 2^{64}-1 / 208 \rfloor = 88.686.269.585.142.075$ phần tử.
-
 ---
 
-## 3. PHÂN TÍCH COMPILE TIME (GCC COMPILER ANALYSIS)
+## 4. KẾT QUẢ PHÂN TÍCH TRÌNH BIÊN DỊCH (GCC COMPILE-TIME ANALYSIS)
 
-### 3.1. Biên dịch Baseline Chuẩn
-Thực hiện chuỗi lệnh build chuẩn trong thư mục `source/`:
+### 4.1. Biên dịch Baseline v0 và Bộ Kiểm thử Nền tảng
+Chuỗi lệnh thực thi từ thư mục `source/`:
 ```bash
-make clean && make && make debug && make test && make smoke-test
+make clean; make; make test; make smoke-test
 ```
 - **Kết quả:**
-  - Build chính (`app.exe`): **Thành công** (Exit code: 0).
-  - Build gỡ lỗi (`app_debug.exe`): **Thành công** (Exit code: 0).
-  - Chạy Unit Test (`tests/test_inventory.exe`, `tests/test_utils.exe`): **PASS** (Exit code: 0).
-  - Chạy Smoke Test (17 kịch bản tự động): **PASS 17/17** (Exit code: 0).
-  - Bằng chứng lưu tại: [build.log](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/results/step2/compiler/build.log) và [build-exit-code.txt](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/results/step2/compiler/build-exit-code.txt).
+  - Build chính (`inventory_app.exe`): **Thành công** (Exit code: 0).
+  - Build unit tests (`inventory_tests.exe`): **Thành công**, pass toàn bộ unit test inventory & utils.
+  - Smoke tests: **17/17 ca kiểm thử ĐẠT 100% (PASS)**, Exit code: 0.
+  - Bằng chứng lưu tại: [results/step2/compiler/build.log](../../../results/step2/compiler/build.log) (Exit code: [build-exit-code.txt](../../../results/step2/compiler/build-exit-code.txt)).
 
-### 3.2. Lượt Phân tích Cảnh báo Tăng cường (Enhanced Diagnostics Run)
-Thực hiện lệnh phân tích chuyên sâu độc lập với bộ cờ nghiêm ngặt nhất của GCC:
+### 4.2. Lượt Phân tích Chẩn đoán Tăng cường (Enhanced GCC Diagnostics)
+Lệnh phân tích chuyên sâu độc lập với 9 cờ cảnh báo nghiêm ngặt của GCC:
 ```bash
 gcc -std=c17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow -Wformat=2 -Wnull-dereference -Iinclude -c src/*.c
 ```
 - **Số lượng Compiler Errors:** **0**
-- **Số lượng Compiler Warnings:** **0**
+- **Số lượng Compiler Warnings:** **0 warnings observed**
 - **Exit Code:** **0**
-- **Bằng chứng lưu tại:** [diagnostics.log](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/results/step2/compiler/diagnostics.log) và [compiler-findings.csv](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/results/step2/compiler/compiler-findings.csv).
+- **Bằng chứng lưu tại:** [results/step2/compiler/diagnostics.log](../../../results/step2/compiler/diagnostics.log) và [results/step2/compiler/compiler-findings.csv](../../../results/step2/compiler/compiler-findings.csv).
 
-> [!IMPORTANT]
-> **KẾT LUẬN VỀ KẾT QUẢ 0 WARNING:**  
-> Việc GCC không phát hiện cảnh báo nào ngay cả dưới `-Wconversion` và `-Wsign-conversion` chứng minh mã nguồn baseline `v0` đã được chuẩn hóa rất tốt về mặt cú pháp kiểu dữ liệu ở Bước 1. **Tuy nhiên, theo nguyên tắc kiểm toán an toàn phần mềm, 0 compiler warning TUYỆT ĐỐI KHÔNG ĐỒNG NGHĨA VỚI CHƯƠNG TRÌNH KHÔNG CÓ LỖ HỔNG AN TOÀN BỘ NHỚ**. Compiler không thể phát hiện các lỗi logic ngữ cảnh như mất hiệu lực con trỏ mượn sau `realloc`, tràn số học cộng dồn vượt `INT_MAX`, hoặc các kịch bản cạn kiệt tài nguyên hệ thống.
-
----
-
-## 4. PHÂN TÍCH TĨNH MÃ NGUỒN (STATIC CODE ANALYSIS)
-
-### 4.1. Khám phá và Ghi nhận Công cụ
-- **Cppcheck:** Kiểm tra trong môi trường hệ thống cho thấy lệnh `cppcheck` chưa được cài đặt trong biến môi trường PATH (Exit code: 127).
-- **Trạng thái ghi nhận:** Đánh dấu chính thức **`TOOL_UNAVAILABLE`** theo đúng chỉ đạo tại Mục V.2 của Master Prompt.
-- Nhóm đã lưu trữ bằng chứng và cung cấp hướng dẫn cài đặt cụ thể cho các môi trường tại [results/step2/cppcheck/](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/results/step2/cppcheck/):
-  - MSYS2 UCRT64: `pacman -S mingw-w64-ucrt-x86_64-cppcheck`
-  - Windows: `winget install Cppcheck.Cppcheck`
-  - Linux: `sudo apt-get install cppcheck`
-- **Clang Static Analyzer / Clang-tidy:** Tương tự, `clang` chưa có sẵn trong môi trường Windows hiện tại (`TOOL_UNAVAILABLE`).
-
-### 4.2. Rà soát Mã nguồn Thủ công Kết hợp Phân tích Luồng Dữ liệu (Code Review)
-Để bù đắp việc công cụ tự động chưa khả dụng, nhóm kỹ sư đã tiến hành rà soát thủ công 100% 70 hàm C dựa trên mô hình đối tượng bộ nhớ (Memory Ownership & Control Flow Analysis). Toàn bộ 10 phát hiện đánh giá (`CR-001` tới `CR-010`) được lưu trữ tại [code-review-findings.csv](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/results/step2/review/code-review-findings.csv).
+> [!NOTE]
+> **KẾT LUẬN VỀ KẾT QUẢ 0 WARNING CỦA GCC:**
+> Trình biên dịch GCC trả về 0 cảnh báo chứng minh mã nguồn baseline `v0` đã được chuẩn hóa kiểu dữ liệu rất tốt ở Bước 1. Tuy nhiên, theo nguyên tắc an toàn phần mềm, **0 compiler warning không đồng nghĩa với không có lỗi an toàn bộ nhớ**. Compiler không thể phát hiện các lỗi logic ngữ cảnh như con trỏ mượn bị mất hiệu lực sau `realloc`, hoặc các kịch bản cạn kiệt tài nguyên bộ nhớ.
 
 ---
 
-## 5. RÀ SOÁT CHUYÊN SÂU 5 NHÓM RỦI RO BỘ NHỚ
+## 5. KẾT QUẢ PHÂN TÍCH TĨNH MÃ NGUỒN (CPPCHECK 2.21.0 ANALYSIS)
 
-### 5.1. Nhóm A – Cấp phát Vùng nhớ Động Heap (Heap Allocation Safety)
-- **Hàm trọng tâm:** `product_list_init()`, `add_product()`, `product_list_free()`.
-- **Thao tác:** `malloc`, `realloc`, `free`.
-- **Đánh giá cơ chế phòng vệ:**
-  - Trong `add_product()` (`product.c:44`), chương trình sử dụng biến con trỏ tạm:
-    ```c
-    Product *new_items = realloc(list->items, new_cap * sizeof(Product));
-    if (!new_items) return STATUS_ERR_NO_MEMORY;
-    list->items = new_items;
-    ```
-  - **Kết luận:** Mã nguồn xử lý đúng mẫu an toàn cấp phát lại; nếu `realloc` trả về `NULL`, khối nhớ gốc `list->items` **không bị rò rỉ (No Memory Leak)**. Rủi ro này được xếp loại **`GUARDED`**.
+### 5.1. Cấu hình và Lệnh Thực thi
+Sau khi được người dùng phê duyệt, công cụ Cppcheck 2.21.0 đã được cài đặt và thực thi trên toàn bộ mã nguồn `source/src/`:
+```bash
+cppcheck --enable=all --inconclusive --std=c17 --language=c --template=gcc -Iinclude src/
+cppcheck --enable=all --inconclusive --std=c17 --language=c --xml --xml-version=2 -Iinclude src/
+```
+- **Phiên bản:** Cppcheck 2.21.0 ([version.txt](../../../results/step2/cppcheck/version.txt)).
+- **Exit code:** 0 ([exit-code.txt](../../../results/step2/cppcheck/exit-code.txt)).
+- **Log thực thi:** [results/step2/cppcheck/cppcheck.log](../../../results/step2/cppcheck/cppcheck.log).
+- **XML chính thức:** [results/step2/cppcheck/cppcheck.xml](../../../results/step2/cppcheck/cppcheck.xml).
+- **Bảng dữ liệu chuẩn hóa:** [results/step2/cppcheck/findings.csv](../../../results/step2/cppcheck/findings.csv).
 
-### 5.2. Nhóm B – An toàn Con trỏ và Vòng đời Truy cập (Pointer Safety)
-- **Hàm trọng tâm:** `find_product_by_id()`, `find_product()`.
-- **Mô hình hợp đồng con trỏ:** Các hàm tra cứu trả về con trỏ mượn trực tiếp `Product*` trỏ vào phần tử nội bộ của mảng `list->items`.
-- **Rủi ro Mất hiệu lực Con trỏ (Pointer Invalidation):**
-  - Nếu một hàm gọi giữ con trỏ `Product *p` trong khi thực hiện một thao tác khác làm danh sách mở rộng (`add_product`), `realloc` có thể cấp phát vùng nhớ ở địa chỉ mới và giải phóng khối nhớ cũ. Khi đó `p` trở thành con trỏ lơ lửng (*dangling pointer*).
-  - **Kết quả rà soát Baseline v0:** Trong toàn bộ `main.c` và `inventory.c`, không có bất kỳ luồng thực thi nào lưu giữ con trỏ mượn qua lời gọi `add_product()`. Sau khi tìm kiếm, mã nguồn đọc/ghi ngay hoặc sao chép dữ liệu.
-  - **Kết luận:** Rủi ro Use-After-Free sau `realloc` là một **Rủi ro Hợp đồng Kiến trúc (Architectural Contract Risk)** chứ **KHÔNG PHẢI LỖ HỔNG ĐÃ XÁC NHẬN (NOT A CONFIRMED DEFECT)** trong baseline v0. Xếp loại: **`REACHABILITY_UNPROVEN`**.
-
-### 5.3. Nhóm C – Giới hạn Mảng và Bộ đệm Chuỗi (Buffer & Array Bounds)
-- **Hàm trọng tâm:** `safe_string_copy()`, `trim_whitespace()`, `calculate_category_summaries()`.
-- **Đánh giá `calculate_category_summaries()` (Xác minh CANDIDATE-03):**
-  - Tài liệu sơ bộ trước đây từng nghi ngờ khả năng tràn mảng khi vượt quá 32 danh mục.
-  - Kiểm tra thực tế tại `report.c:72-76`:
-    ```c
-    if (*out_count >= max_summaries) {
-        return STATUS_ERR_OVERFLOW;
-    }
-    ```
-  - Mã nguồn đã chủ động kiểm tra giới hạn mảng trước khi ghi bản ghi mới vào `summaries[*out_count]`.
-  - **Kết luận:** Nhận định lỗi Heap Buffer Overflow (CWE-122) là **`FALSE_POSITIVE`**. Đây là cơ chế phòng vệ có chủ đích (**`DEFENSIVE_BEHAVIOR`**) và giới hạn dung lượng nghiệp vụ.
-- **Đánh giá `safe_string_copy()`:** Sử dụng `strncpy` kết hợp ép `dest[dest_size - 1] = ' '`. An toàn, xếp loại **`GUARDED`**.
-
-### 5.4. Nhóm D – An toàn Số học Số nguyên (Integer Safety)
-- **Hàm trọng tâm:** `add_product()`, `import_stock()`, `export_stock()`.
-- **Phép toán `capacity * 2` và `new_cap * sizeof(Product)`:**
-  - Về mặt lý thuyết số học, phép nhân unsigned 64-bit có thể tràn nếu `capacity >= 2^{63}` hoặc `new_cap >= 88.686.269.585.142.076`.
-  - Tuy nhiên, trong môi trường thực tế, hệ thống không thể chứa đủ dữ liệu để đạt tới dung lượng này. Xếp loại: **`REACHABILITY_UNPROVEN`**.
-- **Phép toán `p->quantity += quantity` tại `inventory.c:48`:**
-  - Kiểu dữ liệu `int` (32-bit signed).
-  - Hàm `validate_quantity` chỉ kiểm tra `quantity > 0`, không kiểm tra trần `p->quantity + quantity <= INT_MAX`.
-  - Nếu nhập kho liên tiếp vượt $2.147.483.647$, phép cộng số nguyên có dấu sẽ bị tràn (*Signed Integer Overflow*), dẫn tới hành vi bất định (Undefined Behavior theo C17).
-  - Xếp loại: **`POTENTIALLY_REACHABLE`** (Ưu tiên kiểm chứng ở Bước 3).
-
-### 5.5. Nhóm E – Xử lý Dữ liệu Đầu vào Tệp tin (Input / Parser Safety)
-- **Hàm trọng tâm:** `load_products_from_file()`, `parse_product_line()`.
-- **Bộ đệm 512 bytes và Dòng Quá Dài:**
-  - `fgets(line, 512, fp)` đọc tối đa 511 ký tự.
-  - Mã nguồn kiểm tra: `if (!strchr(line, '
-') && !feof(fp))` $\implies$ phát hiện dòng bị cắt cụt do vượt quá 512 bytes và trả về `STATUS_ERR_INVALID_DATA`.
-  - Không xảy ra tràn bộ đệm ghi đè ngăn xếp (*Stack Buffer Overflow*). Xếp loại: **`GUARDED`**.
-- **Số Lượng Token Phân tách:**
-  - Mảng cố định `char *tokens[8]`. Vòng lặp `strtok_r` có guard `token_count < 8`. An toàn, xếp loại **`GUARDED`**.
-- **Xử lý Dữ liệu Sai Định dạng (Legacy 4 trường vs 6 trường):**
-  - Dòng chỉ có 4 trường được xử lý an toàn bằng cách gán giá trị mặc định cho `quantity` và `price`.
-  - Dòng thiếu trường hoặc chứa ký tự không hợp lệ bị từ chối an toàn.
+### 5.2. Phân loại 67 Cảnh báo từ Cppcheck
+Tổng số 67 cảnh báo được Cppcheck ghi nhận gồm các nhóm sau:
+1. **Nhóm Information (38 cảnh báo):**
+   - 30 cảnh báo `missingIncludeSystem`: Nhắc nhở các header thư viện chuẩn (`<stdio.h>`, `<stdlib.h>`, `<string.h>`, `<ctype.h>`, `<limits.h>`). Đây là hành vi bình thường khi chạy phân tích tĩnh mà không truyền đường dẫn include nội bộ của hệ điều hành.
+   - 7 cảnh báo `normalCheckLevelMaxBranches`: Cppcheck giới hạn độ sâu nhánh rẽ; đề xuất dùng cờ `--check-level=exhaustive` khi kiểm chứng toàn diện.
+   - 1 cảnh báo `checkersReport`: Báo cáo 119/186 bộ kiểm tra đang hoạt động.
+2. **Nhóm Style & Advisory (29 cảnh báo):**
+   - **`arrayIndexThenCheck` tại `src/product.c:55` và `src/product.c:61` (SA-037, SA-038):** Cảnh báo chỉ số `i` hoặc `j` được dùng truy cập `haystack[i]` trước khi so sánh với giới hạn `sizeof(h_lower) - 1`. Trong ngữ cảnh hàm `contains_ignore_case`, chuỗi kết thúc bằng ` ` nên không tràn nếu chuỗi hợp lệ, nhưng đây là một lưu ý phong cách phòng vệ quan trọng cho Bước 3.
+   - **`compareValueOutOfTypeRangeError` tại `src/file_io.c:26` (SA-011):** So sánh `parsed > INT_MAX` khi `parsed` là kiểu `long`. Trên Windows LLP64, `sizeof(long) == 4` nên `LONG_MAX == INT_MAX = 2147483647`. Biểu thức so sánh luôn nhận giá trị false trên kiến trúc LLP64. Đây là một phát hiện phân tích tĩnh chính xác về tính khả chuyển (Portability/Type Range).
+   - **`constVariablePointer` & `constParameterPointer` (8 cảnh báo):** Đề xuất gắn từ khóa `const` cho các con trỏ chỉ đọc trong `main.c`, `product.c`, `report.c`.
+   - **`unusedFunction` & `staticFunction` (11 cảnh báo):** Các hàm API công khai (`inventory_init`, `inventory_free`, `update_stock`, v.v.) chưa được gọi trực tiếp trong hàm `main.c`.
+3. **Nhóm Memory Error / Vulnerability:** **0 lỗi bộ nhớ nghiêm trọng (0 errors)**. Cppcheck xác nhận không phát hiện rò rỉ bộ nhớ hoặc truy cập con trỏ NULL hiển nhiên trong baseline `v0`.
 
 ---
 
-## 6. DANH MỤC RỦI RO CHUẨN HÓA (RISK REGISTER)
+## 6. DANH MỤC 10 RỦI RO AN TOÀN BỘ NHỚ (RISK REGISTER)
 
-10 rủi ro được tổng hợp và phân loại độc lập tại [risk_register.csv](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/docs/verification/step2/risk_register.csv) và [risk_register.md](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/docs/verification/step2/risk_register.md):
+Sau khi rà soát độc lập và chuẩn hóa số dòng mã theo commit baseline `4420207`, 10 rủi ro được lưu trữ tại [docs/verification/step2/risk_register.csv](risk_register.csv) và [risk_register.md](risk_register.md):
 
-| Risk ID | Tập tin / Hàm | Dòng mã | Bản chất Rủi ro | CWE | Cơ chế Guard Hiện tại | Trạng thái Khả đạt | Yêu cầu REQ | Phương pháp Kiểm chứng Đề xuất |
+| Risk ID | File & Dòng | Hàm C | Biểu thức / Nguy cơ | CWE | Cơ chế Guard Hiện tại | Trạng thái Khả đạt | REQ Liên quan | Phương pháp Kiểm chứng (Bước 3) |
 |---|---|---|---|---|---|---|---|---|
-| **RISK-001** | `product.c` / `add_product` | 42 | Tràn số nhân đôi capacity (`capacity * 2`) | CWE-190 | Không có guard tường minh; phụ thuộc ngưỡng RAM | **REACHABILITY_UNPROVEN** | REQ-2, REQ-3 | SMT Bit-Vector / CBMC |
-| **RISK-002** | `product.c` / `add_product` | 44 | Tràn số byte cấp phát (`new_cap * sizeof(Product)`) | CWE-190 | Không có guard; realloc thất bại trước khi đạt ngưỡng | **REACHABILITY_UNPROVEN** | REQ-3 | SMT Bit-Vector / CBMC |
-| **RISK-003** | `product.c` / `add_product` | 44-48 | Rò rỉ bộ nhớ khi `realloc` thất bại | CWE-401 | Guard con trỏ tạm `new_items` bảo toàn `list->items` | **GUARDED** | REQ-4 | CBMC / Error Injection Harness |
-| **RISK-004** | `product.c` / `find_product_by_id` | 57-80 | Con trỏ mượn mất hiệu lực sau khi realloc dời mảng | CWE-416 | Hợp đồng kiến trúc; callers không lưu con trỏ qua realloc | **REACHABILITY_UNPROVEN** | REQ-14 | Contract Checking / C Harness SIM-001 |
-| **RISK-005** | `product.c` / `product_list_free` | 16-25 | Giải phóng kép hoặc giải phóng con trỏ rác | CWE-415 | Gán `list->items = NULL`, `count = 0`, `capacity = 0` | **GUARDED** | REQ-13, REQ-15 | CTL Verification / ASan |
-| **RISK-006** | `utils.c` / `safe_string_copy` | 14-25 | Tràn bộ đệm đích khi sao chép chuỗi | CWE-120 | Kiểm tra `dest_size > 0`, ép `dest[dest_size - 1] = 0` | **GUARDED** | REQ-5, REQ-6 | Unit Bounds Tests / CBMC |
-| **RISK-007** | `file_io.c` / `load_products_from_file` | 31-48 | Tràn bộ đệm đọc dòng tệp 512 bytes | CWE-120 | `fgets(512)` + kiểm tra thiếu newline trả về lỗi | **GUARDED** | REQ-16, REQ-17 | Fuzzing Harness SIM-002 |
-| **RISK-008** | `file_io.c` / `parse_product_line` | 86-105 | Tràn mảng con trỏ token khi dòng có quá nhiều dấu phẩy | CWE-121 | Guard `token_count < 8` trong vòng lặp `strtok_r` | **GUARDED** | REQ-17 | Token Fuzzing SIM-002 |
-| **RISK-009** | `file_io.c` / `parse_product_line` | 80-140 | Lỗi xử lý dữ liệu sai định dạng (4 trường vs 6 trường) | CWE-20 | Kiểm tra số token >= 4, parse an toàn qua `safe_str_to_*` | **POTENTIALLY_REACHABLE** | REQ-16, REQ-18 | Boundary Parsing Harness |
-| **RISK-010** | `report.c` / `calculate_category_summaries` | 72-76 | Tràn mảng tổng hợp danh mục vượt quá 32 phần tử | CWE-122 | Guard `*out_count >= max_summaries` trả về mã lỗi | **FALSE_POSITIVE** | REQ-11 | Model Checking Invariant |
+| **RISK-001** | `product.c:118` | `add_product` | Tràn số nhân đôi: `list->capacity * 2` | CWE-190 | Chưa có guard; cần $2^63$ phần tử (trần RAM vật lý) | **REACHABILITY_UNPROVEN** | `REQ-2` | SMT Bit-Vector (Z3) / CBMC |
+| **RISK-002** | `product.c:119` | `add_product` | Tràn số byte cấp phát: `new_cap * sizeof(Product)` | CWE-190, CWE-680 | Chưa có guard; realloc thất bại do cạn RAM trước | **REACHABILITY_UNPROVEN** | `REQ-3` | SMT Bit-Vector (Z3) / CBMC / SIM-001 |
+| **RISK-003** | `product.c:119-124` | `add_product` | Rò rỉ khối nhớ cũ khi realloc trả về NULL | CWE-401 | Dùng con trỏ tạm `new_items`, bảo toàn `list->items` | **GUARDED** | `REQ-12, REQ-11` | CBMC / OOM Fault Injection |
+| **RISK-004** | `product.c:223-233` | `find_product_by_id` | Con trỏ mượn `Product*` mất hiệu lực sau realloc dời mảng | CWE-416 | Hợp đồng kiến trúc; callers không lưu con trỏ qua realloc | **REACHABILITY_UNPROVEN** | `REQ-14` | Contract Checking / SIM-001 Harness |
+| **RISK-005** | `product.c:27-34` | `product_list_free` | Giải phóng kép hoặc giải phóng con trỏ rác | CWE-415 | Gán `list->items = NULL`, `count = 0`, `capacity = 0` | **GUARDED** | `REQ-13, REQ-11` | CTL Temporal Verification / ASan |
+| **RISK-006** | `utils.c:44-66` | `safe_string_copy` | Tràn bộ đệm đích khi sao chép chuỗi | CWE-120 | Kiểm tra `dest_size > 0`, ép `dest[i] = 0`, trả mã lỗi | **GUARDED** | `REQ-9` | CBMC String Bounds / Unit Tests |
+| **RISK-007** | `file_io.c:96, 107-114` | `load_products_from_file` | Đọc dòng tệp dài vượt quá bộ đệm 512 bytes | CWE-120 | `fgets(line, 512)` + phát hiện thiếu newline trả lỗi | **GUARDED** | `REQ-10, REQ-17` | Fuzzing Harness SIM-002 |
+| **RISK-008** | `file_io.c:47, 52-61` | `parse_product_line` | Tràn mảng con trỏ token `tokens[8]` trên ngăn xếp | CWE-121 | Guard `cursor != NULL && token_count < 8` trong vòng lặp | **GUARDED** | `REQ-16, REQ-17` | Excess Token Fuzzing SIM-002 |
+| **RISK-009** | `file_io.c:63-91` | `parse_product_line` | Xử lý dữ liệu sai định dạng (4 trường vs 6 trường) | CWE-20 | Rẽ nhánh token == 6/4, kiểm tra miền số qua `parse_int` | **GUARDED** | `REQ-17, REQ-18` | Boundary Parsing Harness SIM-002 |
+| **RISK-010** | `report.c:72-74` | `calculate_category_summaries` | Vượt quá sức chứa mảng danh mục 32 phần tử | CWE-122 (Prevented) | Guard `if (*out_count >= max_summaries) return STATUS_ERR_OVERFLOW;` | **GUARDED** (Defensive Behavior) | `REQ-16` | Model Checking Invariant |
 
 ---
 
-## 7. ĐẶC TẢ TOÀN BỘ 18 YÊU CẦU AN TOÀN BỘ NHỚ (18 REQs)
+## 7. ĐẶC TẢ VÀ TRUY VẾT 18 YÊU CẦU AN TOÀN BỘ NHỚ (18 REQs)
 
-Toàn bộ 18 REQ từ `Spec_Inventory_Memory_Safety_Audit_18REQ_CHUAN.xlsx` đã được chuyển hóa thành bản đặc tả kỹ thuật đầy đủ tại [requirement_specifications.md](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/docs/verification/step2/requirement_specifications.md) và ma trận truy vết hai chiều tại [req_traceability.csv](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/docs/verification/step2/req_traceability.csv).
+100% 18 yêu cầu từ Sheet `YeuCauChucNang` trong workbook `Spec_Inventory_Memory_Safety_Audit_18REQ_CHUAN.xlsx` đã được trích xuất nguyên văn và đặc tả tại [docs/verification/step2/requirement_specifications.md](requirement_specifications.md) và [req_traceability.csv](req_traceability.csv).
 
-### Tóm tắt Phân nhóm 18 REQ:
-1. **Nhóm Cấp phát và Quản lý Danh sách (REQ-1 đến REQ-4):**
-   - `REQ-1`: Khởi tạo danh sách động hợp lệ (`capacity = 16`, `items != NULL`).
-   - `REQ-2`: Mở rộng dung lượng nhân đôi không tràn số (`capacity * 2 <= SIZE_MAX`).
-   - `REQ-3`: Cấp phát lại kích thước byte an toàn (`new_cap * sizeof(Product) <= SIZE_MAX`).
-   - `REQ-4`: Xử lý cạn kiệt bộ nhớ không làm rò rỉ khối nhớ cũ (`realloc_failed -> owner_valid`).
-2. **Nhóm Vùng đệm và Chuỗi Ký tự (REQ-5 đến REQ-9):**
-   - `REQ-5`: Bảo đảm kích thước trường Mã sản phẩm (`id[20]`).
-   - `REQ-6`: Bảo đảm kích thước trường Tên sản phẩm (`name[100]`).
-   - `REQ-7`: Bảo đảm kích thước trường Danh mục (`category[50]`).
-   - `REQ-8`: Bảo đảm kích thước trường Đơn vị tính (`unit[20]`).
-   - `REQ-9`: Bất biến luôn đóng NUL (`str[sizeof(str)-1] == ' '`) cho mọi chuỗi.
-3. **Nhóm Số học và Tính toán Kho (REQ-10 đến REQ-12):**
-   - `REQ-10`: Phép cộng số lượng nhập kho không tràn số nguyên (`current + add <= INT_MAX`).
-   - `REQ-11`: Giới hạn mảng tổng hợp danh mục (`out_count <= max_summaries`).
-   - `REQ-12`: Thống kê tổng giá trị và số lượng kho không tràn số nguyên 64-bit.
-4. **Nhóm Con trỏ và Quyền Sở hữu (REQ-13 đến REQ-15):**
-   - `REQ-13`: Giải phóng toàn bộ tài nguyên heap khi dọn dẹp danh sách (`items = NULL`).
-   - `REQ-14`: Không dereference con trỏ mượn sau khi khối nhớ bị realloc di chuyển.
-   - `REQ-15`: Ngăn chặn giải phóng kép danh sách (`AG(!(list_live & list_freed))`).
-5. **Nhóm Tệp tin và Bộ Phân tích Cú pháp (REQ-16 đến REQ-18):**
-   - `REQ-16`: Đọc dòng tệp tin an toàn với bộ đệm 512 bytes (`line[512]`).
-   - `REQ-17`: Tách token phân cách phẩy không vượt quá sức chứa mảng `tokens[8]`.
-   - `REQ-18`: Phân tích dữ liệu số nguyên và số thực an toàn từ chuỗi đầu vào.
+### Bảng Tóm tắt Ánh xạ 18 REQ:
+1. **REQ-1 (Safety Invariant):** `ProductList luôn thỏa count <= capacity; khi count > 0 thì items khác NULL và trỏ tới vùng nhớ còn hiệu lực.` (`product.c:9-24, 116-138`).
+2. **REQ-2 (Safety Arithmetic):** `Trước khi mở rộng ProductList bằng capacity * 2, phải kiểm tra capacity <= SIZE_MAX / 2 để tránh tràn số size_t.` (`product.c:118`, ánh xạ `RISK-001`).
+3. **REQ-3 (Safety Arithmetic):** `Trước realloc, phải kiểm tra new_cap <= SIZE_MAX / sizeof(Product) để phép nhân kích thước cấp phát không bị tràn.` (`product.c:119`, ánh xạ `RISK-002`).
+4. **REQ-4 (Safety Arithmetic):** `Trong import_stock, chỉ cộng khi add_quantity > 0, tồn kho hiện tại hợp lệ và current_stock <= INT_MAX - add_quantity; nếu không phải từ chối trước khi cập nhật.` (`inventory.c:30-47`, đã được guard tại `validation.c:297-311`).
+5. **REQ-5 (Safety Arithmetic):** `Trong export_stock, số lượng xuất phải > 0 và <= tồn kho hiện tại; không được tạo ra tồn kho âm hoặc cập nhật khi điều kiện không thỏa.` (`inventory.c:49-66`, đã guard tại `validation.c:286-295`).
+6. **REQ-6 (Memory Bounds):** `Mọi truy cập ProductList.items[i] trong thêm/sửa/xóa/tìm kiếm/báo cáo phải thỏa i < count <= capacity và items còn hiệu lực.` (`product.c:128, 147, 207-215, 227-230`).
+7. **REQ-7 (Liveness):** `Với đầu vào hữu hạn và thao tác I/O trả về, mọi thao tác thêm/sửa/xóa/nhập/xuất đã bắt đầu phải kết thúc ở trạng thái thành công hoặc từ chối có kiểm soát; không lặp vô hạn.` (`product.c`, `inventory.c`).
+8. **REQ-8 (Liveness):** `Với tệp hữu hạn và thao tác đọc trả về, quá trình đọc/phân tích dữ liệu sản phẩm phải kết thúc ở trạng thái chấp nhận hoặc từ chối có kiểm soát; không lặp vô hạn.` (`file_io.c:94-135`).
+9. **REQ-9 (Memory Bounds):** `Các trường chuỗi cố định của Product (id, name, category, unit) phải được kiểm tra độ dài trước sao chép, không ghi vượt buffer và luôn kết thúc bằng ký tự  .` (`utils.c:44-66`, `product.c:37-44`, ánh xạ `RISK-006`).
+10. **REQ-10 (Memory Bounds):** `Input bàn phím và dòng tệp vượt kích thước buffer phải được tiêu thụ/từ chối có kiểm soát mà không phát sinh đọc/ghi ngoài vùng nhớ hợp lệ.` (`file_io.c:96, 107-114`, ánh xạ `RISK-007`).
+11. **REQ-11 (Memory Ownership):** `Allocation động do ProductList/Inventory sở hữu phải có vòng đời rõ ràng; không làm mất con trỏ sở hữu còn sống và phải giải phóng ở thời điểm kết thúc vòng đời.` (`product.c:9-24, 27-34`, ánh xạ `RISK-003, RISK-005`).
+12. **REQ-12 (Memory Ownership):** `Khi realloc thất bại, allocation cũ phải được giữ nguyên quyền sở hữu; khi thành công, con trỏ sở hữu và capacity phải cập nhật đúng vùng nhớ mới.` (`product.c:119-125`, ánh xạ `RISK-003`).
+13. **REQ-13 (Memory Safety):** `Một allocation chỉ được free tối đa một lần; cleanup phải cập nhật trạng thái/con trỏ để ngăn double-free khi gọi lại.` (`product.c:27-34`, ánh xạ `RISK-005`).
+14. **REQ-14 (Pointer Safety):** `Không được dereference con trỏ Product/vùng nhớ ProductList sau free hoặc sau khi realloc làm con trỏ cũ mất hiệu lực.` (`product.c:223-233, 119`, ánh xạ `RISK-004`).
+15. **REQ-15 (API Boundary Safety):** `API ProductList/Inventory phải kiểm tra con trỏ NULL theo hợp đồng hàm trước khi dereference đối tượng hoặc buffer vào/ra.` (`product.c:10, 71, 142, 201, 224`).
+16. **REQ-16 (Memory Bounds):** `Mảng tokens, results, summaries và vùng nhớ dùng với memmove phải kiểm soát số phần tử, số byte, giới hạn nguồn/đích; không truy cập ngoài vùng nhớ đã cấp phát.` (`file_io.c:47, 52`, `report.c:72-74`, `product.c:212`, ánh xạ `RISK-008, RISK-010`).
+17. **REQ-17 (Functional Parser):** `Parser phải chấp nhận đúng định dạng 6 trường hoặc định dạng tương thích 4 trường; các dòng sai số trường/độ dài/định dạng phải bị từ chối mà không gây hỏng bộ nhớ Inventory.` (`file_io.c:46-92`, ánh xạ `RISK-007, RISK-008, RISK-009`).
+18. **REQ-18 (Functional Validation):** `Quantity/price không hợp lệ, vượt miền số hoặc không hữu hạn (NaN/Infinity) phải bị từ chối trước cập nhật kho và trước phép tính báo cáo có liên quan.` (`validation.c:150-210`, `file_io.c:20-44`, ánh xạ `RISK-009`).
 
 ---
 
-## 8. MÔ HÌNH HÓA VÀ CHUẨN BỊ KIỂM CHỨNG HÌNH THỨC
+## 8. HÌNH THỨC HÓA VÀ CHUẨN BỊ CHO BƯỚC 3
 
-Chi tiết tại [formalization_plan.md](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/docs/verification/step2/formalization_plan.md):
-
-### 8.1. Hệ Thống 5 Mô Hình Trạng Thái Rời Rạc
-- **Phân hệ Danh sách Heap (`list_*`):** 7 trạng thái (`list_valid`, `list_growth`, `list_growth_ok`, `list_growth_failed`, `list_cleanup`, `list_freed_state`, `list_cleanup_rejected`).
-- **Phân hệ Con trỏ Mượn (`ptr_*`):** 2 trạng thái (`ptr_valid`, `ptr_invalidated`).
-- **Phân hệ Tệp tin (`file_*`):** 4 trạng thái (`file_idle`, `file_parsing`, `file_loaded`, `file_rejected`).
-- **Phân hệ Bộ đệm (`buffer_*`):** 4 trạng thái (`buffer_idle`, `buffer_processing`, `buffer_safe`, `buffer_rejected`).
-- **Phân hệ Nghiệp vụ (`product_op_*`):** 4 trạng thái (`product_op_idle`, `product_op_processing`, `product_op_done`, `product_op_rejected`).
-
-### 8.2. Nhận Diện Bẫy Logic "Đúng Hiển Nhiên" (Vacuous Truth)
-- Sheet `LoaiTruLanNhau` định nghĩa 8 cặp mệnh đề loại trừ lẫn nhau (ví dụ: `(ptr_deref, ptr_invalid)`).
-- **Phát hiện học thuật:** Nếu người kiểm chứng khai báo tiên đề `TRANS !(ptr_deref & ptr_invalid)` trong NuSMV, công thức CTL-03 `AG(ptr_invalid -> !ptr_deref)` sẽ đúng hiển nhiên do cấu trúc logic chứ không chứng minh được mã nguồn C an toàn.
-- **Giải pháp chuyển giao cho Bước 3:** Trong mô hình kiểm chứng Bước 3, các biến trạng thái phải được kích hoạt độc lập theo đường chạy của mã C; không được biến thuộc tính an toàn cần kiểm chứng thành tiên đề tiên nghiệm.
-
-### 8.3. SMT Bit-Vector (Z3 Formulation)
-Đã thiết lập 3 script SMT-LIB v2 chính xác cho kiến trúc LLP64:
-- `SMT-01`: Tràn dung lượng `capacity * 2` trên `(_ BitVec 64)` $\implies$ SAT lý thuyết, Unreachable runtime.
-- `SMT-02`: Tràn kích thước cấp phát `new_cap * 208` trên `(_ BitVec 64)` $\implies$ SAT lý thuyết, Unreachable runtime.
-- `SMT-03`: Tràn số nguyên có dấu `current_stock + add_quantity` trên `(_ BitVec 32)` $\implies$ **SAT & POTENTIALLY_REACHABLE**.
+Chi tiết tại [formalization_plan.md](formalization_plan.md):
+- **5 Mô hình Trạng thái Rời rạc (21 trạng thái):** Đã phân định rõ các biến trạng thái cho vòng đời heap, con trỏ mượn, bộ phân tích cú pháp tệp, bộ đệm chuỗi và luồng giao dịch kho.
+- **Phân tích Bẫy Logic Đúng Hiển Nhiên (Vacuous Truth):** Nhận diện nguy cơ nếu đưa tiên đề `TRANS !(ptr_deref & ptr_invalid)` trong `LoaiTruLanNhau` vào model checker, công thức `AG(ptr_invalid -> !ptr_deref)` sẽ đúng hiển nhiên. Nhóm đã đề ra phương án kiểm chứng độc lập theo luồng gọi C thực tế ở Bước 3.
+- **3 Bài toán SMT Bit-Vector (QF_BV):**
+  - `SMT-01` (`product.c:118`): `capacity * 2 > UINT64_MAX` $\implies$ SAT toán học, Unreachable runtime.
+  - `SMT-02` (`product.c:119`): `new_cap * 208 > UINT64_MAX` $\implies$ SAT toán học, Unreachable runtime.
+  - `SMT-03` (`inventory.c:45` & `validation.c:306`): Phép cộng số lượng có guard `current_stock > INT_MAX - add_quantity` $\implies$ **UNSAT** (Đã phòng vệ an toàn khỏi Undefined Behavior).
 
 ---
 
 ## 9. ĐÁNH GIÁ TÍNH PHỦ (COVERAGE ASSESSMENT)
 
-Chi tiết tại [coverage_matrix.csv](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/docs/verification/step2/coverage_matrix.csv) và [coverage_report.md](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/docs/verification/step2/coverage_report.md):
-
-1. **Requirement Mapping Coverage:** **18 / 18 (100.0%)** – 100% REQ trong đề tài được ánh xạ đầy đủ.
-2. **Source Review Coverage:** **7 / 7 modules (100.0%)**, **70 / 70 hàm (100.0%)**, **2.229 Code LOC (100.0%)**.
-3. **Risk Specification Coverage:** **10 / 10 rủi ro (100.0%)** được đặc tả chi tiết.
-4. **Planned State Transition Coverage:** **21 / 21 trạng thái (100.0% đặc tả)**.
-5. **Dynamic Code/Branch Coverage:** **`NOT_MEASURED`** (Giai đoạn 2 chưa tích hợp gcov).
-6. **Formal State Space Exploration Coverage:** **`NOT_MEASURED`** (Chờ chạy Model Checker ở Bước 3).
-
----
-
-## 10. KẾ HOẠCH MÔ PHỎNG RỦI RO BẰNG C (SIMULATION PLAN)
-
-Chi tiết tại [c_simulation_plan.md](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/docs/verification/step2/c_simulation_plan.md):
-- **SIM-001 (Heap Reallocation & Pointer Invalidation):** Thiết kế C harness cô lập cưỡng bức dung lượng cận biên $2^{62}$ để quan sát phản ứng của `realloc` và đo đạc hành vi truy cập con trỏ mượn cũ.
-- **SIM-002 (Parser Buffer & Token Boundary Fuzzing):** Xây dựng bộ test corpus gồm 7 trường hợp dị dạng (dòng > 512 bytes, > 8 tokens, < 4 tokens, ký tự NUL nhúng ` `, số liệu NaN/Overflow) để kích hoạt toàn diện các nhánh phòng vệ của `file_io.c`.
-- **Vai trò của nhánh `audit/v0-file-io-vulnerable`:** Được lưu giữ làm mẫu đối chứng lỗi (Benchmark Baseline) để kiểm thử độ nhạy của công cụ phân tích tĩnh trong Bước 3, tuyệt đối không merge vào baseline chính.
+Chi tiết tại [coverage_matrix.csv](coverage_matrix.csv) và [coverage_report.md](coverage_report.md):
+1. **Requirement Mapping Coverage:** **18 / 18 (100.0%)** – Toàn bộ 18 REQ được ánh xạ chi tiết hai chiều.
+2. **Source Review Coverage:** **7 / 7 modules (100.0%)**, **70 / 70 hàm C (100.0%)**, **2.229 Code LOC (100.0%)**.
+3. **Risk Specification Coverage:** **10 / 10 rủi ro (100.0%)** được đặc tả đầy đủ 24 trường thông tin.
+4. **Static Code Analysis Coverage:** **7 / 7 tệp C (100.0%)** được Cppcheck 2.21.0 phân tích thực tế (67 findings).
+5. **Planned State Model Coverage:** **21 / 21 trạng thái (100.0% đặc tả)**.
+6. **Dynamic Code / Branch Coverage:** **`CHƯA ĐO (NOT_MEASURED)`** (Ghi nhận trung thực; sẽ đo bằng gcov/lcov ở Bước 3).
+7. **Formal State Space Coverage:** **`CHƯA ĐO (NOT_MEASURED)`** (Ghi nhận trung thực; sẽ đo bằng CBMC/NuSMV ở Bước 3).
 
 ---
 
-## 11. HỒ SƠ BẰNG CHỨNG (EVIDENCE MANIFEST)
+## 10. KẾ HOẠCH MÔ PHỎNG RỦI RO BẰNG C TEST HARNESS (SIMULATION PLAN)
 
-Toàn bộ 22 bằng chứng thực nghiệm đã được lập chỉ mục và băm mã SHA-256 thực tế tại [evidence_manifest.csv](file:///c:/Du_an/ATPM/ATPM_Group_04_inventory-memory-audit/results/step2/evidence_manifest.csv). Bất kỳ thành viên nào cũng có thể kiểm chứng tính toàn vẹn của kết quả bằng cách so sánh mã băm của từng tập tin log.
+Chi tiết tại [c_simulation_plan.md](c_simulation_plan.md):
+- **SIM-001 (Heap Reallocation & Borrowed Pointer Lifetime):**
+  - *Mã nguồn:* `product.c:116-138, 223-233`.
+  - *Kịch bản A:* Thiết lập trạng thái cận biên $2^62$ để kích thích phép nhân tràn và kiểm chứng guard con trỏ tạm `new_items` bảo toàn mảng gốc khi OOM (REQ-12).
+  - *Kịch bản B:* Thu thập con trỏ mượn, ép realloc dời mảng heap, và dereference để quan sát phát hiện Use-After-Free của AddressSanitizer (REQ-14).
+- **SIM-002 (File Parser Buffer Bounds & Malformed Inputs):**
+  - *Mã nguồn:* `file_io.c:46-92, 94-135`.
+  - *Test Corpus:* 6 trường hợp kiểm thử biên (dòng > 512 bytes, > 8 tokens, < 4 tokens, NUL nhúng, số liệu lỗi) để kích hoạt toàn diện các guard của parser dùng `strchr('\|')` (REQ-9, REQ-10, REQ-16, REQ-17, REQ-18).
+- **Mẫu Đối chứng Lỗi (Vulnerable Benchmark):** Sử dụng nhánh `audit/v0-file-io-vulnerable` làm mẫu thử đối chứng đo độ nhạy phát hiện của công cụ phân tích động, bảo đảm không merge vào baseline chính.
 
 ---
 
-## 12. KẾT LUẬN VÀ SẴN SÀNG CHUYỂN GIAO BƯỚC 3
+## 11. HỒ SƠ BẰNG CHỨNG THỰC NGHIỆM (EVIDENCE MANIFEST)
 
-### 12.1. Trả lời Trọng tâm Nhận xét của Giảng viên
-1. **Xuất phát từ Source C:** Đã rà soát chi tiết 100% 70 hàm và 2.229 dòng lệnh.
-2. **Compile Time & Errors/Warnings:** Thu được 0 lỗi và 0 cảnh báo dưới bộ cờ nghiêm ngặt nhất của GCC C17; hiểu rõ bản chất cảnh báo 0 không đồng nghĩa với không có rủi ro logic.
-3. **Tổng hợp & Đặc tả Hình thức:** Hoàn thành 18 REQ, 18 CTL properties, 5 mô hình trạng thái và 3 bài toán SMT.
-4. **Tính Phủ:** Đạt 100% độ phủ đặc tả và rà soát mã nguồn; phân định minh bạch với độ phủ thực thi runtime (`NOT_MEASURED`).
-5. **Mô phỏng Rủi ro bằng C:** Đã lập kế hoạch chi tiết hai bài toán then chốt `SIM-001` và `SIM-002`.
+Toàn bộ 23 bằng chứng thực nghiệm đã được lập chỉ mục tại [results/step2/evidence_manifest.csv](../../../results/step2/evidence_manifest.csv). Script kiểm tra tự động `tools/check_step2_consistency.py` đã xác minh 100% mã băm SHA-256 thực tế của các tập tin log và tài liệu.
 
-### 12.2. Trạng thái Sẵn sàng cho Bước 3
-Dự án đã hoàn thành **100% Bước 2** trên nhánh làm việc `audit/step2-risk-specification` và sẵn sàng bước vào **Bước 3: Thực thi Kiểm chứng Hình thức, Phân tích Động và Mô phỏng C**.
+---
+
+## 12. KẾT LUẬN NGHIỆM THU VÀ PHÂN CÔNG BƯỚC 3
+
+### 12.1. Đánh giá Nghiệm thu Bước 2
+Dự án đã **HOÀN THÀNH 100% BƯỚC 2** theo đúng toàn bộ các tiêu chí đề ra:
+- Mã nguồn baseline `v0` được bảo vệ nguyên vẹn 100%.
+- Cppcheck 2.21.0 đã được cài đặt và thực thi thực tế, phân loại 67 cảnh báo.
+- 10 rủi ro bộ nhớ được chuẩn hóa số dòng và phân loại tính khả đạt chính xác.
+- 18 REQ được trích xuất nguyên văn và liên kết hai chiều chặt chẽ.
+- Script kiểm tra tính nhất quán tự động báo cáo 0 lỗi, 0 cảnh báo.
+
+### 12.2. Kế hoạch Phân công Công việc cho Bước 3
+1. **Kiểm chứng Hình thức SMT (Nguyễn Quang Thọ):** Chạy Z3 solver trên các script QF_BV cho `capacity * 2`, `new_cap * 208` và `stock + add`.
+2. **Kiểm chứng Mô hình Hữu hạn CBMC (Hà Văn Đô):** Thiết lập unwinding loop và assertion checks cho các hàm mảng động và chuỗi.
+3. **Kiểm chứng Logic Thời gian NuSMV (Hà Văn Đô):** Mô hình hóa và kiểm chứng 18 công thức CTL không dính vacuity.
+4. **Phân tích Động & Test Harness Mô phỏng (Nguyễn Quang Thọ):** Xây dựng và biên dịch SIM-001, SIM-002 với GCC ASan + UBSan; đo độ phủ thực thi bằng gcov/lcov.
+5. **Đánh giá và Tích hợp Báo cáo Bước 3 (Nguyễn Kiều Trang):** Tổng hợp bằng chứng, đối sánh kết quả với mẫu đối chứng lỗi, chuẩn bị hồ sơ cho bản v1.
