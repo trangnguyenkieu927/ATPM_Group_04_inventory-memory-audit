@@ -1,2 +1,68 @@
-Finding_ID,Tool,Tool_Version,File,Line,Column,Function,Diagnostic_Code,Severity,Message,Build_Config,Source_SHA,Evidence_Path,Triage_Status
-SA-000,Cppcheck,TOOL_UNAVAILABLE,NONE,0,0,NONE,NONE,INFO,"Cppcheck tool is unavailable in environment. Refer to results/step2/cppcheck/cppcheck.log for installation guide.",N/A,44202070c68002d9af068374478cdc83098dd4d8,results/step2/cppcheck/cppcheck.log,TOOL_UNAVAILABLE
+Finding_ID,Tool,Tool_Version,File,Line,Column,Diagnostic_Code,Severity,CWE,Inconclusive,Message,Triage_Status
+SA-001,Cppcheck,2.21.0,include/inventory.h,4,2,missingIncludeSystem,information,,false,Include file: <stddef.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-002,Cppcheck,2.21.0,include/models.h,4,2,missingIncludeSystem,information,,false,Include file: <stddef.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-003,Cppcheck,2.21.0,src/file_io.c,3,2,missingIncludeSystem,information,,false,Include file: <ctype.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-004,Cppcheck,2.21.0,src/file_io.c,4,2,missingIncludeSystem,information,,false,Include file: <errno.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-005,Cppcheck,2.21.0,src/file_io.c,5,2,missingIncludeSystem,information,,false,Include file: <limits.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-006,Cppcheck,2.21.0,src/file_io.c,6,2,missingIncludeSystem,information,,false,Include file: <math.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-007,Cppcheck,2.21.0,src/file_io.c,7,2,missingIncludeSystem,information,,false,Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-008,Cppcheck,2.21.0,src/file_io.c,8,2,missingIncludeSystem,information,,false,Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-009,Cppcheck,2.21.0,src/file_io.c,9,2,missingIncludeSystem,information,,false,Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-010,Cppcheck,2.21.0,src/file_io.c,0,0,normalCheckLevelMaxBranches,information,,false,Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.,ANALYZED
+SA-011,Cppcheck,2.21.0,src/file_io.c,26,82,compareValueOutOfTypeRangeError,style,CWE-398,false,Comparing expression of type 'signed long' against value 2147483647. Condition is always false.,ANALYZED
+SA-012,Cppcheck,2.21.0,src/inventory.c,5,2,missingIncludeSystem,information,,false,Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-013,Cppcheck,2.21.0,src/inventory.c,6,2,missingIncludeSystem,information,,false,Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-014,Cppcheck,2.21.0,src/inventory.c,7,2,missingIncludeSystem,information,,false,Include file: <stdint.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-015,Cppcheck,2.21.0,src/inventory.c,8,2,missingIncludeSystem,information,,false,Include file: <math.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-016,Cppcheck,2.21.0,src/inventory.c,22,42,constParameterPointer,style,CWE-398,false,Parameter 'inventory' can be declared as pointer to const,ANALYZED
+SA-017,Cppcheck,2.21.0,src/main.c,1,2,missingIncludeSystem,information,,false,Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-018,Cppcheck,2.21.0,src/main.c,2,2,missingIncludeSystem,information,,false,Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-019,Cppcheck,2.21.0,src/main.c,3,2,missingIncludeSystem,information,,false,Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-020,Cppcheck,2.21.0,src/main.c,4,2,missingIncludeSystem,information,,false,Include file: <time.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-021,Cppcheck,2.21.0,include/utils.h,4,2,missingIncludeSystem,information,,false,Include file: <stddef.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-022,Cppcheck,2.21.0,include/report.h,4,2,missingIncludeSystem,information,,false,Include file: <stddef.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-023,Cppcheck,2.21.0,include/report.h,5,2,missingIncludeSystem,information,,false,Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-024,Cppcheck,2.21.0,src/main.c,0,0,normalCheckLevelMaxBranches,information,,false,Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.,ANALYZED
+SA-025,Cppcheck,2.21.0,src/main.c,41,16,constVariablePointer,style,CWE-398,false,Variable 't' can be declared as pointer to const,ANALYZED
+SA-026,Cppcheck,2.21.0,src/main.c,376,14,constVariablePointer,style,CWE-398,false,Variable 'p' can be declared as pointer to const,ANALYZED
+SA-027,Cppcheck,2.21.0,src/main.c,442,14,constVariablePointer,style,CWE-398,false,Variable 'p' can be declared as pointer to const,ANALYZED
+SA-028,Cppcheck,2.21.0,src/main.c,480,18,constVariablePointer,style,CWE-398,false,Variable 'p' can be declared as pointer to const,ANALYZED
+SA-029,Cppcheck,2.21.0,src/main.c,529,14,constVariablePointer,style,CWE-398,false,Variable 'p' can be declared as pointer to const,ANALYZED
+SA-030,Cppcheck,2.21.0,src/main.c,571,14,constVariablePointer,style,CWE-398,false,Variable 'p' can be declared as pointer to const,ANALYZED
+SA-031,Cppcheck,2.21.0,src/main.c,682,26,constParameter,style,CWE-398,false,Parameter 'argv' can be declared as const array,ANALYZED
+SA-032,Cppcheck,2.21.0,src/product.c,3,2,missingIncludeSystem,information,,false,Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-033,Cppcheck,2.21.0,src/product.c,4,2,missingIncludeSystem,information,,false,Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-034,Cppcheck,2.21.0,src/product.c,5,2,missingIncludeSystem,information,,false,Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-035,Cppcheck,2.21.0,src/product.c,6,2,missingIncludeSystem,information,,false,Include file: <ctype.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-036,Cppcheck,2.21.0,src/product.c,0,0,normalCheckLevelMaxBranches,information,,false,Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.,ANALYZED
+SA-037,Cppcheck,2.21.0,src/product.c,55,20,arrayIndexThenCheck,style,CWE-398,false,Array index 'i' is used before limits check.,ANALYZED
+SA-038,Cppcheck,2.21.0,src/product.c,61,18,arrayIndexThenCheck,style,CWE-398,false,Array index 'j' is used before limits check.,ANALYZED
+SA-039,Cppcheck,2.21.0,src/product.c,141,33,constParameterPointer,style,CWE-398,false,Parameter 'list' can be declared as pointer to const,ANALYZED
+SA-040,Cppcheck,2.21.0,src/report.c,4,2,missingIncludeSystem,information,,false,Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-041,Cppcheck,2.21.0,src/report.c,5,2,missingIncludeSystem,information,,false,Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-042,Cppcheck,2.21.0,src/report.c,6,2,missingIncludeSystem,information,,false,Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-043,Cppcheck,2.21.0,src/report.c,7,2,missingIncludeSystem,information,,false,Include file: <time.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-044,Cppcheck,2.21.0,src/report.c,0,0,normalCheckLevelMaxBranches,information,,false,Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.,ANALYZED
+SA-045,Cppcheck,2.21.0,src/report.c,229,16,constVariablePointer,style,CWE-398,false,Variable 't' can be declared as pointer to const,ANALYZED
+SA-046,Cppcheck,2.21.0,src/utils.c,2,2,missingIncludeSystem,information,,false,Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-047,Cppcheck,2.21.0,src/utils.c,3,2,missingIncludeSystem,information,,false,Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-048,Cppcheck,2.21.0,src/utils.c,4,2,missingIncludeSystem,information,,false,Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-049,Cppcheck,2.21.0,src/utils.c,5,2,missingIncludeSystem,information,,false,Include file: <ctype.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-050,Cppcheck,2.21.0,src/utils.c,6,2,missingIncludeSystem,information,,false,Include file: <limits.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-051,Cppcheck,2.21.0,src/utils.c,0,0,normalCheckLevelMaxBranches,information,,false,Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.,ANALYZED
+SA-052,Cppcheck,2.21.0,src/validation.c,3,2,missingIncludeSystem,information,,false,Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-053,Cppcheck,2.21.0,src/validation.c,4,2,missingIncludeSystem,information,,false,Include file: <ctype.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-054,Cppcheck,2.21.0,src/validation.c,5,2,missingIncludeSystem,information,,false,Include file: <limits.h> not found. Please note: Standard library headers do not need to be provided to get proper results.,ANALYZED
+SA-055,Cppcheck,2.21.0,src/validation.c,0,0,normalCheckLevelMaxBranches,information,,false,Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.,ANALYZED
+SA-056,Cppcheck,2.21.0,include/report.h,98,19,unusedFunction,style,CWE-561,false,The function 'report_statistics_default' is never used.,ANALYZED
+SA-057,Cppcheck,2.21.0,src/inventory.c,10,5,unusedFunction,style,CWE-561,false,The function 'inventory_init' is never used.,ANALYZED
+SA-058,Cppcheck,2.21.0,src/inventory.c,14,6,unusedFunction,style,CWE-561,false,The function 'inventory_free' is never used.,ANALYZED
+SA-059,Cppcheck,2.21.0,src/inventory.c,18,16,unusedFunction,style,CWE-561,false,The function 'find_product' is never used.,ANALYZED
+SA-060,Cppcheck,2.21.0,src/inventory.c,68,5,unusedFunction,style,CWE-561,false,The function 'update_stock' is never used.,ANALYZED
+SA-061,Cppcheck,2.21.0,src/utils.c,200,6,unusedFunction,style,CWE-561,false,The function 'to_lower_case' is never used.,ANALYZED
+SA-062,Cppcheck,2.21.0,src/validation.c,119,5,unusedFunction,style,CWE-561,false,The function 'validate_product_info' is never used.,ANALYZED
+SA-063,Cppcheck,2.21.0,src/validation.c,271,5,unusedFunction,style,CWE-561,false,The function 'validate_price_quantity_values' is never used.,ANALYZED
+SA-064,Cppcheck,2.21.0,src/inventory.c,22,10,staticFunction,style,,false,The function 'find_product_mutable' should have static linkage since it is not used outside of its translation unit.,ANALYZED
+SA-065,Cppcheck,2.21.0,src/main.c,93,6,staticFunction,style,,false,The function 'print_product_list' should have static linkage since it is not used outside of its translation unit.,ANALYZED
+SA-066,Cppcheck,2.21.0,src/validation.c,110,5,staticFunction,style,,false,The function 'validate_name_unit' should have static linkage since it is not used outside of its translation unit.,ANALYZED
+SA-067,Cppcheck,2.21.0,,,,checkersReport,information,,false,Active checkers: 119/186 (use --checkers-report=<filename> to see details),ANALYZED
