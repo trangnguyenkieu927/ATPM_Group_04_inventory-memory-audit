@@ -1,0 +1,43 @@
+﻿=========================================================================
+THONG TIN MOI TRUONG BIEN DICH VA PHAN TICH COMPILE-TIME (STEP 2)
+=========================================================================
+Thoi diem thuc hien : 2026-10-15 21:01:07 +07:00
+He dieu hanh        : Microsoft Windows NT 10.0.26200.0
+Kien truc CPU       : AMD64 (64-bit)
+Data Model          : LLP64 (Windows 64-bit: int=4B, long=4B, pointer=8B)
+
+THONG TIN PHIEN BAN GIT:
+Nhanh lam viec      : audit/step2-risk-specification
+Commit Baseline SHA : 44202070c68002d9af068374478cdc83098dd4d8
+
+CONG CU VA TIEN TRINH:
+Compiler            : gcc.exe (Rev5, Built by MSYS2 project) 16.1.0
+Copyright (C) 2026 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
+Build Tool          : GNU Make 4.4.1
+Built for x86_64-w64-mingw32
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+
+THONG SO KIEU DU LIEU THUC TE (MEASURED ABI PROBE):
+- sizeof(int)              : 4 bytes
+- sizeof(long)             : 4 bytes
+- sizeof(long long)        : 8 bytes
+- sizeof(size_t)           : 8 bytes
+- sizeof(void*)            : 8 bytes
+- sizeof(double)           : 8 bytes
+- sizeof(Product)          : 208 bytes (Struct with padding for double alignment)
+- sizeof(ProductList)      : 24 bytes (items:8B, count:8B, capacity:8B)
+- sizeof(Inventory)        : 24 bytes
+- sizeof(CategorySummary)  : 80 bytes
+- sizeof(InventorySummary) : 456 bytes
+- INT_MAX                  : 2147483647 (0x7FFFFFFF)
+- SIZE_MAX                 : 18446744073709551615 (0xFFFFFFFFFFFFFFFF)
+- __STDC_VERSION__         : 201710L (ISO C17)
+=========================================================================

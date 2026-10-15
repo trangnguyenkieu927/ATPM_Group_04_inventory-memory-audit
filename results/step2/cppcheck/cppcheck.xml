@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results version="2">
+    <cppcheck version="TOOL_UNAVAILABLE"/>
+    <errors>
+        <error id="toolUnavailable" severity="information" msg="Cppcheck is not installed on the system PATH. Refer to results/step2/cppcheck/cppcheck.log for installation instructions." verbose="Cppcheck tool was not found during Step 2 analysis." cwe="0"/>
+    </errors>
+</results>

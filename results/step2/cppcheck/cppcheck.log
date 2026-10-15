@@ -1,0 +1,30 @@
+=========================================================================
+NHẬT KÝ THỰC THI CÔNG CỤ PHÂN TÍCH TĨNH: CPPCHECK
+=========================================================================
+Thời điểm kiểm tra : 2026-10-15 21:01:28 +07:00
+Trạng thái công cụ : TOOL_UNAVAILABLE (Chưa cài đặt trên hệ thống PATH)
+Lệnh dự kiến       : cppcheck --enable=all --inconclusive --std=c17 --language=c -Isource/include --template=gcc source/src/
+
+NGUYÊN NHÂN:
+- Trình thực thi 'cppcheck.exe' không tồn tại trong biến môi trường PATH của hệ điều hành Windows và môi trường MSYS2 hiện hành.
+- Tuân thủ nguyên tắc bắt buộc: "Không tự ý cài phần mềm hệ thống khi cần quyền quản trị hoặc tác động tới môi trường của người dùng mà chưa được chấp thuận."
+
+HƯỚNG DẪN CÀI ĐẶT DÀNH CHO NGƯỜI DÙNG:
+1. Đối với môi trường MSYS2 UCRT64 (Khuyến nghị cho dự án hiện tại):
+   Mở terminal MSYS2 UCRT64 và chạy:
+   $ pacman -S mingw-w64-ucrt-x86_64-cppcheck
+
+2. Đối với Windows (Chocolatey / Winget / Scoop):
+   > winget install Cppcheck.Cppcheck
+   hoặc:
+   > choco install cppcheck
+   hoặc:
+   > scoop install cppcheck
+
+3. Đối với Linux (Ubuntu / Debian):
+   $ sudo apt-get update && sudo apt-get install -y cppcheck
+
+KẾ HOẠCH BỔ SUNG:
+- Kết quả kiểm tra phân tích tĩnh ở Bước 2 được thực hiện độc lập thông qua phân tích mã chuyên sâu (In-depth Security Code Review) và phân tích cảnh báo toàn diện của GCC 16.1.0 (-Wconversion -Wsign-conversion -Wshadow -Wformat=2 -Wnull-dereference).
+- Phép phân tích Cppcheck sẽ được thực thi bổ sung ngay sau khi công cụ được cài đặt ở Bước 3.
+=========================================================================

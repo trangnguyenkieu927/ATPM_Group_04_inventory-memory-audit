@@ -1,0 +1,2 @@
+Finding_ID,Tool,Tool_Version,File,Line,Column,Function,Diagnostic_Code,Severity,Message,Build_Config,Source_SHA,Evidence_Path,Triage_Status
+SA-000,Cppcheck,TOOL_UNAVAILABLE,NONE,0,0,NONE,NONE,INFO,"Cppcheck tool is unavailable in environment. Refer to results/step2/cppcheck/cppcheck.log for installation guide.",N/A,44202070c68002d9af068374478cdc83098dd4d8,results/step2/cppcheck/cppcheck.log,TOOL_UNAVAILABLE
