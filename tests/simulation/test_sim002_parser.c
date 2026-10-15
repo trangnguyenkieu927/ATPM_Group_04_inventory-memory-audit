@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "models.h"
-#include "inventory.h"
-#include "file_io.h"
+#include "../../source/include/models.h"
+#include "../../source/include/inventory.h"
+#include "../../source/include/file_io.h"
 
 typedef struct {
     const char *corpus_file;

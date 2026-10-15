@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "models.h"
-#include "validation.h"
+#include "../../../source/include/models.h"
+#include "../../../source/include/validation.h"
 
 /* Cơ chế Fault Injection để ép realloc trả NULL có kiểm soát */
 static int g_fail_realloc = 0;

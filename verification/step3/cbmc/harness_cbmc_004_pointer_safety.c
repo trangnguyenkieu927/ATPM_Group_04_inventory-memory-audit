@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "models.h"
-#include "product.h"
+#include "../../../source/include/models.h"
+#include "../../../source/include/product.h"
 
 #ifndef __CPROVER__
 #define __CPROVER_assert(cond, msg) do { \

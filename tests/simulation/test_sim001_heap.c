@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "models.h"
-#include "product.h"
+#include "../../source/include/models.h"
+#include "../../source/include/product.h"
 
 /* Biến cờ điều khiển fault injection */
 static int g_inject_realloc_failure = 0;

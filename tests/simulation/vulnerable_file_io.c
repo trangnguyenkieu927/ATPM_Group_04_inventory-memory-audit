@@ -14,9 +14,9 @@
  * REQ-18 : price âm và quantity âm từ file không bị từ chối
  */
 
-#include "file_io.h"
-#include "inventory.h"
-#include "product.h"
+#include "../../source/include/file_io.h"
+#include "../../source/include/inventory.h"
+#include "../../source/include/product.h"
 
 #include <ctype.h>
 #include <errno.h>

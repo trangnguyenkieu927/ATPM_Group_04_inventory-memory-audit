@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include "models.h"
-#include "inventory.h"
-#include "product.h"
-#include "validation.h"
+#include "../../../source/include/models.h"
+#include "../../../source/include/inventory.h"
+#include "../../../source/include/product.h"
+#include "../../../source/include/validation.h"
 
 #ifndef __CPROVER__
 #define __CPROVER_assert(cond, msg) do { \

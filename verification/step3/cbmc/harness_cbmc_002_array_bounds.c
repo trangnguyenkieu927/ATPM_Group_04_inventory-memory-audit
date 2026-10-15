@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "models.h"
-#include "product.h"
-#include "inventory.h"
-#include "report.h"
+#include "../../../source/include/models.h"
+#include "../../../source/include/product.h"
+#include "../../../source/include/inventory.h"
+#include "../../../source/include/report.h"
 
 #ifndef __CPROVER__
 #define __CPROVER_assert(cond, msg) do { \
