@@ -1,0 +1,34 @@
+=================================================================
+==12346==ERROR: AddressSanitizer: heap-use-after-free on address 0x619000000080 pc 0x000000402100 bp 0x7ffd98765430 sp 0x7ffd98765428
+READ of size 4 at 0x619000000080 thread T0
+    #0 0x4020ff in test_sc05_use_after_free tests/simulation/SC-05/test_sc05_pointer_lifetime.c:56
+    #1 0x402340 in main tests/simulation/SC-05/test_sc05_pointer_lifetime.c:88
+    #2 0x7f8a12345678 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x29d90)
+    #3 0x40109a in _start (test_sc05_pointer_lifetime.exe+0x40109a)
+
+0x619000000080 is located 0 bytes inside of 1040-byte region [0x619000000080,0x619000000490)
+freed by thread T0 here:
+    #0 0x7f8a12445890 in realloc (/lib/x86_64-linux-gnu/libasan.so.8+0xb8890)
+    #1 0x401340 in add_product source/src/product.c:120
+    #2 0x4020a0 in test_sc05_use_after_free tests/simulation/SC-05/test_sc05_pointer_lifetime.c:50
+
+previously allocated by thread T0 here:
+    #0 0x7f8a12445450 in malloc (/lib/x86_64-linux-gnu/libasan.so.8+0xb8450)
+    #1 0x401120 in product_list_init source/src/product.c:25
+    #2 0x402020 in test_sc05_use_after_free tests/simulation/SC-05/test_sc05_pointer_lifetime.c:40
+
+SUMMARY: AddressSanitizer: heap-use-after-free tests/simulation/SC-05/test_sc05_pointer_lifetime.c:56 in test_sc05_use_after_free
+Shadow bytes around the buggy address:
+  0x0c327fff7fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c327fff7fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x0c327fff7fe0:[fd]fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c327fff7ff0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Heap left redzone:     fa
+  Freed heap region:     fd
+  Stack left redzone:    f1
+  Stack mid redzone:     f2
+  Stack right redzone:   f3
+  ASan internal:         fe
+==12346==ABORTING

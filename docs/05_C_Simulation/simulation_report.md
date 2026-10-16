@@ -22,12 +22,12 @@ Nhóm ATPM_Group_04 đã xây dựng toàn bộ **6 bộ test driver C độc l�
 2. **Bất biến bảo toàn tồn kho (Conservation Invariant - SC-06):** Khi thực hiện giao dịch nhập kho tràn số (`INT_MAX + 50`) hoặc xuất kho vượt quá số lượng hiện có (`200 > 150`), hệ thống từ chối dứt khoát và số lượng tồn kho cũ được bảo toàn $100\%$ không suy suyển.
 3. **Phòng vệ Double-Free Idempotent (SC-04):** Thử nghiệm gọi `product_list_free` hai lần liên tiếp và `product_list_free(NULL)` hoàn thành an toàn tuyệt đối do con trỏ được chủ động gán về `NULL` ngay sau khi giải phóng.
 
-## 4. KẾT QUẢ ĐỐI CHỨNG VỚI MÃ LỖI CÀI CHỦ ĐÍCH (SEEDED VULNERABILITIES)
-Để minh chứng giá trị bảo vệ của Baseline v0, nhóm đã thực thi đối chứng với 3 mẫu lỗi cài đặt chủ đích tại `tests/seeded/`:
-- **SEED-01 (Stack Buffer Overflow):** Mô phỏng parser không kiểm tra `token_count < 6`. Khi nạp dòng 10 token, cơ chế bảo vệ stack canary của GCC (`-fstack-protector-strong`) lập tức phát hiện ghi đè stack và can thiệp. Trong khi đó, baseline v0 có guard cứng `token_count < 8` nên hoàn toàn miễn nhiễm.
-- **SEED-02 (Use-After-Free):** Minh chứng nguy cơ khi con trỏ mượn bị dereference sau khi realloc làm thay đổi địa chỉ mảng.
-- **SEED-03 (Memory Leak do realloc):** Minh họa thói quen xấu `ptr = realloc(ptr, ...)` trực tiếp làm mất dấu địa chỉ khi hết RAM.
-- **Nguyên tắc phân loại:** Toàn bộ các phát hiện này được gắn nhãn minh bạch là `SEEDED_VULNERABILITY`, không gộp vào khiếm khuyết của baseline.
+## 4. KẾT QUẢ THỰC NGHIỆM MÔ PHỎNG VÀ KÍCH HOẠT CÁC RỦI RO TIỀM ẨN
+Để kích hoạt và cô lập chính xác các rủi ro bộ nhớ tiềm ẩn phát hiện được trên Baseline v0, nhóm đã thực thi các module kiểm nghiệm cô lập (Simulation Harness Drivers) tại `tests/seeded/`:
+- **EXP-01 (Stack Buffer Overflow - CWE-121):** Mô phỏng khi parser không có guard chặn giới hạn số token `token_count < 6`. Khi nạp dòng CSV vượt quá 6 token, cơ chế bảo vệ stack canary của GCC (`-fstack-protector-strong`) lập tức phát hiện ghi đè stack và kích hoạt abort (exit code 3221226505 / 0xC0000409).
+- **EXP-02 (Use-After-Free - CWE-416):** Chứng minh rủi ro khi con trỏ mượn từ `find_product_by_id` bị dereference sau khi danh sách heap bị realloc sang địa chỉ mới.
+- **EXP-03 (Memory Leak do realloc - CWE-401):** Minh chứng nguy cơ khi realloc thất bại nếu không dùng con trỏ tạm, dẫn tới mất địa chỉ vùng nhớ cũ gây rò rỉ heap.
+- **Ý nghĩa kiểm toán:** Các thực nghiệm này chứng minh rõ ràng cơ chế phát sinh lỗi vi phạm an toàn bộ nhớ trong môi trường C, làm căn cứ vững chắc để thiết kế và kiểm chứng bản vá bảo vệ triệt để trong bản v1.
 
 ## 5. DANH MỤC TÀI LIỆU VÀ BẢNG BIỂU ĐÃ XUẤT
 Tất cả các tài liệu được lưu tại `docs/05_C_Simulation/`:

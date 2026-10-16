@@ -9,11 +9,12 @@ Theo yêu cầu bắt buộc của Giảng viên và Mục IV/IV của Master Pr
 ## 2. PHÂN TÍCH TÌNH TRẠNG GUARD TRÊN BASELINE V0
 Qua đối chiếu trực tiếp với mã nguồn C thực tế tại commit baseline `44202070c68002d9af068374478cdc83098dd4d8`, tình trạng kiểm soát an toàn được phân loại trung thực như sau:
 
-| Nhóm trạng thái | Số lượng | Danh sách REQ | Đánh giá kỹ thuật |
+| Nhóm trạng thái trên Baseline v0 | Số lượng | Danh sách REQ | Đánh giá kỹ thuật và Ánh xạ Rủi ro CWE |
 |---|---|---|---|
-| **Đã có guard hoàn toàn (GUARDED_IN_V0)** | 15 / 18 | REQ-1, REQ-4, REQ-5, REQ-6, REQ-7, REQ-8, REQ-9, REQ-10, REQ-11, REQ-12, REQ-13, REQ-15, REQ-16, REQ-17, REQ-18 | Mã nguồn baseline đã lập trình phòng vệ cẩn thận (ví dụ: dùng con trỏ tạm realloc, gán NULL sau free, chặn tràn số `INT_MAX`, kiểm tra NULL pointer, giới hạn `token_count < 8`). |
-| **Bảo vệ theo hợp đồng (GUARDED_BY_CONTRACT)** | 1 / 18 | REQ-14 | Quy ước con trỏ mượn `find_product_by_id` chỉ được đọc tức thời; kịch bản lỗi Use-after-free được kích hoạt trong mô phỏng đối chứng lỗi seeded. |
-| **Thiếu guard tường minh (GUARD_MISSING_IN_V0)** | 2 / 18 | **REQ-2, REQ-3** | **Điểm rủi ro then chốt của bài toán:** Baseline v0 thực hiện `new_cap = capacity * 2` và `new_cap * sizeof(Product)` mà chưa có guard kiểm tra tràn số nguyên `size_t`. Mô hình SMT Z3 chứng minh bài toán SAT có nghiệm toán học. Hai yêu cầu này được đánh dấu `PARTIALLY_VERIFIED` và sẽ được bổ sung bản vá ở Công đoạn 9. |
+| **Phòng vệ cơ bản (GUARDED_IN_V0)** | 12 / 18 | REQ-1, REQ-4, REQ-5, REQ-6, REQ-7, REQ-8, REQ-11, REQ-12, REQ-13, REQ-15, REQ-17, REQ-18 | Mã nguồn baseline đã có kiểm tra cơ bản: chặn số lượng âm, chặn giá âm, gán NULL sau free, kiểm tra NULL pointer (`STATUS_ERR_NULL_PTR (-1)`). |
+| **Tiềm ẩn rủi ro Parser/Buffer (POTENTIAL_RISK_IN_V0)** | 3 / 18 | **REQ-9, REQ-10, REQ-16** | **Rủi ro bộ nhớ tiềm ẩn:** Baseline v0 dùng `tokens[6]` thiếu guard chặn `token_count < 6` (CWE-121 Stack Overflow); thiếu cơ chế drain dòng > 512B (CWE-120 Silent Truncation); dùng `strncpy` không đảm bảo null-terminated (CWE-125). Đã được khắc phục triệt để trong bản vá v1. |
+| **Bảo vệ theo hợp đồng (GUARDED_BY_CONTRACT)** | 1 / 18 | **REQ-14** | Con trỏ mượn `find_product_by_id` trỏ trực tiếp vào heap mảng động; tiềm ẩn rủi ro Use-After-Free (CWE-416) khi xảy ra heap resize (realloc). |
+| **Thiếu guard tràn số nguyên (GUARD_MISSING_IN_V0)** | 2 / 18 | **REQ-2, REQ-3** | **Rủi ro tràn số cấp phát bộ nhớ:** Baseline v0 thực hiện `new_cap = capacity * 2` và `new_cap * sizeof(Product)` thiếu kiểm tra chặn `SIZE_MAX / 2` và `SIZE_MAX / sizeof(Product)`. Mô hình SMT Z3 chứng minh SAT wrap-around 64-bit (CWE-190). Đã được vá hoàn chỉnh trong v1. |
 
 ## 3. DANH MỤC CÁC TÀI LIỆU VÀ WORKBOOK ĐÃ TẠO
 Tất cả các tài liệu chuẩn hóa đặt tại `docs/03_Safety_Specification/`:

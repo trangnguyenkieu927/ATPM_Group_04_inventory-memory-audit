@@ -75,7 +75,7 @@ def demo_seeded():
     res = subprocess.run([seed_exe], capture_output=True)
     if os.path.exists(seed_exe): os.remove(seed_exe)
     print(f"Kết quả chạy tiến trình Seeded: Exit code = {res.returncode} (STATUS_STACK_BUFFER_OVERRUN)")
-    print("[ĐÁNH GIÁ ĐỐI CHỨNG] Trình bảo vệ stack canary đã bắt được tràn buffer stack trên nhánh có lỗi chủ đích (CWE-120).")
+    print("[ĐÁNH GIÁ THỰC NGHIỆM] Trình bảo vệ stack canary của GCC đã bắt được tràn buffer stack (CWE-121 Stack Buffer Overflow) và kích hoạt abort an toàn.")
 
 def demo_regression():
     src_root = os.path.join(PROJECT_ROOT, "source")
