@@ -67,7 +67,7 @@ static int contains_ignore_case(const char *haystack, const char *needle) {
     return strstr(h_lower, n_lower) != NULL;
 }
 
-/* TASK 3: Cài đặt chức năng Thêm sản phẩm vào danh sách động */
+/* Cài đặt chức năng Thêm sản phẩm vào danh sách động */
 int add_product(ProductList *list, const Product *prod) {
     if (list == NULL || prod == NULL) {
         return STATUS_ERR_NULL_PTR;
@@ -138,7 +138,7 @@ int add_product(ProductList *list, const Product *prod) {
     return STATUS_SUCCESS;
 }
 
-/* TASK 4: Sửa thông tin sản phẩm theo mã ID */
+/* Sửa thông tin sản phẩm theo mã ID */
 int update_product(ProductList *list, const char *id, const char *new_name, const char *new_category, const char *new_unit, int new_quantity, double new_price) {
     if (list == NULL || id == NULL) {
         return STATUS_ERR_NULL_PTR;
@@ -200,7 +200,7 @@ int update_product(ProductList *list, const char *id, const char *new_name, cons
     return STATUS_SUCCESS;
 }
 
-/* TASK 5: Xóa sản phẩm khỏi danh sách theo mã ID */
+/* Xóa sản phẩm khỏi danh sách theo mã ID */
 int delete_product(ProductList *list, const char *id) {
     if (list == NULL || id == NULL) {
         return STATUS_ERR_NULL_PTR;
@@ -220,7 +220,7 @@ int delete_product(ProductList *list, const char *id) {
     return STATUS_ERR_NOT_FOUND;
 }
 
-/* TASK 6: Tìm kiếm sản phẩm theo ID */
+/* Tìm kiếm sản phẩm theo ID */
 Product* find_product_by_id(const ProductList *list, const char *id) {
     if (list == NULL || id == NULL || list->items == NULL) {
         return NULL;
@@ -233,7 +233,7 @@ Product* find_product_by_id(const ProductList *list, const char *id) {
     return NULL;
 }
 
-/* TASK 6: Tìm kiếm sản phẩm theo tên (tìm chuỗi con, không phân biệt hoa thường) */
+/* tìm kiếm sản phẩm theo tên (tìm chuỗi con, không phân biệt hoa thường) */
 int search_products_by_name(const ProductList *list, const char *keyword, Product *results, size_t max_results, size_t *out_count) {
     if (list == NULL || keyword == NULL || results == NULL || out_count == NULL) {
         return STATUS_ERR_NULL_PTR;

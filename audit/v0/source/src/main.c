@@ -723,17 +723,17 @@ int main(int argc, char *argv[]) {
         printf("\n========================================================================\n");
         printf("          HE THONG QUAN LY KHO HANG & KIEM TOAN AN TOAN BO NHO           \n");
         printf("========================================================================\n");
-        printf(" [1] Xem danh sach san pham trong kho (Bang chi tiet)\n");
-        printf(" [2] Them san pham moi (Validate chat che 6 truong thong tin)\n");
-        printf(" [3] Sua thong tin san pham (Theo ma ID)\n");
-        printf(" [4] Xoa san pham khoi kho (Theo ma ID)\n");
-        printf(" [5] Tim kiem san pham (Theo ma SP hoac tu khoa ten)\n");
-        printf(" [6] Nhap kho (Import Stock - Chuyen doi so luong, chong tran so)\n");
-        printf(" [7] Xuat kho (Export Stock - Kiem tra ton kho, chong am kho)\n");
-        printf(" [8] Xem lich su giao dich (transactions.txt)\n");
-        printf(" [9] Bao cao & Thong ke kho hang (Tong quan, Canh bao ton, Xuat file)\n");
-        printf(" [10] Kiem toan du lieu tep tu dong (Validation File Audit)\n");
-        printf(" [11] Chay bo kiem thu tu dong (All Unit Tests: Utils, Valid, Product, Report)\n");
+        printf(" [1] Xem danh sach san pham trong kho\n");
+        printf(" [2] Them san pham moi\n");
+        printf(" [3] Sua thong tin san pham\n");
+        printf(" [4] Xoa san pham khoi kho\n");
+        printf(" [5] Tim kiem san pham\n");
+        printf(" [6] Nhap kho\n");
+        printf(" [7] Xuat kho\n");
+        printf(" [8] Xem lich su giao dich\n");
+        printf(" [9] Bao cao & Thong ke kho hang\n");
+        printf(" [10] Kiem toan du lieu tep tu dong\n");
+        printf(" [11] Chay bo kiem thu tu dong\n");
         printf(" [0] Thoat chuong trinh & Luu du lieu\n");
         printf("------------------------------------------------------------------------\n");
 
