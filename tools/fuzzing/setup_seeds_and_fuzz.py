@@ -1,4 +1,5 @@
 import os
+import sys
 import random
 import string
 import subprocess
@@ -7,6 +8,13 @@ import json
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 PROJECT_ROOT = r"c:\Du_an\ATPM\ATPM_Group_04_inventory-memory-audit"
 FUZZ_DIR = os.path.join(PROJECT_ROOT, "tests", "fuzz")
@@ -95,7 +103,7 @@ build_cmd = [
 ]
 
 print("Compiling fuzz harness...")
-b_res = subprocess.run(build_cmd, capture_output=True, text=True)
+b_res = subprocess.run(build_cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
 if b_res.returncode != 0:
     print(f"Compilation failed: {b_res.stderr}")
     exit(1)
@@ -199,12 +207,12 @@ san_build_cmd = [
     "-o", sanitizer_exe, sanitizer_src, tracker_src
 ]
 subprocess.run(san_build_cmd, capture_output=True)
-san_run = subprocess.run([sanitizer_exe], capture_output=True, text=True)
+san_run = subprocess.run([sanitizer_exe], capture_output=True, text=True, encoding="utf-8", errors="replace")
 if os.path.exists(sanitizer_exe):
     os.remove(sanitizer_exe)
 
 with open(os.path.join(SANITIZER_RES_DIR, "canary_audit.log"), "w", encoding="utf-8") as sf:
-    sf.write(san_run.stdout)
+    sf.write(san_run.stdout or "")
 
 print(f"Memory audit captured: results/sanitizers/canary_audit.log")
 

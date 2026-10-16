@@ -7,8 +7,8 @@ Theo quy định tại Công đoạn 7.3 của Master Prompt:
 
 ## 2. KẾT QUẢ CHIẾN DỊCH FUZZING (FUZZ-001)
 - **Tổng số lần thực thi (Executions):** `1000` lượt.
-- **Thời gian thực thi:** `19.87` giây.
-- **Tốc độ trung bình:** `50.3` executions/giây.
+- **Thời gian thực thi:** `20.97` giây.
+- **Tốc độ trung bình:** `47.7` executions/giây.
 - **Số lượng Crashes phát hiện trên Baseline v0:** **`0` crashes**.
 - **Số lượng Hangs (Timeout 2s):** **`0` hangs**.
 - **Tập tin Log chiến dịch:** `results/fuzzing/fuzz_campaign.log`.

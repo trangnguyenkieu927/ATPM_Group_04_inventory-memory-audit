@@ -26,7 +26,7 @@ def run_step(title, cmd, cwd=PROJECT_ROOT):
     print(f" {title}")
     print("="*70)
     start = time.time()
-    res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     elapsed = time.time() - start
     print(res.stdout.strip())
     if res.stderr.strip():
