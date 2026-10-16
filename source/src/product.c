@@ -114,24 +114,9 @@ int add_product(ProductList *list, const Product *prod) {
         return STATUS_ERR_DUPLICATE_ID;
     }
 
-    /* 8. Mở rộng bộ nhớ mảng động an toàn khi đầy (Heap Reallocation Guard - REQ-2, REQ-3 Remediation) */
+    /* 8. Mở rộng bộ nhớ mảng động khi đầy (Baseline v0 - [RISK-02]: Chưa có guard chống tràn số nguyên size_t) */
     if (list->count >= list->capacity) {
-        size_t new_cap;
-        if (list->capacity == 0) {
-            new_cap = INITIAL_CAPACITY;
-        } else {
-            /* REQ-2 Defense: Chống tràn số nguyên khi nhân đôi capacity */
-            if (list->capacity > SIZE_MAX / 2) {
-                return STATUS_ERR_MEMORY;
-            }
-            new_cap = list->capacity * 2;
-        }
-
-        /* REQ-3 Defense: Chống tràn số nguyên khi tính số byte cấp phát heap */
-        if (new_cap > SIZE_MAX / sizeof(Product)) {
-            return STATUS_ERR_MEMORY;
-        }
-
+        size_t new_cap = (list->capacity == 0) ? INITIAL_CAPACITY : (list->capacity * 2);
         Product *new_items = (Product *)realloc(list->items, new_cap * sizeof(Product));
         if (new_items == NULL) {
             return STATUS_ERR_MEMORY; /* Giữ nguyên list->items cũ, tránh rò rỉ bộ nhớ */
