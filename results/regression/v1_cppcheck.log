@@ -1,0 +1,37 @@
+src\product.c:0:0: information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+src\product.c:56:20: style: Array index 'i' is used before limits check. [arrayIndexThenCheck]
+    for (; haystack[i] != '\0' && i < sizeof(h_lower) - 1; ++i) {
+                   ^
+src\product.c:62:18: style: Array index 'j' is used before limits check. [arrayIndexThenCheck]
+    for (; needle[j] != '\0' && j < sizeof(n_lower) - 1; ++j) {
+                 ^
+src\product.c:157:33: style: Parameter 'list' can be declared as pointer to const [constParameterPointer]
+int update_product(ProductList *list, const char *id, const char *new_name, const char *new_category, const char *new_unit, int new_quantity, double new_price) {
+                                ^
+src\product.c:10:5: style: The function 'product_list_init' is never used. [unusedFunction]
+int product_list_init(ProductList *list) {
+    ^
+src\product.c:28:6: style: The function 'product_list_free' is never used. [unusedFunction]
+void product_list_free(ProductList *list) {
+     ^
+src\product.c:71:5: style: The function 'add_product' is never used. [unusedFunction]
+int add_product(ProductList *list, const Product *prod) {
+    ^
+src\product.c:157:5: style: The function 'update_product' is never used. [unusedFunction]
+int update_product(ProductList *list, const char *id, const char *new_name, const char *new_category, const char *new_unit, int new_quantity, double new_price) {
+    ^
+src\product.c:219:5: style: The function 'delete_product' is never used. [unusedFunction]
+int delete_product(ProductList *list, const char *id) {
+    ^
+src\product.c:252:5: style: The function 'search_products_by_name' is never used. [unusedFunction]
+int search_products_by_name(const ProductList *list, const char *keyword, Product *results, size_t max_results, size_t *out_count) {
+    ^
+src\product.c:239:10: style: The function 'find_product_by_id' should have static linkage since it is not used outside of its translation unit. [staticFunction]
+Product* find_product_by_id(const ProductList *list, const char *id) {
+         ^
+nofile:0:0: information: Active checkers: 119/186 (use --checkers-report=<filename> to see details) [checkersReport]
+
+
+Checking src\product.c ...

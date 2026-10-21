@@ -1,0 +1,449 @@
+{
+  "ctl_results": [
+    {
+      "ctl_id": "CTL-01",
+      "formula": "AG(!(list_live & list_freed))",
+      "result": "TRUE",
+      "description": "Danh sách không bao giờ vừa live vừa freed",
+      "vacuous_analysis": "N/A",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-02",
+      "formula": "AG(!(ptr_live & ptr_invalid))",
+      "result": "TRUE",
+      "description": "Con trỏ mượn không bao giờ vừa live vừa invalid",
+      "vacuous_analysis": "N/A",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-03",
+      "formula": "AG(ptr_invalid -> !ptr_deref)",
+      "result": "TRUE",
+      "description": "Con trỏ mất hiệu lực không bao giờ bị dereference",
+      "vacuous_analysis": "NON_VACUOUS (Tiền đề khả đạt tại 2 trạng thái)",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-04",
+      "formula": "AG(realloc_failed -> owner_valid)",
+      "result": "TRUE",
+      "description": "Realloc thất bại bảo toàn con trỏ sở hữu cũ (REQ-12)",
+      "vacuous_analysis": "NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-05",
+      "formula": "AG(realloc_done -> owner_valid)",
+      "result": "TRUE",
+      "description": "Realloc thành công cập nhật con trỏ sở hữu hợp lệ (REQ-12)",
+      "vacuous_analysis": "NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-06",
+      "formula": "AG(cleanup_done -> list_freed)",
+      "result": "TRUE",
+      "description": "Dọn dẹp hoàn tất đưa danh sách về trạng thái giải phóng (REQ-11)",
+      "vacuous_analysis": "NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-07",
+      "formula": "AG(product_op_processing -> AF(product_op_done | product_op_rejected))",
+      "result": "TRUE",
+      "description": "Mọi thao tác nghiệp vụ đang xử lý cuối cùng sẽ dừng",
+      "vacuous_analysis": "NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-08",
+      "formula": "AG(file_parsing -> AF(file_loaded | file_rejected))",
+      "result": "TRUE",
+      "description": "Tiến trình nạp tệp đang phân tích cuối cùng sẽ dừng",
+      "vacuous_analysis": "NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-09",
+      "formula": "AG(buffer_processing -> AF(buffer_safe | buffer_rejected))",
+      "result": "TRUE",
+      "description": "Xử lý chuỗi đang chạy cuối cùng sẽ an toàn hoặc bị từ chối",
+      "vacuous_analysis": "NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-10",
+      "formula": "AG(reallocating -> AF(realloc_done | realloc_failed))",
+      "result": "TRUE",
+      "description": "Cấp phát lại đang chạy cuối cùng sẽ thành công hoặc thất bại",
+      "vacuous_analysis": "NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-11",
+      "formula": "AG(cleanup_processing -> AF(cleanup_done | cleanup_rejected))",
+      "result": "TRUE",
+      "description": "Giải phóng đang chạy cuối cùng sẽ hoàn tất hoặc bị từ chối",
+      "vacuous_analysis": "NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-12",
+      "formula": "AG(!(buffer_safe & buffer_rejected))",
+      "result": "TRUE",
+      "description": "Chuỗi an toàn và bị từ chối loại trừ lẫn nhau",
+      "vacuous_analysis": "N/A",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-13",
+      "formula": "AG(!(file_loaded & file_rejected))",
+      "result": "TRUE",
+      "description": "Tải tệp thành công và thất bại loại trừ lẫn nhau",
+      "vacuous_analysis": "N/A",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-14",
+      "formula": "AG(!(realloc_done & realloc_failed))",
+      "result": "TRUE",
+      "description": "Cấp phát thành công và thất bại loại trừ lẫn nhau",
+      "vacuous_analysis": "N/A",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-15",
+      "formula": "AG(!(cleanup_done & cleanup_rejected))",
+      "result": "TRUE",
+      "description": "Dọn dẹp hoàn tất và bị từ chối loại trừ lẫn nhau",
+      "vacuous_analysis": "N/A",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-16",
+      "formula": "AG(!(product_op_done & product_op_rejected))",
+      "result": "TRUE",
+      "description": "Nghiệp vụ thành công và thất bại loại trừ lẫn nhau",
+      "vacuous_analysis": "N/A",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-17",
+      "formula": "EF(list_freed)",
+      "result": "TRUE",
+      "description": "Luôn tồn tại đường dẫn tới giải phóng bộ nhớ (Liveness)",
+      "vacuous_analysis": "N/A",
+      "sat_states_count": 21,
+      "total_states": 21
+    },
+    {
+      "ctl_id": "CTL-18",
+      "formula": "EF(realloc_failed)",
+      "result": "TRUE",
+      "description": "Nhánh realloc thất bại là khả đạt trong không gian trạng thái (Reachability)",
+      "vacuous_analysis": "N/A",
+      "sat_states_count": 21,
+      "total_states": 21
+    }
+  ],
+  "state_reachability": [
+    {
+      "state_id": "S01",
+      "state_name": "S01_list_init",
+      "reachable": true,
+      "labels": [
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S02_list_valid"
+      ]
+    },
+    {
+      "state_id": "S02",
+      "state_name": "S02_list_valid",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid",
+        "ptr_live"
+      ],
+      "transitions_out": [
+        "S03_list_growth",
+        "S06_list_cleanup",
+        "S08_ptr_deref_ok",
+        "S09_file_idle",
+        "S13_buf_idle",
+        "S17_op_idle"
+      ]
+    },
+    {
+      "state_id": "S03",
+      "state_name": "S03_list_growth",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid",
+        "reallocating"
+      ],
+      "transitions_out": [
+        "S04_list_growth_ok",
+        "S05_list_growth_failed"
+      ]
+    },
+    {
+      "state_id": "S04",
+      "state_name": "S04_list_growth_ok",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid",
+        "ptr_invalid",
+        "realloc_done"
+      ],
+      "transitions_out": [
+        "S02_list_valid"
+      ]
+    },
+    {
+      "state_id": "S05",
+      "state_name": "S05_list_growth_failed",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid",
+        "ptr_live",
+        "realloc_failed"
+      ],
+      "transitions_out": [
+        "S02_list_valid"
+      ]
+    },
+    {
+      "state_id": "S06",
+      "state_name": "S06_list_cleanup",
+      "reachable": true,
+      "labels": [
+        "cleanup_processing"
+      ],
+      "transitions_out": [
+        "S07_list_freed",
+        "S21_cleanup_rejected"
+      ]
+    },
+    {
+      "state_id": "S07",
+      "state_name": "S07_list_freed",
+      "reachable": true,
+      "labels": [
+        "cleanup_done",
+        "list_freed",
+        "ptr_invalid"
+      ],
+      "transitions_out": [
+        "S01_list_init"
+      ]
+    },
+    {
+      "state_id": "S08",
+      "state_name": "S08_ptr_deref_ok",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid",
+        "ptr_deref",
+        "ptr_live"
+      ],
+      "transitions_out": [
+        "S02_list_valid"
+      ]
+    },
+    {
+      "state_id": "S09",
+      "state_name": "S09_file_idle",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S02_list_valid",
+        "S10_file_parsing"
+      ]
+    },
+    {
+      "state_id": "S10",
+      "state_name": "S10_file_parsing",
+      "reachable": true,
+      "labels": [
+        "file_parsing",
+        "list_live",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S11_file_loaded",
+        "S12_file_rejected"
+      ]
+    },
+    {
+      "state_id": "S11",
+      "state_name": "S11_file_loaded",
+      "reachable": true,
+      "labels": [
+        "file_loaded",
+        "list_live",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S09_file_idle"
+      ]
+    },
+    {
+      "state_id": "S12",
+      "state_name": "S12_file_rejected",
+      "reachable": true,
+      "labels": [
+        "file_rejected",
+        "list_live",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S09_file_idle"
+      ]
+    },
+    {
+      "state_id": "S13",
+      "state_name": "S13_buf_idle",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S02_list_valid",
+        "S14_buf_processing"
+      ]
+    },
+    {
+      "state_id": "S14",
+      "state_name": "S14_buf_processing",
+      "reachable": true,
+      "labels": [
+        "buffer_processing",
+        "list_live",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S15_buf_safe",
+        "S16_buf_rejected"
+      ]
+    },
+    {
+      "state_id": "S15",
+      "state_name": "S15_buf_safe",
+      "reachable": true,
+      "labels": [
+        "buffer_safe",
+        "list_live",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S13_buf_idle"
+      ]
+    },
+    {
+      "state_id": "S16",
+      "state_name": "S16_buf_rejected",
+      "reachable": true,
+      "labels": [
+        "buffer_rejected",
+        "list_live",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S13_buf_idle"
+      ]
+    },
+    {
+      "state_id": "S17",
+      "state_name": "S17_op_idle",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S02_list_valid",
+        "S18_op_processing"
+      ]
+    },
+    {
+      "state_id": "S18",
+      "state_name": "S18_op_processing",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid",
+        "product_op_processing"
+      ],
+      "transitions_out": [
+        "S19_op_done",
+        "S20_op_rejected"
+      ]
+    },
+    {
+      "state_id": "S19",
+      "state_name": "S19_op_done",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid",
+        "product_op_done"
+      ],
+      "transitions_out": [
+        "S17_op_idle"
+      ]
+    },
+    {
+      "state_id": "S20",
+      "state_name": "S20_op_rejected",
+      "reachable": true,
+      "labels": [
+        "list_live",
+        "owner_valid",
+        "product_op_rejected"
+      ],
+      "transitions_out": [
+        "S17_op_idle"
+      ]
+    },
+    {
+      "state_id": "S21",
+      "state_name": "S21_cleanup_rejected",
+      "reachable": true,
+      "labels": [
+        "cleanup_rejected",
+        "owner_valid"
+      ],
+      "transitions_out": [
+        "S02_list_valid"
+      ]
+    }
+  ]
+}

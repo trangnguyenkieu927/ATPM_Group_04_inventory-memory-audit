@@ -1,0 +1,39 @@
+﻿=========================================================================
+NHAT KY BIEN DICH (BUILD LOG) - BASELINE V0
+Thoi diem bat dau: 2026-10-15 20:31:28 +07:00
+Thu muc lam viec : C:\Du_an\ATPM\ATPM_Group_04_inventory-memory-audit\source
+=========================================================================
+
+--- 1. LENH: make clean ---
+powershell -NoProfile -Command "Get-ChildItem -Path src/*.o, *.exe, inventory_app, inventory_tests, smoke_tests, data/test_products_output.txt, data/test_smoke_products.txt, data/test_smoke_report.txt, data/test_legacy_4field.txt -ErrorAction SilentlyContinue | Remove-Item -Force; exit 0"
+
+Exit code make clean: 0
+
+--- 2. LENH: make (C17, -Wall -Wextra -Wpedantic) ---
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/file_io.c -o src/file_io.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/inventory.c -o src/inventory.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/main.c -o src/main.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/product.c -o src/product.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/report.c -o src/report.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/utils.c -o src/utils.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/validation.c -o src/validation.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -o inventory_app src/file_io.o src/inventory.o src/main.o src/product.o src/report.o src/utils.o src/validation.o
+
+Exit code make: 0
+
+--- 3. LENH: make clean va make debug (-g -O0) ---
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/file_io.c -o src/file_io.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/inventory.c -o src/inventory.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/main.c -o src/main.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/product.c -o src/product.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/report.c -o src/report.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/utils.c -o src/utils.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/validation.c -o src/validation.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -o inventory_app src/file_io.o src/inventory.o src/main.o src/product.o src/report.o src/utils.o src/validation.o
+
+Exit code make debug: 0
+
+=========================================================================
+TONG KET BIEN DICH: EXIT CODE = 0
+Thoi diem ket thuc: 2026-10-15 20:31:32 +07:00
+=========================================================================

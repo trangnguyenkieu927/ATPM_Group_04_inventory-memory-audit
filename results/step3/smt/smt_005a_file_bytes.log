@@ -1,0 +1,20 @@
+Command: C:/Du_an/ATPM/lab5_sat_smt_verification/.deps/bin/z3.exe -smt2 verification/step3/smt\smt_005a_file_bytes.smt2
+Exit Code: 0
+Output:
+sat
+(
+  (define-fun existing_bytes () (_ BitVec 32)
+    #x7fffffff)
+  (define-fun incoming_bytes () (_ BitVec 32)
+    #x7fffffff)
+  (define-fun add_ext () (_ BitVec 33)
+    ((_ sign_extend 1) incoming_bytes))
+  (define-fun int_max_33 () (_ BitVec 33)
+    ((_ sign_extend 1) #x7fffffff))
+  (define-fun sum_33 () (_ BitVec 33)
+    (bvadd ((_ sign_extend 1) existing_bytes) ((_ sign_extend 1) incoming_bytes)))
+  (define-fun cur_ext () (_ BitVec 33)
+    ((_ sign_extend 1) existing_bytes))
+)
+Error:
+

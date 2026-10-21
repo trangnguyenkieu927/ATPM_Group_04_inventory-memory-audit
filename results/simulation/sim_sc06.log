@@ -1,0 +1,13 @@
+============================================================
+ SC-06 SIMULATION: INVENTORY STOCK ARITHMETIC & CONSERVATION
+============================================================
+[PASS] TC-SC06-01: Negative import quantity rejected (rc=-3)
+[PASS] TC-SC06-02: Normal import succeeded (100 + 50 = 150)
+[PASS] TC-SC06-03: Integer overflow blocked by guard STATUS_ERR_OVERFLOW (-6)
+[PASS] TC-SC06-04: Conservation Invariant: Stock remained exactly 150 after rejected overflow
+[PASS] TC-SC06-05: Excessive export blocked by STATUS_ERR_INSUFFICIENT_STOCK (-5)
+[PASS] TC-SC06-06: Conservation Invariant: Stock remained exactly 150 after rejected export
+[PASS] TC-SC06-07: Valid export succeeded (150 - 50 = 100)
+------------------------------------------------------------
+SC-06 RESULT: 7/7 tests PASSED (SUCCESS)
+============================================================

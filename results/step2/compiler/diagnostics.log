@@ -1,0 +1,19 @@
+﻿=========================================================================
+NHAT KY PHAN TICH CANH BAO COMPILER TANG CUONG (GCC 16.1.0)
+Thoi diem bat dau: 2026-10-15 21:01:28 +07:00
+Commit SHA       : 44202070c68002d9af068374478cdc83098dd4d8
+Co bien dich     : -std=c17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow -Wformat=2 -Wnull-dereference
+=========================================================================
+
+LENH THUC THI:
+gcc -std=c17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow -Wformat=2 -Wnull-dereference -Isource/include -c source/src/file_io.c source/src/inventory.c source/src/main.c source/src/product.c source/src/report.c source/src/utils.c source/src/validation.c
+
+OUTPUT TU GCC (STDOUT / STDERR):
+[0 compiler warnings observed under specified flags]
+0 compiler errors observed.
+
+Exit code: 0
+=========================================================================
+TONG KET PHAN TICH DIAGNOSTICS: 0 ERRORS, 0 WARNINGS (EXIT CODE 0)
+Thoi diem ket thuc: 2026-10-15 21:01:28 +07:00
+=========================================================================

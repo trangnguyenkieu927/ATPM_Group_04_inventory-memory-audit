@@ -1,0 +1,97 @@
+[
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c source/src/file_io.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/source/src/file_io.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c source/src/inventory.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/source/src/inventory.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c source/src/main.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/source/src/main.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c source/src/product.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/source/src/product.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c source/src/report.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/source/src/report.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c source/src/utils.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/source/src/utils.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c source/src/validation.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/source/src/validation.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c tests/test_utils.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/tests/test_utils.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c tests/simulation/test_sim001_heap.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/tests/simulation/test_sim001_heap.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c tests/simulation/test_sim002_parser.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/tests/simulation/test_sim002_parser.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c tests/simulation/test_sim003_negative_control.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/tests/simulation/test_sim003_negative_control.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c tests/simulation/vulnerable_file_io.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/tests/simulation/vulnerable_file_io.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c verification/step3/cbmc/harness_cbmc_001_product_list_invariant.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/verification/step3/cbmc/harness_cbmc_001_product_list_invariant.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c verification/step3/cbmc/harness_cbmc_002_array_bounds.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/verification/step3/cbmc/harness_cbmc_002_array_bounds.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c verification/step3/cbmc/harness_cbmc_003_realloc_failure.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/verification/step3/cbmc/harness_cbmc_003_realloc_failure.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c verification/step3/cbmc/harness_cbmc_004_pointer_safety.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/verification/step3/cbmc/harness_cbmc_004_pointer_safety.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c verification/step3/cbmc/harness_cbmc_005_stock_safety.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/verification/step3/cbmc/harness_cbmc_005_stock_safety.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c verification/step3/sanitizers/memory_tracker.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/verification/step3/sanitizers/memory_tracker.c"
+  },
+  {
+    "directory": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit",
+    "command": "C:/msys64/ucrt64/bin/gcc.exe -std=c99 -g -O0 -Isource/include -Iverification/step3/sanitizers -c verification/step3/sanitizers/test_memory_audit.c",
+    "file": "C:\\Du_an\\ATPM\\ATPM_Group_04_inventory-memory-audit/verification/step3/sanitizers/test_memory_audit.c"
+  }
+]

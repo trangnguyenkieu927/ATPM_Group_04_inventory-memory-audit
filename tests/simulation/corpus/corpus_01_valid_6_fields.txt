@@ -1,0 +1,2 @@
+P001|Laptop Dell XPS|Electronics|Cai|15|1200.50
+P002|Mouse Logitech|Accessories|Cai|50|25.00

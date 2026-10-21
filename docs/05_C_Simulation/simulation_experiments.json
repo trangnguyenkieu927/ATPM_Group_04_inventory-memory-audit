@@ -1,0 +1,82 @@
+{
+  "project": "ATPM_Group_04_inventory-memory-audit",
+  "scenario_simulations": [
+    {
+      "id": "SC-01",
+      "name": "Parser Input Validation",
+      "driver": "tests\\simulation\\SC-01\\test_sc01_parser.c",
+      "status": "PASS",
+      "exit_code": 0,
+      "log_path": "results\\simulation\\sim_sc01.log"
+    },
+    {
+      "id": "SC-02",
+      "name": "Buffer Bounds & String Safety",
+      "driver": "tests\\simulation\\SC-02\\test_sc02_buffer.c",
+      "status": "PASS",
+      "exit_code": 0,
+      "log_path": "results\\simulation\\sim_sc02.log"
+    },
+    {
+      "id": "SC-03",
+      "name": "Heap Allocation & Capacity Doubling",
+      "driver": "tests\\simulation\\SC-03\\test_sc03_capacity.c",
+      "status": "PASS",
+      "exit_code": 0,
+      "log_path": "results\\simulation\\sim_sc03.log"
+    },
+    {
+      "id": "SC-04",
+      "name": "Allocation Failure & Memory Leak Defense",
+      "driver": "tests\\simulation\\SC-04\\test_sc04_alloc_failure.c",
+      "status": "PASS",
+      "exit_code": 0,
+      "log_path": "results\\simulation\\sim_sc04.log"
+    },
+    {
+      "id": "SC-05",
+      "name": "Pointer Lifetime & Borrowed Invalidation",
+      "driver": "tests\\simulation\\SC-05\\test_sc05_pointer_lifetime.c",
+      "status": "PASS",
+      "exit_code": 0,
+      "log_path": "results\\simulation\\sim_sc05.log"
+    },
+    {
+      "id": "SC-06",
+      "name": "Inventory Stock Arithmetic & Conservation",
+      "driver": "tests\\simulation\\SC-06\\test_sc06_stock_arithmetic.c",
+      "status": "PASS",
+      "exit_code": 0,
+      "log_path": "results\\simulation\\sim_sc06.log"
+    }
+  ],
+  "seeded_experiments": [
+    {
+      "id": "SEED-01",
+      "name": "Stack Buffer Overflow in Un-guarded Parser",
+      "cwe": "CWE-120",
+      "source": "tests\\seeded\\seeded_stack_overflow.c",
+      "exit_code": 3221226505,
+      "status": "SEEDED_VULNERABILITY_CONFIRMED",
+      "log_path": "results\\simulation\\seed_stack_overflow.log"
+    },
+    {
+      "id": "SEED-02",
+      "name": "Use-After-Free via Stale Borrowed Pointer",
+      "cwe": "CWE-416",
+      "source": "tests\\seeded\\seeded_use_after_free.c",
+      "exit_code": 0,
+      "status": "SEEDED_VULNERABILITY_CONFIRMED",
+      "log_path": "results\\simulation\\seed_use_after_free.log"
+    },
+    {
+      "id": "SEED-03",
+      "name": "Realloc Direct Assignment Memory Leak",
+      "cwe": "CWE-401",
+      "source": "tests\\seeded\\seeded_memory_leak.c",
+      "exit_code": 0,
+      "status": "SEEDED_VULNERABILITY_CONFIRMED",
+      "log_path": "results\\simulation\\seed_memory_leak.log"
+    }
+  ]
+}

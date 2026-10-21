@@ -1,0 +1,35 @@
+============================================================
+      KẾT QUẢ KIỂM CHỨNG HÌNH THỨC 18 THUỘC TÍNH CTL        
+============================================================
+[TRUE] CTL-01: AG(!(list_live & list_freed))
+[TRUE] CTL-02: AG(!(ptr_live & ptr_invalid))
+[TRUE] CTL-03: AG(ptr_invalid -> !ptr_deref)
+       -> Vacuity Check: NON_VACUOUS (Tiền đề khả đạt tại 2 trạng thái)
+[TRUE] CTL-04: AG(realloc_failed -> owner_valid)
+       -> Vacuity Check: NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)
+[TRUE] CTL-05: AG(realloc_done -> owner_valid)
+       -> Vacuity Check: NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)
+[TRUE] CTL-06: AG(cleanup_done -> list_freed)
+       -> Vacuity Check: NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)
+[TRUE] CTL-07: AG(product_op_processing -> AF(product_op_done | product_op_rejected))
+       -> Vacuity Check: NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)
+[TRUE] CTL-08: AG(file_parsing -> AF(file_loaded | file_rejected))
+       -> Vacuity Check: NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)
+[TRUE] CTL-09: AG(buffer_processing -> AF(buffer_safe | buffer_rejected))
+       -> Vacuity Check: NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)
+[TRUE] CTL-10: AG(reallocating -> AF(realloc_done | realloc_failed))
+       -> Vacuity Check: NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)
+[TRUE] CTL-11: AG(cleanup_processing -> AF(cleanup_done | cleanup_rejected))
+       -> Vacuity Check: NON_VACUOUS (Tiền đề khả đạt tại 1 trạng thái)
+[TRUE] CTL-12: AG(!(buffer_safe & buffer_rejected))
+[TRUE] CTL-13: AG(!(file_loaded & file_rejected))
+[TRUE] CTL-14: AG(!(realloc_done & realloc_failed))
+[TRUE] CTL-15: AG(!(cleanup_done & cleanup_rejected))
+[TRUE] CTL-16: AG(!(product_op_done & product_op_rejected))
+[TRUE] CTL-17: EF(list_freed)
+[TRUE] CTL-18: EF(realloc_failed)
+
+============================================================
+  ĐỘ PHỦ TRẠNG THÁI: 21/21 TRẠNG THÁI KHẢ ĐẠT (100.0%)
+  TỔNG KẾT CTL:      18/18 CÔNG THỨC TRUE TRÊN TOÀN BỘ KHÔNG GIAN KHẢ ĐẠT
+============================================================

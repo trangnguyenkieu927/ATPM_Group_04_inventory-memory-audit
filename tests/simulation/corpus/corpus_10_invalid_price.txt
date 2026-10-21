@@ -1,0 +1,3 @@
+P014|Bad Price Product|Hardware|Cai|10|NaN
+P015|Inf Price Product|Hardware|Cai|10|Infinity
+P016|Alpha Price Product|Hardware|Cai|10|GiaKhongXacDinh

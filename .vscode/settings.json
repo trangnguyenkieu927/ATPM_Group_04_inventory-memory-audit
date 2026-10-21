@@ -1,0 +1,17 @@
+{
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/source/include",
+        "${workspaceFolder}/source/src",
+        "${workspaceFolder}/tests/simulation",
+        "${workspaceFolder}/verification/step3/sanitizers",
+        "${workspaceFolder}/verification/step3/cbmc"
+    ],
+    "C_Cpp.default.compilerPath": "C:/msys64/ucrt64/bin/gcc.exe",
+    "C_Cpp.default.cStandard": "c99",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+    "C_Cpp.errorSquiggles": "enabled",
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}"
+    ]
+}

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results version="2">
+    <cppcheck version="2.21.0"/>
+    <errors>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="src/file_io.c">
+            <location file="src/file_io.c" line="0" column="0"/>
+        </error>
+        <error id="compareValueOutOfTypeRangeError" severity="style" msg="Comparing expression of type &apos;signed long&apos; against value 2147483647. Condition is always false." verbose="Comparing expression of type &apos;signed long&apos; against value 2147483647. Condition is always false." cwe="398" file0="src/file_io.c">
+            <location file="src/file_io.c" line="26" column="82"/>
+        </error>
+        <error id="constParameterPointer" severity="style" msg="Parameter &apos;inventory&apos; can be declared as pointer to const" verbose="Parameter &apos;inventory&apos; can be declared as pointer to const" cwe="398" file0="src/inventory.c">
+            <location file="src/inventory.c" line="22" column="42" info="Parameter &apos;inventory&apos; can be declared as pointer to const"/>
+            <symbol>inventory</symbol>
+        </error>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="src/main.c">
+            <location file="src/main.c" line="0" column="0"/>
+        </error>
+        <error id="constVariablePointer" severity="style" msg="Variable &apos;t&apos; can be declared as pointer to const" verbose="Variable &apos;t&apos; can be declared as pointer to const" cwe="398" file0="src/main.c">
+            <location file="src/main.c" line="41" column="16" info="Variable &apos;t&apos; can be declared as pointer to const"/>
+            <symbol>t</symbol>
+        </error>
+        <error id="constVariablePointer" severity="style" msg="Variable &apos;p&apos; can be declared as pointer to const" verbose="Variable &apos;p&apos; can be declared as pointer to const" cwe="398" file0="src/main.c">
+            <location file="src/main.c" line="376" column="14" info="Variable &apos;p&apos; can be declared as pointer to const"/>
+            <symbol>p</symbol>
+        </error>
+        <error id="constVariablePointer" severity="style" msg="Variable &apos;p&apos; can be declared as pointer to const" verbose="Variable &apos;p&apos; can be declared as pointer to const" cwe="398" file0="src/main.c">
+            <location file="src/main.c" line="442" column="14" info="Variable &apos;p&apos; can be declared as pointer to const"/>
+            <symbol>p</symbol>
+        </error>
+        <error id="constVariablePointer" severity="style" msg="Variable &apos;p&apos; can be declared as pointer to const" verbose="Variable &apos;p&apos; can be declared as pointer to const" cwe="398" file0="src/main.c">
+            <location file="src/main.c" line="480" column="18" info="Variable &apos;p&apos; can be declared as pointer to const"/>
+            <symbol>p</symbol>
+        </error>
+        <error id="constVariablePointer" severity="style" msg="Variable &apos;p&apos; can be declared as pointer to const" verbose="Variable &apos;p&apos; can be declared as pointer to const" cwe="398" file0="src/main.c">
+            <location file="src/main.c" line="529" column="14" info="Variable &apos;p&apos; can be declared as pointer to const"/>
+            <symbol>p</symbol>
+        </error>
+        <error id="constVariablePointer" severity="style" msg="Variable &apos;p&apos; can be declared as pointer to const" verbose="Variable &apos;p&apos; can be declared as pointer to const" cwe="398" file0="src/main.c">
+            <location file="src/main.c" line="571" column="14" info="Variable &apos;p&apos; can be declared as pointer to const"/>
+            <symbol>p</symbol>
+        </error>
+        <error id="constParameter" severity="style" msg="Parameter &apos;argv&apos; can be declared as const array" verbose="Parameter &apos;argv&apos; can be declared as const array" cwe="398" file0="src/main.c">
+            <location file="src/main.c" line="682" column="26" info="Parameter &apos;argv&apos; can be declared as const array"/>
+            <symbol>argv</symbol>
+        </error>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="src/product.c">
+            <location file="src/product.c" line="0" column="0"/>
+        </error>
+        <error id="arrayIndexThenCheck" severity="style" msg="Array index &apos;i&apos; is used before limits check." verbose="Defensive programming: The variable &apos;i&apos; is used as an array index before it is checked that is within limits. This can mean that the array might be accessed out of bounds. Reorder conditions such as &apos;(a[i] &amp;&amp; i &lt; 10)&apos; to &apos;(i &lt; 10 &amp;&amp; a[i])&apos;. That way the array will not be accessed if the index is out of limits." cwe="398" file0="src/product.c">
+            <location file="src/product.c" line="55" column="20"/>
+            <symbol>i</symbol>
+        </error>
+        <error id="arrayIndexThenCheck" severity="style" msg="Array index &apos;j&apos; is used before limits check." verbose="Defensive programming: The variable &apos;j&apos; is used as an array index before it is checked that is within limits. This can mean that the array might be accessed out of bounds. Reorder conditions such as &apos;(a[i] &amp;&amp; i &lt; 10)&apos; to &apos;(i &lt; 10 &amp;&amp; a[i])&apos;. That way the array will not be accessed if the index is out of limits." cwe="398" file0="src/product.c">
+            <location file="src/product.c" line="61" column="18"/>
+            <symbol>j</symbol>
+        </error>
+        <error id="constParameterPointer" severity="style" msg="Parameter &apos;list&apos; can be declared as pointer to const" verbose="Parameter &apos;list&apos; can be declared as pointer to const" cwe="398" file0="src/product.c">
+            <location file="src/product.c" line="141" column="33" info="Parameter &apos;list&apos; can be declared as pointer to const"/>
+            <symbol>list</symbol>
+        </error>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="src/report.c">
+            <location file="src/report.c" line="0" column="0"/>
+        </error>
+        <error id="constVariablePointer" severity="style" msg="Variable &apos;t&apos; can be declared as pointer to const" verbose="Variable &apos;t&apos; can be declared as pointer to const" cwe="398" file0="src/report.c">
+            <location file="src/report.c" line="229" column="16" info="Variable &apos;t&apos; can be declared as pointer to const"/>
+            <symbol>t</symbol>
+        </error>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="src/utils.c">
+            <location file="src/utils.c" line="0" column="0"/>
+        </error>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="src/validation.c">
+            <location file="src/validation.c" line="0" column="0"/>
+        </error>
+        <error id="unusedFunction" severity="style" msg="The function &apos;report_statistics_default&apos; is never used." verbose="The function &apos;report_statistics_default&apos; is never used." cwe="561">
+            <location file="include/report.h" line="98" column="19"/>
+            <symbol>report_statistics_default</symbol>
+        </error>
+        <error id="unusedFunction" severity="style" msg="The function &apos;inventory_init&apos; is never used." verbose="The function &apos;inventory_init&apos; is never used." cwe="561">
+            <location file="src/inventory.c" line="10" column="5"/>
+            <symbol>inventory_init</symbol>
+        </error>
+        <error id="unusedFunction" severity="style" msg="The function &apos;inventory_free&apos; is never used." verbose="The function &apos;inventory_free&apos; is never used." cwe="561">
+            <location file="src/inventory.c" line="14" column="6"/>
+            <symbol>inventory_free</symbol>
+        </error>
+        <error id="unusedFunction" severity="style" msg="The function &apos;find_product&apos; is never used." verbose="The function &apos;find_product&apos; is never used." cwe="561">
+            <location file="src/inventory.c" line="18" column="16"/>
+            <symbol>find_product</symbol>
+        </error>
+        <error id="unusedFunction" severity="style" msg="The function &apos;update_stock&apos; is never used." verbose="The function &apos;update_stock&apos; is never used." cwe="561">
+            <location file="src/inventory.c" line="68" column="5"/>
+            <symbol>update_stock</symbol>
+        </error>
+        <error id="unusedFunction" severity="style" msg="The function &apos;to_lower_case&apos; is never used." verbose="The function &apos;to_lower_case&apos; is never used." cwe="561">
+            <location file="src/utils.c" line="200" column="6"/>
+            <symbol>to_lower_case</symbol>
+        </error>
+        <error id="unusedFunction" severity="style" msg="The function &apos;validate_product_info&apos; is never used." verbose="The function &apos;validate_product_info&apos; is never used." cwe="561">
+            <location file="src/validation.c" line="119" column="5"/>
+            <symbol>validate_product_info</symbol>
+        </error>
+        <error id="unusedFunction" severity="style" msg="The function &apos;validate_price_quantity_values&apos; is never used." verbose="The function &apos;validate_price_quantity_values&apos; is never used." cwe="561">
+            <location file="src/validation.c" line="271" column="5"/>
+            <symbol>validate_price_quantity_values</symbol>
+        </error>
+        <error id="staticFunction" severity="style" msg="The function &apos;find_product_mutable&apos; should have static linkage since it is not used outside of its translation unit." verbose="The function &apos;find_product_mutable&apos; should have static linkage since it is not used outside of its translation unit.">
+            <location file="src/inventory.c" line="22" column="10"/>
+            <symbol>find_product_mutable</symbol>
+        </error>
+        <error id="staticFunction" severity="style" msg="The function &apos;print_product_list&apos; should have static linkage since it is not used outside of its translation unit." verbose="The function &apos;print_product_list&apos; should have static linkage since it is not used outside of its translation unit.">
+            <location file="src/main.c" line="93" column="6"/>
+            <symbol>print_product_list</symbol>
+        </error>
+        <error id="staticFunction" severity="style" msg="The function &apos;validate_name_unit&apos; should have static linkage since it is not used outside of its translation unit." verbose="The function &apos;validate_name_unit&apos; should have static linkage since it is not used outside of its translation unit.">
+            <location file="src/validation.c" line="110" column="5"/>
+            <symbol>validate_name_unit</symbol>
+        </error>
+        <error id="checkersReport" severity="information" msg="Active checkers: 119/186 (use --checkers-report=&lt;filename&gt; to see details)" verbose="Active checkers: 119/186 (use --checkers-report=&lt;filename&gt; to see details)"/>
+    </errors>
+</results>

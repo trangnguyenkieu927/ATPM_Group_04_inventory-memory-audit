@@ -1,0 +1,6 @@
+Command: C:/Du_an/ATPM/lab5_sat_smt_verification/.deps/bin/z3.exe -smt2 verification/step3/smt\smt_004b_category_total_guard.smt2
+Exit Code: 0
+Output:
+unsat
+Error:
+

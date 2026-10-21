@@ -1,0 +1,3 @@
+SP12|Nguon Corsair|Linh kien|Cai|10|NaN
+SP13|Case NZXT|Vo may|Cai|10|Infinity
+SP14|Quat Case|Cai|5|abc

@@ -1,0 +1,2 @@
+Finding_ID,Tool,Tool_Version,File,Line,Column,Function,Diagnostic_Code,Severity,Message,Build_Config,Source_SHA,Evidence_Path,Triage_Status
+CF-000,GCC,16.1.0,ALL_MODULES,0,0,ALL,NONE,INFO,"0 compiler warnings observed under specified flags: -std=c17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow -Wformat=2 -Wnull-dereference",Enhanced-C17-Diagnostics,44202070c68002d9af068374478cdc83098dd4d8,results/step2/compiler/diagnostics.log,CONFIRMED_CLEAN

@@ -1,0 +1,2 @@
+P003|Old Product Standard|20|15.75
+P004|Keyboard Classic|35|40.00

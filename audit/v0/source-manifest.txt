@@ -1,0 +1,49 @@
+# =========================================================================
+# MANIFEST MÃ NGUỒN VÀ MÔI TRƯỜNG THỰC NGHIỆM - BASELINE V0
+# Dự án: Kiểm chứng an toàn bộ nhớ cho chương trình C mô phỏng quản lý kho
+# =========================================================================
+
+THÔNG TIN PHIÊN BẢN (BASELINE METADATA):
+- Phiên bản: v0 (Baseline Pre-Audit)
+- Nhánh Git: audit/prepare-v0
+- Commit SHA gốc: d57e583270517dfcc6afcba071dd2621d75708aa
+- Ngày chốt baseline: 2026-10-15
+- Tiêu chuẩn ngôn ngữ: ISO C17 (-std=c17)
+
+CÔNG CỤ BIÊN DỊCH VÀ XÂY DỰNG (TOOLCHAINS):
+- C Compiler: gcc.exe (Rev5, Built by MSYS2 project) 16.1.0
+- Build Tool: GNU Make 4.4.1 (Built for x86_64-w64-mingw32)
+- Hệ điều hành: Windows 11 / Windows NT 10.0 (x86_64)
+- Shell: PowerShell 7 / Windows PowerShell
+
+DANH SÁCH TỆP TIN TIÊU ĐỀ (HEADER FILES - source/include/):
+1. source/include/models.h         - Mô hình Product, ProductList, Inventory, hằng số và mã lỗi
+2. source/include/inventory.h      - Khai báo API facade nghiệp vụ kho hàng
+3. source/include/product.h        - Khai báo API quản lý danh sách sản phẩm động trên heap
+4. source/include/file_io.h        - Khai báo API đọc và ghi tệp dữ liệu kho
+5. source/include/validation.h     - Khai báo API kiểm tra tính hợp lệ dữ liệu đầu vào
+6. source/include/utils.h          - Khai báo API tiện ích chuỗi, safe copy, trim, split, int/double
+7. source/include/report.h         - Khai báo API báo cáo, thống kê tồn kho
+
+DANH SÁCH TỆP TIN NGUỒN (SOURCE FILES - source/src/):
+1. source/src/inventory.c         - Cài đặt nghiệp vụ kho (nhập, xuất, tồn, tìm kiếm)
+2. source/src/product.c           - Cài đặt quản lý mảng heap ProductList (init, realloc, free, CRUD)
+3. source/src/file_io.c           - Cài đặt đọc/ghi tệp, parser 6 trường và 4 trường tương thích
+4. source/src/validation.c        - Cài đặt các quy tắc kiểm tra dữ liệu đầu vào và chống tràn số
+5. source/src/utils.c             - Cài đặt tiện ích chuỗi an toàn bộ nhớ và điều hướng tệp
+6. source/src/report.c            - Cài đặt tính toán báo cáo tổng quan và cơ cấu ngành hàng
+7. source/src/main.c              - Điểm vào ứng dụng, xử lý CLI flags và menu tương tác console
+
+DANH SÁCH BỘ KIỂM THỬ (TEST SUITES):
+1. source/tests/test_inventory.c  - Bộ test tích hợp nghiệp vụ kho hàng và tệp tin
+2. source/tests/smoke_test.c      - Bộ smoke test 17 ca nghiệp vụ và an toàn bộ nhớ tự động
+3. tests/test_utils.c             - Bộ test 25 ca tiện ích chuỗi an toàn bộ nhớ
+
+TỆP TIN DỮ LIỆU MẪU (DATA FILES - source/data/):
+1. source/data/products.txt       - Dữ liệu 10 sản phẩm mẫu chuẩn định dạng 6 trường
+2. source/data/transactions.txt   - Nhật ký ghi nhận lịch sử các giao dịch nhập/xuất kho
+
+CẤU HÌNH BIÊN DỊCH (BUILD CONFIGURATION):
+- source/Makefile                 - Makefile chuẩn hóa với các cờ -std=c17 -Wall -Wextra -Wpedantic,
+                                    hỗ trợ target all, debug, test, smoke-test, sanitize-test, clean
+- .gitignore                      - Loại trừ toàn bộ artifacts sinh ra (*.exe, *.o, log)

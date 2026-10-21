@@ -1,0 +1,115 @@
+﻿=========================================================================
+NHAT KY SMOKE TEST CHUC NANG NEN TANG - BASELINE V0
+Thoi diem bat dau: 2026-10-15 20:31:50 +07:00
+Commit SHA       : d57e583270517dfcc6afcba071dd2621d75708aa
+=========================================================================
+
+--- 1. CHAY BO SMOKE TEST TU DONG (17 CA THUC CHUNG) ---
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -o smoke_tests tests/smoke_test.c src/inventory.c src/product.c src/file_io.c src/validation.c src/utils.c src/report.c
+./smoke_tests
+========================================================================================================================
+                                      SMOKE TEST CHUC NANG NEN TANG - BASELINE V0                                       
+========================================================================================================================
+| ID | Thao tac               | Input                          | Expected                 | Actual                   | Code | Pass |
+|----|------------------------|--------------------------------|--------------------------|--------------------------|------|------|
+| 1  | Khoi tao danh sach     | Inventory pointer              | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 2  | Them san pham 6 truong | SP_TEST01|Dell|Laptop|10       | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 3  | Chan trung lap ID      | SP_TEST01 (da ton tai)         | STATUS_ERR_DUPLICATE_ID  | STATUS_ERR_DUPLICATE_ID  | -12  | PASS |
+| 4  | Tim kiem theo ID       | ID = SP_TEST01                 | Tim thay Dell Precision  | Tim thay Dell Precision  | 0    | PASS |
+| 5  | Tim kiem theo ten      | Keyword = 'dell'               | 1 ket qua phu hop        | 1 ket qua phu hop        | 0    | PASS |
+| 6  | Cap nhat san pham      | ID=SP_TEST01, SL=12, Gia=2600  | Cap nhat thanh cong      | Cap nhat thanh cong      | 0    | PASS |
+| 7  | Nhap kho hop le        | ID=SP_TEST01, qty=+8           | Ton kho tang len 20      | Ton kho tang len 20      | 0    | PASS |
+| 8  | Chan tran so nhap kho  | ID=SP_TEST01, qty=INT_MAX      | STATUS_ERR_OVERFLOW      | STATUS_ERR_OVERFLOW      | -6   | PASS |
+| 9  | Xuat kho hop le        | ID=SP_TEST01, qty=-5           | Ton kho giam con 15      | Ton kho giam con 15      | 0    | PASS |
+| 10 | Chan xuat qua ton kho  | ID=SP_TEST01, qty=100 (ton=15) | ERR_INSUFFICIENT_STOCK   | ERR_INSUFFICIENT_STOCK   | -5   | PASS |
+| 11 | Ghi tep du lieu 6 truong | data/test_smoke_products.txt   | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 12 | Doc tep du lieu 6 truong | data/test_smoke_products.txt   | Nap thanh cong 1 san pham | Nap thanh cong 1 san pham | 0    | PASS |
+| 13 | Tuong thich tep 4 truong | OLD01|Ban phim|25|45.00        | Default cat/unit hop le  | Default cat/unit hop le  | 0    | PASS |
+| 14 | Thong ke tong quan kho | 2 SP (1 ton 15, 1 ton 0)       | Tong 2 SP, 1 het hang    | Tong 2 SP, 1 het hang    | 0    | PASS |
+| 15 | Xuat bao cao ra tep    | data/test_smoke_report.txt     | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 16 | Xoa san pham           | ID = SP_TEST01                 | Xoa thanh cong           | Xoa thanh cong           | 0    | PASS |
+| 17 | Giai phong bo nho      | inventory_free(&inv)           | Con tro NULL, size=0     | Con tro NULL, size=0     | 0    | PASS |
+------------------------------------------------------------------------------------------------------------------------
+TONG KET SMOKE TEST: Tong so ca: 17 | Dat: 17 | Loi: 0 | Ket qua: TAT CA DEU PASS (100%)
+========================================================================================================================
+
+Exit code make smoke-test: 0
+
+--- 2. SMOKE TEST CLI: ./inventory_app --list ---
+
+================================================================================================-------------------------
+                                      DANH SACH SAN PHAM TRONG KHO (Tong so: 10)                                      
+================================================================================================-------------------------
+STT  | MA SP      | TEN SAN PHAM                     | LOAI SP          | DON VI   | TON KHO  | DON GIA ($) | THANH TIEN ($)
+-------------------------------------------------------------------------------------------------------------------------
+1    | SP001      | Laptop Dell XPS 13               | Laptop           | Chiec    | 38       | 1499.99    | 56999.62    
+2    | SP002      | Chuot khong day Logitech MX Master | Phu kien         | Con      | 30       | 99.50      | 2985.00     
+3    | SP003      | Ban phim co Keychron K2          | Phu kien         | Chiec    | 15       | 85.00      | 1275.00     
+4    | SP004      | Man hinh LG UltraFine 27 inch    | Man hinh         | Chiec    | 10       | 350.00     | 3500.00     
+5    | SP005      | Tai nghe Sony WH-1000XM5         | Am thanh         | Chiec    | 0        | 399.00     | 0.00        
+6    | SP006      | O cung SSD Samsung 980 Pro 1TB   | Linh kien        | Chiec    | 50       | 129.99     | 6499.50     
+7    | SP007      | RAM Corsair Vengeance 16GB DDR4  | Linh kien        | Thanh    | 40       | 65.00      | 2600.00     
+8    | SP008      | Webcam Logitech C920 Pro HD      | Phu kien         | Chiec    | 25       | 79.90      | 1997.50     
+9    | SP009      | Loa Bluetooth JBL Flip 6         | Am thanh         | Chiec    | 18       | 119.00     | 2142.00     
+10   | SP011      | Laptop LOQ                       | Laptop           | chiec    | 24       | 20000000.00 | 480000000.00
+-------------------------------------------------------------------------------------------------------------------------
+Tong so mat hang: 10 | Tong ton kho: 250 | Tong gia tri kho: 480077998.62 $
+================================================================================================-------------------------
+
+
+--- 3. SMOKE TEST CLI: ./inventory_app --validate ---
+
+================================================================================================-------------------------
+                               KIEM TOAN DU LIEU TEP SAN PHAM (data/products.txt)                               
+================================================================================================-------------------------
+MA SP    | TEN SAN PHAM                     | LOAI SP      | DON VI   | SO LUONG | GIA ($)   | TRANG THAI KIEM TOAN
+-------------------------------------------------------------------------------------------------------------------------
+SP001    | Laptop Dell XPS 13               | Laptop       | Chiec    | 38       | 1499.99   | [HOP LE]          
+SP002    | Chuot khong day Logitech MX Master | Phu kien     | Con      | 30       | 99.50     | [HOP LE]          
+SP003    | Ban phim co Keychron K2          | Phu kien     | Chiec    | 15       | 85.00     | [HOP LE]          
+SP004    | Man hinh LG UltraFine 27 inch    | Man hinh     | Chiec    | 10       | 350.00    | [HOP LE]          
+SP005    | Tai nghe Sony WH-1000XM5         | Am thanh     | Chiec    | 0        | 399.00    | [HOP LE]          
+SP006    | O cung SSD Samsung 980 Pro 1TB   | Linh kien    | Chiec    | 50       | 129.99    | [HOP LE]          
+SP007    | RAM Corsair Vengeance 16GB DDR4  | Linh kien    | Thanh    | 40       | 65.00     | [HOP LE]          
+SP008    | Webcam Logitech C920 Pro HD      | Phu kien     | Chiec    | 25       | 79.90     | [HOP LE]          
+SP009    | Loa Bluetooth JBL Flip 6         | Am thanh     | Chiec    | 18       | 119.00    | [HOP LE]          
+SP011    | Laptop LOQ                       | Laptop       | chiec    | 24       | 20000000.00 | [HOP LE]          
+-------------------------------------------------------------------------------------------------------------------------
+Tong so ban ghi: 10 | Ban ghi hop le: 10 | Ban ghi loi: 0
+================================================================================================-------------------------
+
+
+--- 4. SMOKE TEST CLI: ./inventory_app --report ---
+
+========================================================================
+                     BAO CAO TONG QUAN KHO HANG                         
+========================================================================
+ - Tong so mat hang quan ly (SKU)   : 10 san pham
+ - Tong so luong hang ton kho       : 250 san pham
+ - Tong gia tri hang ton kho        : 480077998.62 $
+ - So mat hang da het hang (SL = 0) : 1 san pham
+ - So mat hang sap het hang (<= 10) : 1 san pham
+ - San pham gia cao nhat            : Laptop LOQ (SP011 - 20000000.00 $)
+ - San pham gia thap nhat           : RAM Corsair Vengeance 16GB DDR4 (SP007 - 65.00 $)
+========================================================================
+
+
+=========================================================================================
+                         BAO CAO CO CAU TON KHO THEO NGANH HANG                         
+=========================================================================================
+STT  | DANH MUC NGANH HANG      | SO MAT HANG    | TONG TON KHO   | TONG GIA TRI ($)
+-----------------------------------------------------------------------------------------
+1    | Laptop                   | 2              | 62             | 480056999.62    
+2    | Phu kien                 | 3              | 70             | 6257.50         
+3    | Man hinh                 | 1              | 10             | 3500.00         
+4    | Am thanh                 | 2              | 18             | 2142.00         
+5    | Linh kien                | 2              | 90             | 9099.50         
+-----------------------------------------------------------------------------------------
+Tong cong: 5 danh muc | Tong ton kho: 250 | Tong gia tri: 480077998.62 $
+=========================================================================================
+
+
+=========================================================================
+TONG KET SMOKE TEST: EXIT CODE = 0 (TAT CA THAO TAC NEN TANG DA PASS)
+Thoi diem ket thuc: 2026-10-15 20:31:51 +07:00
+=========================================================================

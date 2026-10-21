@@ -1,0 +1,62 @@
+[
+  {
+    "file": "smt_001a_capacity_growth.smt2",
+    "result": "SAT",
+    "exit_code": 0,
+    "output": "sat\n(\n  (define-fun capacity () (_ BitVec 64)\n    #x8000000000000000)\n  (define-fun mult_65 () (_ BitVec 65)\n    (bvmul ((_ zero_extend 1) capacity)\n       #b00000000000000000000000000000000000000000000000000000000000000010))\n  (define-fun two_ext () (_ BitVec 65)\n    #b00000000000000000000000000000000000000000000000000000000000000010)\n  (define-fun cap_ext () (_ BitVec 65)\n    ((_ zero_extend 1) capacity))\n  (define-fun max_64_ext () (_ BitVec 65)\n    ((_ zero_extend 1) #xffffffffffffffff))\n)"
+  },
+  {
+    "file": "smt_001b_capacity_growth_reach.smt2",
+    "result": "UNSAT",
+    "exit_code": 0,
+    "output": "unsat"
+  },
+  {
+    "file": "smt_002a_realloc_size.smt2",
+    "result": "SAT",
+    "exit_code": 0,
+    "output": "sat\n(\n  (define-fun new_cap () (_ BitVec 64)\n    #xeea85800eaaaaaaa)\n  (define-fun size_128 () (_ BitVec 128)\n    ((_ zero_extend 64) #x00000000000000d0))\n  (define-fun sizeof_product () (_ BitVec 64)\n    #x00000000000000d0)\n  (define-fun max_size_t_128 () (_ BitVec 128)\n    ((_ zero_extend 64) #xffffffffffffffff))\n  (define-fun alloc_bytes_128 () (_ BitVec 128)\n    (bvmul ((_ zero_extend 64) new_cap) ((_ zero_extend 64) #x00000000000000d0)))\n  (define-fun cap_128 () (_ BitVec 128)\n    ((_ zero_extend 64) new_cap))\n)"
+  },
+  {
+    "file": "smt_002b_realloc_size_guard.smt2",
+    "result": "UNSAT",
+    "exit_code": 0,
+    "output": "unsat"
+  },
+  {
+    "file": "smt_003a_stock_addition.smt2",
+    "result": "SAT",
+    "exit_code": 0,
+    "output": "sat\n(\n  (define-fun current_stock () (_ BitVec 32)\n    #x7fffffff)\n  (define-fun add_quantity () (_ BitVec 32)\n    #x7fffffff)\n  (define-fun add_ext () (_ BitVec 33)\n    ((_ sign_extend 1) add_quantity))\n  (define-fun int_max_33 () (_ BitVec 33)\n    ((_ sign_extend 1) #x7fffffff))\n  (define-fun sum_33 () (_ BitVec 33)\n    (bvadd ((_ sign_extend 1) current_stock) ((_ sign_extend 1) add_quantity)))\n  (define-fun cur_ext () (_ BitVec 33)\n    ((_ sign_extend 1) current_stock))\n)"
+  },
+  {
+    "file": "smt_003b_stock_addition_guard.smt2",
+    "result": "UNSAT",
+    "exit_code": 0,
+    "output": "unsat"
+  },
+  {
+    "file": "smt_004a_category_total.smt2",
+    "result": "SAT",
+    "exit_code": 0,
+    "output": "sat\n(\n  (define-fun cat_total () (_ BitVec 32)\n    #x7fffffff)\n  (define-fun next_qty () (_ BitVec 32)\n    #x7fffffff)\n  (define-fun add_ext () (_ BitVec 33)\n    ((_ sign_extend 1) next_qty))\n  (define-fun int_max_33 () (_ BitVec 33)\n    ((_ sign_extend 1) #x7fffffff))\n  (define-fun sum_33 () (_ BitVec 33)\n    (bvadd ((_ sign_extend 1) cat_total) ((_ sign_extend 1) next_qty)))\n  (define-fun cur_ext () (_ BitVec 33)\n    ((_ sign_extend 1) cat_total))\n)"
+  },
+  {
+    "file": "smt_004b_category_total_guard.smt2",
+    "result": "UNSAT",
+    "exit_code": 0,
+    "output": "unsat"
+  },
+  {
+    "file": "smt_005a_file_bytes.smt2",
+    "result": "SAT",
+    "exit_code": 0,
+    "output": "sat\n(\n  (define-fun existing_bytes () (_ BitVec 32)\n    #x7fffffff)\n  (define-fun incoming_bytes () (_ BitVec 32)\n    #x7fffffff)\n  (define-fun add_ext () (_ BitVec 33)\n    ((_ sign_extend 1) incoming_bytes))\n  (define-fun int_max_33 () (_ BitVec 33)\n    ((_ sign_extend 1) #x7fffffff))\n  (define-fun sum_33 () (_ BitVec 33)\n    (bvadd ((_ sign_extend 1) existing_bytes) ((_ sign_extend 1) incoming_bytes)))\n  (define-fun cur_ext () (_ BitVec 33)\n    ((_ sign_extend 1) existing_bytes))\n)"
+  },
+  {
+    "file": "smt_005b_file_bytes_bound.smt2",
+    "result": "UNSAT",
+    "exit_code": 0,
+    "output": "unsat"
+  }
+]

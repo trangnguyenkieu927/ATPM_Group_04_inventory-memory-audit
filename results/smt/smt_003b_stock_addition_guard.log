@@ -1,0 +1,4 @@
+Z3 Command: z3 smt_003b_stock_addition_guard.smt2
+Exit Code: 0
+Output:
+unsat

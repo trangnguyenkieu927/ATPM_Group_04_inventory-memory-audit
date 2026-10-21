@@ -1,0 +1,29 @@
+﻿Evidence_ID,Scenario_ID,REQ_ID,Risk_ID,Finding_ID,Tool,Evidence_Path,SHA256_Checksum,Description
+EVID-COMP-01,SC-01..06,ALL,ALL,COMP-001..008,GCC 16.1.0,results/compiler/gcc_audit.log,ad210422aeee2d6a6fc16ebe0765e84b99262bbca37aac3e69e0d6fab52e28c9,Strict warning compilation (-Wall -Wextra -Wconversion)
+EVID-COMP-02,SC-01,"REQ-1, REQ-17",RISK-001,None,GCC 16.1.0,results/compiler/smoke_test.log,5fa0d823af05867779329b6bb239be5b4f5f1eb29eb938ed0d85b97f6913cc93,Smoke test 17/17 pass log
+EVID-STAT-01,SC-01..06,ALL,ALL,STATIC-CPP-001..014,Cppcheck 2.21.0,results/static_analysis/cppcheck_raw.log,6ae97d84a31f70d3fe7a58184dbcf1333bcbb8c41973935afe9155589ccec835,Raw text log 14 style findings
+EVID-STAT-02,SC-01..06,ALL,ALL,STATIC-CPP-001..014,Cppcheck 2.21.0,results/static_analysis/cppcheck_findings.xml,e25b6481ee177ad8ec29d749c7b4102afd3c892c8657772306b4e40620977c97,XML findings with CWE and lines
+EVID-SMT-01A,SC-03,REQ-2,RISK-001,SMT-001A,Z3 Solver 5.1.0,results/smt/smt_001a_capacity_growth.log,1af6daaac0f4752b5cc90f2c77f210263566344da7d00d5d2bf12bbbaacc37df,SAT counterexample capacity=2^63
+EVID-SMT-01B,SC-03,REQ-2,RISK-001,SMT-001B,Z3 Solver 5.1.0,results/smt/smt_001b_capacity_growth_reach.log,543a6444d22d50b03420a490a3999557770c09ce9122c49138a8b3cce2dc76af,UNSAT proof of unreachability in normal range
+EVID-SMT-02A,SC-03,REQ-3,RISK-002,SMT-002A,Z3 Solver 5.1.0,results/smt/smt_002a_realloc_size.log,c61e09b9ec5d02895b4b1b1ae5e2f6e4b14daf0e5dd493da083356a1de7206c1,SAT counterexample new_cap*208 overflow
+EVID-SMT-02B,SC-03,REQ-3,RISK-002,SMT-002B,Z3 Solver 5.1.0,results/smt/smt_002b_realloc_size_guard.log,82009ccf51700fe3f4f6bdb9c4527df531c9d16a12c09ddcdd70ed77f456786c,UNSAT proof with defensive guard
+EVID-SMT-03A,SC-06,REQ-4,RISK-006,SMT-003A,Z3 Solver 5.1.0,results/smt/smt_003a_stock_addition.log,715fb571704afc7141714f082b703b14dae0fa7a796bbdacdd5e5a915592f3aa,SAT counterexample INT_MAX + INT_MAX overflow
+EVID-SMT-03B,SC-06,REQ-4,RISK-006,SMT-003B,Z3 Solver 5.1.0,results/smt/smt_003b_stock_addition_guard.log,7125a397f907afb16cbd18d9ba9ae1790c8e33b49d8e004c2dbdd5c40d735f12,UNSAT proof that baseline guard prevents overflow
+EVID-CTL-01,SC-01..06,REQ-1..18,RISK-001..012,CTL-01..18,Custom CTL Checker,results/ctl/ctl_verification.log,61242b27b06490767b93ca7e9e513e4d1cfd483e86516eeb6440d69a6a17d92e,"18 CTL formulas TRUE, 21/21 states reached"
+EVID-BMC-01,SC-03,REQ-1,RISK-001,HARNESS-001,GCC Bounded Harness,results/cbmc/harness_001.log,5143f2411e505d59f265e0de2d267e3a10a746643c8bbf563c711c984da8d49c,ProductList invariant verified k=20
+EVID-BMC-02,SC-02,"REQ-6, REQ-16",RISK-008,HARNESS-002,GCC Bounded Harness,results/cbmc/harness_002.log,dfbbbb98a65e43f43beaac7bd1de27fcd247e661e8eedd29167b2ae9c3ec0497,Array bounds verified k=40
+EVID-BMC-03,SC-04,"REQ-3, REQ-12",RISK-003,HARNESS-003,GCC Bounded Harness,results/cbmc/harness_003.log,ede15569857acf940b67a5427dbeb6303a36323f679786b8531f724239448bf0,Mock realloc failure verified k=17
+EVID-BMC-04,SC-05,"REQ-14, REQ-15",RISK-004,HARNESS-004,GCC Bounded Harness,results/cbmc/harness_004.log,6a11e46767b0f5735f570535b6a554317c516a6ebad8687f3c49ee718721b653,Null pointer safety verified k=17
+EVID-BMC-05,SC-06,"REQ-4, REQ-5",RISK-006,HARNESS-005,GCC Bounded Harness,results/cbmc/harness_005.log,cae882d1762aeae07479161e3e9de25f82b86cd004dbbae09cc7669e6b70f3a8,Stock arithmetic bounds verified k=10
+EVID-SIM-01,SC-01,"REQ-1, REQ-17, REQ-18",RISK-007,SIM-SC01,C Simulator,results/simulation/sim_sc01.log,24ae4927f6e98d6fbc214c73fe4f08d14347c55ea8fe233590039cc10047eb2a,7/7 tests pass on parser validation
+EVID-SIM-02,SC-02,"REQ-9, REQ-16",RISK-008,SIM-SC02,C Simulator,results/simulation/sim_sc02.log,cf7c6848e888214728a6e47037459328d79fb2682387fa54c1b2b26beeeec4d4,5/5 tests pass on buffer bounds
+EVID-SIM-03,SC-03,"REQ-2, REQ-3, REQ-10",RISK-001,SIM-SC03,C Simulator,results/simulation/sim_sc03.log,d181bd67c83018c18254464ecdd3da4489428fe8f69e0d2f27ae0847305ae50c,5/5 tests pass on capacity doubling
+EVID-SIM-04,SC-04,"REQ-11, REQ-12, REQ-13",RISK-003,SIM-SC04,C Simulator,results/simulation/sim_sc04.log,f0b1b75ec6885cc85c6592791592816a8830d2cf5a523c35d157596463b4d87a,4/4 tests pass on leak defense and idempotent free
+EVID-SIM-05,SC-05,"REQ-14, REQ-15",RISK-004,SIM-SC05,C Simulator,results/simulation/sim_sc05.log,bac5a0ddeec634e21df3b29880882b9742437c9293cf5f8110a1c0d9112ed618,3/3 tests pass on pointer lifetime
+EVID-SIM-06,SC-06,"REQ-4, REQ-5, REQ-6",RISK-006,SIM-SC06,C Simulator,results/simulation/sim_sc06.log,d5da958ea45bcbd76a9f6ca7bce3dfe45b2c00a15cdf75a04b795619021fd945,7/7 tests pass on stock conservation
+EVID-SEED-01,SC-02,REQ-16,RISK-008,SEED-01,GCC -fstack-protector,results/simulation/seed_stack_overflow.log,9e1f4e8e0fdba0c0241a99dfb7d37c392e7612ba8f30a8fa9ec72867e75586dd,Seeded stack buffer overflow caught
+EVID-SEED-02,SC-05,REQ-14,RISK-004,SEED-02,C Simulator,results/simulation/seed_use_after_free.log,d1078672a2b53ba431332c0845d77077ffb9aab36fa4a3f70ff2d73a2945f6f0,Seeded use-after-free demo
+EVID-SEED-03,SC-04,REQ-12,RISK-003,SEED-03,C Simulator,results/simulation/seed_memory_leak.log,b74857538f7420279f8ec647c9e7fef4d430de3fe0dba2ac4c241f304d5b9ac1,Seeded realloc memory leak demo
+EVID-SAN-01,SC-04,"REQ-11, REQ-13",RISK-005,MEM-001..004,Canary Memory Tracker,results/sanitizers/canary_audit.log,2358794b888e0cf1ed6a1539fc604fa7e80e48b645b6e94b960fd9655e6a69bb,"0 bytes leak, 0 double free, 0 canary corrupted"
+EVID-FUZZ-01,"SC-01, SC-02","REQ-16, REQ-17",RISK-007,FUZZ-001,Mutation Fuzzer,results/fuzzing/fuzz_campaign.log,57c6e22fac3498d65fd7f02ecc87b0c64cc023e77deedc899af3ee8991030690,"1000 executions, 0 crashes, 0 hangs on baseline v0"
+EVID-COV-01,SC-01..06,ALL,ALL,COV-SUMMARY,Gcovr 8.6,results/coverage/coverage_summary.txt,edf96458c731f745615923155be5df14d5b1657932862be00971c87a7ee9fb3b,Line and branch coverage report

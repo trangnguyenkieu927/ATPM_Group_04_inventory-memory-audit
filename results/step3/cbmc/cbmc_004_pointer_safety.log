@@ -1,0 +1,15 @@
+======================================================================
+Harness ID: CBMC-004
+Yêu cầu truy vết: REQ-13, REQ-14, REQ-15
+Unwind Bound k: 17
+Compile Command: gcc -Wall -Wextra -O0 -g -Isource/include verification/step3/cbmc/harness_cbmc_004_pointer_safety.c source/src/product.c source/src/validation.c source/src/utils.c -o scratch/cbmc_004.exe
+Execution Command: scratch/cbmc_004.exe
+Execution Exit Code: 0
+Status: VERIFIED_WITHIN_BOUND
+----------------------------------------------------------------------
+STDOUT:
+[CBMC-004 PASS] Null safety, double-free defense and borrowed pointer lifecycle verified
+
+STDERR:
+
+======================================================================

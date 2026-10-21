@@ -1,0 +1,13 @@
+============================================================
+ SC-01 SIMULATION: PARSER INPUT VALIDATION & COMPATIBILITY  
+============================================================
+[PASS] TC-SC01-01: Valid 6 fields correctly parsed
+[PASS] TC-SC01-02: Legacy 4 fields parsed with default category/unit
+[PASS] TC-SC01-03: Missing fields rejected safely (rc=-7)
+[PASS] TC-SC01-04: Excess tokens rejected safely (rc=-7)
+[PASS] TC-SC01-05: Empty name field rejected safely (rc=-7)
+[PASS] TC-SC01-06: Malformed integer quantity rejected safely (rc=-7)
+[PASS] TC-SC01-07: Duplicate ID correctly rejected (STATUS_ERR_DUPLICATE_ID)
+------------------------------------------------------------
+SC-01 RESULT: 7/7 tests PASSED (SUCCESS)
+============================================================

@@ -1,0 +1,1 @@
+P005|Keyboard RGB|IT|Cai|30|45.00|extra_field_1|extra_field_2|extra_field_3

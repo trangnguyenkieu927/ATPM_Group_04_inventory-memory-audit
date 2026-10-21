@@ -1,0 +1,199 @@
+include\inventory.h:4:2: warning: Include file: <stddef.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stddef.h>
+ ^
+include\models.h:4:2: warning: Include file: <stddef.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stddef.h>
+ ^
+src\file_io.c:3:2: warning: Include file: <ctype.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <ctype.h>
+ ^
+src\file_io.c:4:2: warning: Include file: <errno.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <errno.h>
+ ^
+src\file_io.c:5:2: warning: Include file: <limits.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <limits.h>
+ ^
+src\file_io.c:6:2: warning: Include file: <math.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <math.h>
+ ^
+src\file_io.c:7:2: warning: Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdio.h>
+ ^
+src\file_io.c:8:2: warning: Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdlib.h>
+ ^
+src\file_io.c:9:2: warning: Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <string.h>
+ ^
+src\file_io.c:0:0: warning: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+src\file_io.c:26:82: warning: Comparing expression of type 'signed long' against value 2147483647. Condition is always false. [compareValueOutOfTypeRangeError]
+    if (errno == ERANGE || end == text || *end != '\0' || parsed < 0 || parsed > INT_MAX) {
+                                                                                 ^
+src\inventory.c:5:2: warning: Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdlib.h>
+ ^
+src\inventory.c:6:2: warning: Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <string.h>
+ ^
+src\inventory.c:7:2: warning: Include file: <stdint.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdint.h>
+ ^
+src\inventory.c:8:2: warning: Include file: <math.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <math.h>
+ ^
+src\inventory.c:22:42: warning: Parameter 'inventory' can be declared as pointer to const [constParameterPointer]
+Product *find_product_mutable(Inventory *inventory, const char *product_id) {
+                                         ^
+src\main.c:1:2: warning: Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdio.h>
+ ^
+src\main.c:2:2: warning: Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdlib.h>
+ ^
+src\main.c:3:2: warning: Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <string.h>
+ ^
+src\main.c:4:2: warning: Include file: <time.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <time.h>
+ ^
+include\utils.h:4:2: warning: Include file: <stddef.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stddef.h>
+ ^
+include\report.h:4:2: warning: Include file: <stddef.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stddef.h>
+ ^
+include\report.h:5:2: warning: Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdio.h>
+ ^
+src\main.c:0:0: warning: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+src\main.c:41:16: warning: Variable 't' can be declared as pointer to const [constVariablePointer]
+    struct tm *t = localtime(&now);
+               ^
+src\main.c:376:14: warning: Variable 'p' can be declared as pointer to const [constVariablePointer]
+    Product *p = find_product_by_id(list, id);
+             ^
+src\main.c:442:14: warning: Variable 'p' can be declared as pointer to const [constVariablePointer]
+    Product *p = find_product_by_id(list, id);
+             ^
+src\main.c:480:18: warning: Variable 'p' can be declared as pointer to const [constVariablePointer]
+        Product *p = find_product_by_id(list, id);
+                 ^
+src\main.c:529:14: warning: Variable 'p' can be declared as pointer to const [constVariablePointer]
+    Product *p = find_product_by_id(list, id);
+             ^
+src\main.c:571:14: warning: Variable 'p' can be declared as pointer to const [constVariablePointer]
+    Product *p = find_product_by_id(list, id);
+             ^
+src\main.c:682:26: warning: Parameter 'argv' can be declared as const array [constParameter]
+int main(int argc, char *argv[]) {
+                         ^
+src\product.c:3:2: warning: Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdio.h>
+ ^
+src\product.c:4:2: warning: Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdlib.h>
+ ^
+src\product.c:5:2: warning: Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <string.h>
+ ^
+src\product.c:6:2: warning: Include file: <ctype.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <ctype.h>
+ ^
+src\product.c:0:0: warning: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+src\product.c:55:20: warning: Array index 'i' is used before limits check. [arrayIndexThenCheck]
+    for (; haystack[i] != '\0' && i < sizeof(h_lower) - 1; ++i) {
+                   ^
+src\product.c:61:18: warning: Array index 'j' is used before limits check. [arrayIndexThenCheck]
+    for (; needle[j] != '\0' && j < sizeof(n_lower) - 1; ++j) {
+                 ^
+src\product.c:141:33: warning: Parameter 'list' can be declared as pointer to const [constParameterPointer]
+int update_product(ProductList *list, const char *id, const char *new_name, const char *new_category, const char *new_unit, int new_quantity, double new_price) {
+                                ^
+src\report.c:4:2: warning: Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdio.h>
+ ^
+src\report.c:5:2: warning: Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdlib.h>
+ ^
+src\report.c:6:2: warning: Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <string.h>
+ ^
+src\report.c:7:2: warning: Include file: <time.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <time.h>
+ ^
+src\report.c:0:0: warning: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+src\report.c:229:16: warning: Variable 't' can be declared as pointer to const [constVariablePointer]
+    struct tm *t = localtime(&now);
+               ^
+src\utils.c:2:2: warning: Include file: <stdio.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdio.h>
+ ^
+src\utils.c:3:2: warning: Include file: <stdlib.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <stdlib.h>
+ ^
+src\utils.c:4:2: warning: Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <string.h>
+ ^
+src\utils.c:5:2: warning: Include file: <ctype.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <ctype.h>
+ ^
+src\utils.c:6:2: warning: Include file: <limits.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <limits.h>
+ ^
+src\utils.c:0:0: warning: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+src\validation.c:3:2: warning: Include file: <string.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <string.h>
+ ^
+src\validation.c:4:2: warning: Include file: <ctype.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <ctype.h>
+ ^
+src\validation.c:5:2: warning: Include file: <limits.h> not found. Please note: Standard library headers do not need to be provided to get proper results. [missingIncludeSystem]
+#include <limits.h>
+ ^
+src\validation.c:0:0: warning: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+include\report.h:98:19: warning: The function 'report_statistics_default' is never used. [unusedFunction]
+static inline int report_statistics_default(const ProductList *list) {
+                  ^
+src\inventory.c:10:5: warning: The function 'inventory_init' is never used. [unusedFunction]
+int inventory_init(Inventory *inventory) {
+    ^
+src\inventory.c:14:6: warning: The function 'inventory_free' is never used. [unusedFunction]
+void inventory_free(Inventory *inventory) {
+     ^
+src\inventory.c:18:16: warning: The function 'find_product' is never used. [unusedFunction]
+const Product *find_product(const Inventory *inventory, const char *product_id) {
+               ^
+src\inventory.c:68:5: warning: The function 'update_stock' is never used. [unusedFunction]
+int update_stock(Inventory *inventory, const char *product_id, int new_quantity) {
+    ^
+src\utils.c:200:6: warning: The function 'to_lower_case' is never used. [unusedFunction]
+void to_lower_case(char *str) {
+     ^
+src\validation.c:119:5: warning: The function 'validate_product_info' is never used. [unusedFunction]
+int validate_product_info(const char *name, const char *category, const char *unit) {
+    ^
+src\validation.c:271:5: warning: The function 'validate_price_quantity_values' is never used. [unusedFunction]
+int validate_price_quantity_values(double price, int quantity) {
+    ^
+src\inventory.c:22:10: warning: The function 'find_product_mutable' should have static linkage since it is not used outside of its translation unit. [staticFunction]
+Product *find_product_mutable(Inventory *inventory, const char *product_id) {
+         ^
+src\main.c:93:6: warning: The function 'print_product_list' should have static linkage since it is not used outside of its translation unit. [staticFunction]
+void print_product_list(const ProductList *list) {
+     ^
+src\validation.c:110:5: warning: The function 'validate_name_unit' should have static linkage since it is not used outside of its translation unit. [staticFunction]
+int validate_name_unit(const char *name, const char *unit) {
+    ^
+nofile:0:0: warning: Active checkers: 119/186 (use --checkers-report=<filename> to see details) [checkersReport]

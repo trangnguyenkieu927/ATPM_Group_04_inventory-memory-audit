@@ -1,0 +1,4 @@
+Z3 Command: z3 smt_001b_capacity_growth_reach.smt2
+Exit Code: 0
+Output:
+unsat
