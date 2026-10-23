@@ -8,17 +8,16 @@
 
 /* KICH BAN SC-01 (VÁ): CWE-120 / CWE-121
  * Guard: Kiem tra do dai chuoi nguon truoc khi copy. Neu >= cap thi tu choi ngay. */
-int ingest_raw_line_v1(int cap, const char *raw_line) {
-    char stack_buf[32];
-    if (!raw_line || cap <= 0 || cap > 32) {
-        return -1; /* Kich thuoc cap hoac chuoi khong hop le */
+int ingest_raw_line_v1(char *dst, int cap, const char *raw_line) {
+    if (!dst || !raw_line || cap <= 0) {
+        return -1; /* Loi con tro hoac kich thuoc cap khong hop le */
     }
     size_t len = strlen(raw_line);
     if (len >= (size_t)cap) {
         return -2; /* Tu choi: Chuoi vuot qua dung luong buffer (Chan Buffer Overflow) */
     }
-    memcpy(stack_buf, raw_line, len);
-    stack_buf[len] = '\0';
+    memcpy(dst, raw_line, len);
+    dst[len] = '\0';
     return (int)len;
 }
 

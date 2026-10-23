@@ -13,11 +13,10 @@
 /* KICH BAN SC-01: CWE-120 / CWE-121 (Stack Buffer Overflow)
  * Giai doan RAM: Cho chuoi input tu ban phim/file CSV, nap vao buffer stack.
  * Root cause: Bo qua tham so cap, dung ham strcpy khong gioi han gay tran buffer stack. */
-int ingest_raw_line_v0(int cap, const char *raw_line) {
-    char stack_buf[32];
-    (void)cap; /* Bo qua cap -> Tran bo dem stack neu raw_line >= 32 */
-    strcpy(stack_buf, raw_line);
-    return (int)strlen(stack_buf);
+int ingest_raw_line_v0(char *dst, int cap, const char *raw_line) {
+    (void)cap; /* Bo qua cap -> Tran bo dem neu do dai raw_line >= cap */
+    strcpy(dst, raw_line);
+    return (int)strlen(dst);
 }
 
 
