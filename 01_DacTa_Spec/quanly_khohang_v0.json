@@ -1,997 +1,439 @@
 {
-  "spec_metadata": {
-    "project": "Inventory Memory Safety Audit - Group 04",
-    "topic": "Kiểm toán an toàn bộ nhớ C cho Chương trình Quản lý Kho hàng",
-    "authors": [
-      {
-        "name": "Nguyễn Kiều Trang",
-        "id": "23010495",
-        "role": "Module 2 (Heap Lifecycle & Pointers)"
-      },
-      {
-        "name": "Nguyễn Quang Thọ",
-        "id": "23010162",
-        "role": "Module 1 (I/O Pipeline & Stack Buffer)"
-      },
-      {
-        "name": "Hà Văn Đô",
-        "id": "23010406",
-        "role": "Module 3 (Arithmetic & Stock Safety)"
-      }
-    ],
-    "version": "v0_vulnerable_specification",
-    "description": "Đặc tả kiểm toán an toàn bộ nhớ cho chương trình C mô phỏng quản lý kho: ProductList, cấp phát và realloc, vùng đệm, ownership, con trỏ, nhập/xuất, parser và thống kê. 18 REQ mô tả thuộc tính cần kiểm chứng, không phải 18 lỗi đã xác nhận. CTL là mô hình trừu tượng an toàn; KiemTraSoHoc giả định size_t=64-bit, int=32-bit, long long=64-bit; cần chạy ASan/UBSan/LSan/SMT/Fuzzing và pipeline thật để xác minh."
-  },
-  "attack_surface_and_constraints": [
+  "name": "quanly_khohang_v0",
+  "description": "Quy trình tiếp nhận và xử lý 1 phiếu nhập kho hàng điện máy gồm 3 hành vi: H1 tiếp nhận thông tin phiếu kho (chép mã phiếu vào bộ đệm stack), H2 tạo danh mục lô hàng (cấp phát mảng động các kiện hàng trên heap), H3 tính toán giá trị tồn kho (phép nhân và cộng dồn số nguyên 32-bit, VND). Bản v0 CÀI LỖI CÓ CHỦ ĐÍCH (12 trường hợp rủi ro bộ nhớ/tràn số) để kiểm chứng khả năng phát hiện của mô hình Kripke, công cụ của Thầy và ASan.",
+  "requirements": [
     {
-      "id": "CON-1",
-      "description": "Mục tiêu kiểm toán C17 và thư viện C chuẩn; Makefile nguồn hiện có chưa khóa -std=c17, cần bổ sung tại cấu hình build kiểm chứng.",
+      "id": "REQ-01",
+      "text": "H1: Hàm đọc mã phiếu kho (doc_ma_phieu) không được ghi vượt biên bộ đệm 16 byte",
+      "category": "memory",
       "priority": "HIGH"
     },
     {
-      "id": "CON-2",
-      "description": "MAX_ID_LEN = 20; id tối đa 19 ký tự dữ liệu và 1 ký tự \\0.",
+      "id": "REQ-02",
+      "text": "H1: Mã phiếu hợp lệ không được bị cắt cụt hoặc biến đổi khi lưu vào bộ đệm stack",
+      "category": "functional",
+      "HIGH": "HIGH"
+    },
+    {
+      "id": "REQ-03",
+      "text": "H2: Kết quả cấp phát mảng lô hàng (cap_phat_lo_hang) phải được kiểm tra NULL trước khi sử dụng",
+      "category": "memory",
       "priority": "HIGH"
     },
     {
-      "id": "CON-3",
-      "description": "MAX_NAME_LEN = 100; name tối đa 99 ký tự dữ liệu và 1 ký tự \\0.",
+      "id": "REQ-04",
+      "text": "H2: Bộ nhớ cấp phát cho danh mục lô hàng phải được giải phóng hoàn toàn khi hủy phiếu hoặc hoàn tất đơn",
+      "category": "memory",
       "priority": "HIGH"
     },
     {
-      "id": "CON-4",
-      "description": "MAX_CATEGORY_LEN = 50; category tối đa 49 ký tự dữ liệu và 1 ký tự \\0.",
+      "id": "REQ-05",
+      "text": "H2: Con trỏ lô hàng không được phép truy cập sau khi đã gọi free (chống Use-After-Free)",
+      "category": "memory",
       "priority": "HIGH"
     },
     {
-      "id": "CON-5",
-      "description": "MAX_UNIT_LEN = 20; unit tối đa 19 ký tự dữ liệu và 1 ký tự \\0.",
+      "id": "REQ-06",
+      "text": "H3: Phép tính giá trị từng dòng lô hàng (đơn giá x số lượng) không được tràn số nguyên 32-bit có dấu",
+      "category": "arithmetic",
       "priority": "HIGH"
     },
     {
-      "id": "CON-6",
-      "description": "INITIAL_CAPACITY = 16; ProductList dùng mảng Product* và count/capacity kiểu size_t.",
-      "priority": "MEDIUM"
-    },
-    {
-      "id": "CON-7",
-      "description": "Kiểm tra capacity <= SIZE_MAX / 2 trước capacity * 2; tại capacity=0 dùng INITIAL_CAPACITY.",
+      "id": "REQ-07",
+      "text": "H3: Phép cộng dồn tổng giá trị kho hàng không được vượt trần int32 (tối đa 2.147.483.647 VND)",
+      "category": "arithmetic",
       "priority": "HIGH"
     },
     {
-      "id": "CON-8",
-      "description": "Kiểm tra new_cap <= SIZE_MAX / sizeof(Product) trước realloc(new_cap * sizeof(Product)).",
-      "priority": "HIGH"
-    },
-    {
-      "id": "CON-9",
-      "description": "LINE_BUFFER_SIZE = 512 byte trong file_io.c; trường hợp dòng dài vượt khả năng chứa phải bị từ chối an toàn.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "CON-10",
-      "description": "Parser file_io.c dùng tokens[8]; chấp nhận đúng 6 trường hoặc định dạng tương thích 4 trường (không coi bản 4 trường là lỗi).",
-      "priority": "HIGH"
-    },
-    {
-      "id": "CON-11",
-      "description": "Product.quantity dùng int có dấu, miền giá trị lưu kho hợp lệ là 0..INT_MAX; nhập/xuất có yêu cầu quantity > 0.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "CON-12",
-      "description": "MAX_CATEGORY_SUMMARY_COUNT = 32; không được ghi summaries vượt giới hạn được truyền vào hàm.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "CON-13",
-      "description": "Mọi đối số đưa vào strlen/strcmp/strstr phải trỏ tới chuỗi C có ký tự \\0 trong vùng nhớ hợp lệ.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "CON-14",
-      "description": "Các giá trị tại cột Loi của HamSinhMa mô tả kịch bản lỗi mô phỏng để thử công cụ; không phải finding của mã nguồn chính khi chưa có bằng chứng.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "CON-15",
-      "description": "Các bài toán SIZE_MAX trong KiemTraSoHoc giả định ABI 64-bit (SIZE_MAX=18446744073709551615); phải đổi ngưỡng nếu kiểm toán trên ABI 32-bit.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "CON-16",
-      "description": "Bất biến CTL chỉ kiểm chứng mô hình trừu tượng; kết quả PASS không thay thế bằng chứng thực thi ASan/UBSan/Fuzzing trên chương trình C.",
+      "id": "REQ-08",
+      "text": "H3: Số lượng hàng hóa nhập kho phải là số nguyên dương; đơn giá bình quân không được chia cho 0",
+      "category": "arithmetic",
       "priority": "HIGH"
     }
   ],
-  "requirements_catalog": [
-    {
-      "id": "REQ-1",
-      "description": "ProductList luôn thỏa count <= capacity; khi count > 0 thì items khác NULL và trỏ tới vùng nhớ còn hiệu lực.",
-      "category": "safety",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-2",
-      "description": "Trước khi mở rộng ProductList bằng capacity * 2, phải kiểm tra capacity <= SIZE_MAX / 2 để tránh tràn số size_t.",
-      "category": "safety",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-3",
-      "description": "Trước realloc, phải kiểm tra new_cap <= SIZE_MAX / sizeof(Product) để phép nhân kích thước cấp phát không bị tràn.",
-      "category": "safety",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-4",
-      "description": "Trong import_stock, chỉ cộng khi add_quantity > 0, tồn kho hiện tại hợp lệ và current_stock <= INT_MAX - add_quantity; nếu không phải từ chối trước khi cập nhật.",
-      "category": "safety",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-5",
-      "description": "Trong export_stock, số lượng xuất phải > 0 và <= tồn kho hiện tại; không được tạo ra tồn kho âm hoặc cập nhật khi điều kiện không thỏa.",
-      "category": "safety",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-6",
-      "description": "Mọi truy cập ProductList.items[i] trong thêm/sửa/xóa/tìm kiếm/báo cáo phải thỏa i < count <= capacity và items còn hiệu lực.",
-      "category": "safety",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-7",
-      "description": "Với đầu vào hữu hạn và thao tác I/O trả về, mọi thao tác thêm/sửa/xóa/nhập/xuất đã bắt đầu phải kết thúc ở trạng thái thành công hoặc từ chối có kiểm soát; không lặp vô hạn.",
-      "category": "liveness",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-8",
-      "description": "Với tệp hữu hạn và thao tác đọc trả về, quá trình đọc/phân tích dữ liệu sản phẩm phải kết thúc ở trạng thái chấp nhận hoặc từ chối có kiểm soát; không lặp vô hạn.",
-      "category": "liveness",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-9",
-      "description": "Các trường chuỗi cố định của Product (id, name, category, unit) phải được kiểm tra độ dài trước sao chép, không ghi vượt buffer và luôn kết thúc bằng ký tự \\0.",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-10",
-      "description": "Input bàn phím và dòng tệp vượt kích thước buffer phải được tiêu thụ/từ chối có kiểm soát mà không phát sinh đọc/ghi ngoài vùng nhớ hợp lệ.",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-11",
-      "description": "Allocation động do ProductList/Inventory sở hữu phải có vòng đời rõ ràng; không làm mất con trỏ sở hữu còn sống và phải giải phóng ở thời điểm kết thúc vòng đời.",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-12",
-      "description": "Khi realloc thất bại, allocation cũ phải được giữ nguyên quyền sở hữu; khi thành công, con trỏ sở hữu và capacity phải cập nhật đúng vùng nhớ mới.",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-13",
-      "description": "Một allocation chỉ được free tối đa một lần; cleanup phải cập nhật trạng thái/con trỏ để ngăn double-free khi gọi lại.",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-14",
-      "description": "Không được dereference con trỏ Product/vùng nhớ ProductList sau free hoặc sau khi realloc làm con trỏ cũ mất hiệu lực.",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-15",
-      "description": "API ProductList/Inventory phải kiểm tra con trỏ NULL theo hợp đồng hàm trước khi dereference đối tượng hoặc buffer vào/ra.",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-16",
-      "description": "Mảng tokens, results, summaries và vùng nhớ dùng với memmove phải kiểm soát số phần tử, số byte, giới hạn nguồn/đích; không truy cập ngoài vùng nhớ đã cấp phát.",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-17",
-      "description": "Parser phải chấp nhận đúng định dạng 6 trường hoặc định dạng tương thích 4 trường; các dòng sai số trường/độ dài/định dạng phải bị từ chối mà không gây hỏng bộ nhớ Inventory.",
-      "category": "functional",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-18",
-      "description": "Quantity/price không hợp lệ, vượt miền số hoặc không hữu hạn (NaN/Infinity) phải bị từ chối trước cập nhật kho và trước phép tính báo cáo có liên quan.",
-      "category": "functional",
-      "priority": "HIGH"
-    }
-  ],
-  "kripke_model": {
+  "state_machine": {
     "states": [
-      {
-        "name": "product_op_idle",
-        "is_initial": true,
-        "atomic_propositions": [
-          "product_op_idle"
-        ],
-        "next_states": [
-          "product_op_idle",
-          "product_op_processing"
-        ]
-      },
-      {
-        "name": "product_op_processing",
-        "is_initial": false,
-        "atomic_propositions": [
-          "product_op_processing"
-        ],
-        "next_states": [
-          "product_op_done",
-          "product_op_rejected"
-        ]
-      },
-      {
-        "name": "product_op_done",
-        "is_initial": false,
-        "atomic_propositions": [
-          "product_op_done"
-        ],
-        "next_states": [
-          "product_op_idle"
-        ]
-      },
-      {
-        "name": "product_op_rejected",
-        "is_initial": false,
-        "atomic_propositions": [
-          "product_op_rejected"
-        ],
-        "next_states": [
-          "product_op_idle"
-        ]
-      },
-      {
-        "name": "file_idle",
-        "is_initial": true,
-        "atomic_propositions": [
-          "file_idle"
-        ],
-        "next_states": [
-          "file_idle",
-          "file_parsing"
-        ]
-      },
-      {
-        "name": "file_parsing",
-        "is_initial": false,
-        "atomic_propositions": [
-          "file_parsing"
-        ],
-        "next_states": [
-          "file_loaded",
-          "file_rejected"
-        ]
-      },
-      {
-        "name": "file_loaded",
-        "is_initial": false,
-        "atomic_propositions": [
-          "file_loaded"
-        ],
-        "next_states": [
-          "file_idle"
-        ]
-      },
-      {
-        "name": "file_rejected",
-        "is_initial": false,
-        "atomic_propositions": [
-          "file_rejected"
-        ],
-        "next_states": [
-          "file_idle"
-        ]
-      },
-      {
-        "name": "buffer_idle",
-        "is_initial": true,
-        "atomic_propositions": [
-          "buffer_idle"
-        ],
-        "next_states": [
-          "buffer_idle",
-          "buffer_processing"
-        ]
-      },
-      {
-        "name": "buffer_processing",
-        "is_initial": false,
-        "atomic_propositions": [
-          "buffer_processing"
-        ],
-        "next_states": [
-          "buffer_safe",
-          "buffer_rejected"
-        ]
-      },
-      {
-        "name": "buffer_safe",
-        "is_initial": false,
-        "atomic_propositions": [
-          "buffer_safe"
-        ],
-        "next_states": [
-          "buffer_idle"
-        ]
-      },
-      {
-        "name": "buffer_rejected",
-        "is_initial": false,
-        "atomic_propositions": [
-          "buffer_rejected"
-        ],
-        "next_states": [
-          "buffer_idle"
-        ]
-      },
-      {
-        "name": "list_valid",
-        "is_initial": true,
-        "atomic_propositions": [
-          "list_live",
-          "invariant_ok",
-          "owner_valid"
-        ],
-        "next_states": [
-          "list_valid",
-          "list_growth",
-          "list_cleanup"
-        ]
-      },
-      {
-        "name": "list_growth",
-        "is_initial": false,
-        "atomic_propositions": [
-          "list_live",
-          "invariant_ok",
-          "reallocating"
-        ],
-        "next_states": [
-          "list_growth_ok",
-          "list_growth_failed"
-        ]
-      },
-      {
-        "name": "list_growth_ok",
-        "is_initial": false,
-        "atomic_propositions": [
-          "list_live",
-          "invariant_ok",
-          "owner_valid",
-          "realloc_done"
-        ],
-        "next_states": [
-          "list_valid"
-        ]
-      },
-      {
-        "name": "list_growth_failed",
-        "is_initial": false,
-        "atomic_propositions": [
-          "list_live",
-          "invariant_ok",
-          "owner_valid",
-          "realloc_failed"
-        ],
-        "next_states": [
-          "list_valid"
-        ]
-      },
-      {
-        "name": "list_cleanup",
-        "is_initial": false,
-        "atomic_propositions": [
-          "list_live",
-          "cleanup_processing"
-        ],
-        "next_states": [
-          "list_freed_state",
-          "list_cleanup_rejected"
-        ]
-      },
-      {
-        "name": "list_freed_state",
-        "is_initial": false,
-        "atomic_propositions": [
-          "list_freed",
-          "cleanup_done"
-        ],
-        "next_states": [
-          "list_freed_state"
-        ]
-      },
-      {
-        "name": "list_cleanup_rejected",
-        "is_initial": false,
-        "atomic_propositions": [
-          "list_live",
-          "owner_valid",
-          "cleanup_rejected"
-        ],
-        "next_states": [
-          "list_valid"
-        ]
-      },
-      {
-        "name": "ptr_valid",
-        "is_initial": true,
-        "atomic_propositions": [
-          "ptr_live",
-          "ptr_deref"
-        ],
-        "next_states": [
-          "ptr_invalidated"
-        ]
-      },
-      {
-        "name": "ptr_invalidated",
-        "is_initial": false,
-        "atomic_propositions": [
-          "ptr_invalid"
-        ],
-        "next_states": [
-          "ptr_invalidated"
-        ]
-      }
+      "start",
+      "h1_vao",
+      "h1_ok",
+      "h1_tran_1_byte",
+      "h1_tran_bo_dem",
+      "h2_vao",
+      "h2_ok",
+      "h2_null",
+      "h2_ro_ri_heap",
+      "h2_uaf",
+      "h3_vao",
+      "h3_ok",
+      "h3_tran_nhan",
+      "h3_tran_cong",
+      "h3_chia_0",
+      "ket_thuc_an_toan",
+      "dung_khong_an_toan"
     ],
-    "vulnerabilities_in_v0": [
-      {
-        "module": "M1_io_pipeline",
-        "member": "Nguyễn Quang Thọ",
-        "flaw": "Missing line length guard before strcpy into 32-byte stack buffer",
-        "cwe": "CWE-120/121",
-        "smt_result": "SAT (Violating state reachable: S_stack_overflow)"
-      },
-      {
-        "module": "M2_heap_lifecycle",
-        "member": "Nguyễn Kiều Trang",
-        "flaw": "Direct realloc assignment (ptr = realloc(ptr, ...)) causing memory leak on OOM and missing pointer nullification on free",
-        "cwe": "CWE-401, CWE-416",
-        "smt_result": "SAT (Violating states reachable: S_memory_leak, S_use_after_free)"
-      },
-      {
-        "module": "M3_arithmetic",
-        "member": "Hà Văn Đô",
-        "flaw": "Direct signed integer addition without checking INT_MAX bound",
-        "cwe": "CWE-190",
-        "smt_result": "SAT (Violating state reachable: S_integer_wraparound)"
-      }
+    "initial": [
+      "start"
+    ],
+    "labeling": {
+      "start": [
+        "safe"
+      ],
+      "h1_vao": [
+        "receiving"
+      ],
+      "h1_ok": [
+        "input_ok",
+        "safe"
+      ],
+      "h1_tran_1_byte": [
+        "buffer_overflow",
+        "off_by_one",
+        "violation"
+      ],
+      "h1_tran_bo_dem": [
+        "buffer_overflow",
+        "violation"
+      ],
+      "h2_vao": [
+        "allocating"
+      ],
+      "h2_ok": [
+        "alloc_ok",
+        "safe"
+      ],
+      "h2_null": [
+        "null_deref",
+        "violation"
+      ],
+      "h2_ro_ri_heap": [
+        "memory_leak",
+        "violation"
+      ],
+      "h2_uaf": [
+        "use_after_free",
+        "violation"
+      ],
+      "h3_vao": [
+        "calculating"
+      ],
+      "h3_ok": [
+        "math_ok",
+        "safe"
+      ],
+      "h3_tran_nhan": [
+        "integer_overflow",
+        "violation"
+      ],
+      "h3_tran_cong": [
+        "integer_overflow",
+        "violation"
+      ],
+      "h3_chia_0": [
+        "div_by_zero",
+        "violation"
+      ],
+      "ket_thuc_an_toan": [
+        "flow_end",
+        "safe",
+        "completed"
+      ],
+      "dung_khong_an_toan": [
+        "unsafe_halt",
+        "violation"
+      ]
+    },
+    "transitions": [
+      [
+        "start",
+        "h1_vao"
+      ],
+      [
+        "h1_vao",
+        "h1_ok"
+      ],
+      [
+        "h1_vao",
+        "h1_tran_1_byte"
+      ],
+      [
+        "h1_vao",
+        "h1_tran_bo_dem"
+      ],
+      [
+        "h1_tran_1_byte",
+        "dung_khong_an_toan"
+      ],
+      [
+        "h1_tran_bo_dem",
+        "dung_khong_an_toan"
+      ],
+      [
+        "h1_ok",
+        "h2_vao"
+      ],
+      [
+        "h2_vao",
+        "h2_ok"
+      ],
+      [
+        "h2_vao",
+        "h2_null"
+      ],
+      [
+        "h2_vao",
+        "h2_ro_ri_heap"
+      ],
+      [
+        "h2_vao",
+        "h2_uaf"
+      ],
+      [
+        "h2_null",
+        "dung_khong_an_toan"
+      ],
+      [
+        "h2_ro_ri_heap",
+        "dung_khong_an_toan"
+      ],
+      [
+        "h2_uaf",
+        "dung_khong_an_toan"
+      ],
+      [
+        "h2_ok",
+        "h3_vao"
+      ],
+      [
+        "h3_vao",
+        "h3_ok"
+      ],
+      [
+        "h3_vao",
+        "h3_tran_nhan"
+      ],
+      [
+        "h3_vao",
+        "h3_tran_cong"
+      ],
+      [
+        "h3_vao",
+        "h3_chia_0"
+      ],
+      [
+        "h3_tran_nhan",
+        "dung_khong_an_toan"
+      ],
+      [
+        "h3_tran_cong",
+        "dung_khong_an_toan"
+      ],
+      [
+        "h3_chia_0",
+        "dung_khong_an_toan"
+      ],
+      [
+        "h3_ok",
+        "ket_thuc_an_toan"
+      ],
+      [
+        "ket_thuc_an_toan",
+        "ket_thuc_an_toan"
+      ],
+      [
+        "dung_khong_an_toan",
+        "dung_khong_an_toan"
+      ]
     ]
   },
-  "arithmetic_boundary_checks": [
-    {
-      "check_name": "capacity_growth",
-      "variables": "capacity",
-      "condition": "capacity >= 0 and capacity * 2 > 18446744073709551615",
-      "overflow_expression": "capacity * 2"
-    },
-    {
-      "check_name": "allocation_size",
-      "variables": "new_cap, product_size",
-      "condition": "new_cap >= 0 and product_size > 0 and new_cap * product_size > 18446744073709551615",
-      "overflow_expression": "new_cap * product_size"
-    },
-    {
-      "check_name": "import_stock_counter",
-      "variables": "current_stock, add_quantity",
-      "condition": "current_stock >= 0 and add_quantity > 0 and current_stock <= 2147483647 and current_stock + add_quantity > 2147483647",
-      "overflow_expression": "current_stock + add_quantity"
-    },
-    {
-      "check_name": "inventory_total_quantity",
-      "variables": "partial_total, next_quantity",
-      "condition": "partial_total >= 0 and next_quantity >= 0 and partial_total + next_quantity > 9223372036854775807",
-      "overflow_expression": "partial_total + next_quantity"
-    },
-    {
-      "check_name": "category_total_quantity",
-      "variables": "category_total, next_quantity",
-      "condition": "category_total >= 0 and next_quantity >= 0 and category_total + next_quantity > 9223372036854775807",
-      "overflow_expression": "category_total + next_quantity"
-    },
-    {
-      "check_name": "product_list_count",
-      "variables": "count",
-      "condition": "count >= 0 and count + 1 > 18446744073709551615",
-      "overflow_expression": "count + 1"
-    },
-    {
-      "check_name": "export_quantity_guard",
-      "variables": "current_stock, export_quantity",
-      "condition": "current_stock >= 0 and export_quantity > current_stock",
-      "overflow_expression": "current_stock - export_quantity"
-    },
-    {
-      "check_name": "input_line_capacity",
-      "variables": "line_length",
-      "condition": "line_length >= 512",
-      "overflow_expression": "line_length + 1"
-    }
-  ],
-  "test_cases_catalog": [
-    {
-      "id": "TC-1",
-      "related_req": "REQ-1",
-      "title": "Kiểm chứng bất biến ProductList",
-      "precondition": "ProductList rỗng, đang dùng, sau free",
-      "steps": "Kiểm tra count <= capacity và items != NULL khi count > 0; chạy với ASan và kiểm tra trạng thái.",
-      "expected_result": "Bất biến giữ đúng trên các trạng thái hợp lệ; trạng thái bị cố tình làm sai bị phát hiện.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-2",
-      "related_req": "REQ-2, CON-7",
-      "title": "Kiểm chứng tràn capacity * 2",
-      "precondition": "Các giá trị capacity bình thường và sát SIZE_MAX/2 trên ABI kiểm thử",
-      "steps": "SMT + kiểm tra guard trước nhân capacity*2; kiểm tra source add_product.",
-      "expected_result": "Trường hợp vượt giới hạn bị từ chối trước phép nhân, không phát sinh overflow.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-3",
-      "related_req": "REQ-3, CON-8",
-      "title": "Kiểm chứng tràn kích thước realloc",
-      "precondition": "new_cap và sizeof(Product) tại biên size_t",
-      "steps": "SMT biểu thức new_cap * sizeof(Product); kiểm tra guard trong add_product.",
-      "expected_result": "Không gọi realloc với kích thước đã bị tràn số.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-4",
-      "related_req": "REQ-4, CON-11",
-      "title": "Import kho không overflow",
-      "precondition": "Tồn kho 0, INT_MAX-1, INT_MAX; số nhập 1,2",
-      "steps": "Gọi check_addition_overflow/import_stock, đối chiếu giá trị trước/sau.",
-      "expected_result": "Giá trị hợp lệ cập nhật; vượt INT_MAX bị từ chối, tồn kho không đổi.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-5",
-      "related_req": "REQ-5",
-      "title": "Export kho không âm",
-      "precondition": "current_stock=0/10; export_quantity=0/1/10/11",
-      "steps": "Gọi validate_export_quantity và export_stock ở các trường hợp biên.",
-      "expected_result": "Số lượng xuất <=0 hoặc > tồn kho bị từ chối trước khi trừ.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-6",
-      "related_req": "REQ-6, REQ-16",
-      "title": "Mảng ProductList và buffer phụ trợ",
-      "precondition": "Danh sách rỗng/đầy; result cap=0/1; summaries cap=0/32",
-      "steps": "Chạy delete/search/report/parser với ASan; kiểm tra giới hạn logic.",
-      "expected_result": "Không có truy cập ngoài mảng hoặc đọc/ghi dữ liệu không hợp lệ.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-7",
-      "related_req": "REQ-7",
-      "title": "Liveness thao tác kho",
-      "precondition": "Mô hình có product_op_processing và nhánh từ chối",
-      "steps": "Model-check AG(product_op_processing -> AF(product_op_done | product_op_rejected)).",
-      "expected_result": "Mọi nhánh processing tới done/rejected; giả định hữu hạn được ghi rõ.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-8",
-      "related_req": "REQ-8",
-      "title": "Liveness đọc tệp/parser",
-      "precondition": "Mô hình có file_parsing, nhánh dữ liệu sai",
-      "steps": "Model-check AG(file_parsing -> AF(file_loaded | file_rejected)).",
-      "expected_result": "Mọi nhánh file_parsing tới loaded/rejected trong mô hình trừu tượng.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-9",
-      "related_req": "REQ-9, CON-2, CON-3, CON-4, CON-5",
-      "title": "Chuỗi Product tại biên buffer",
-      "precondition": "Độ dài B-1/B/B+1 cho id, name, category, unit",
-      "steps": "Kiểm thử validation và sao chép chuỗi, bật ASan.",
-      "expected_result": "Chuỗi hợp lệ kết thúc \\0; chuỗi quá dài bị từ chối, không vượt buffer.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-10",
-      "related_req": "REQ-10, CON-9",
-      "title": "Dòng nhập quá dài",
-      "precondition": "Input console và dòng tệp 511/512/513 ký tự",
-      "steps": "Chạy safe_read_line/load_products_from_file với ASan; kiểm tra xử lý dòng dư.",
-      "expected_result": "Không tràn bộ đệm; dữ liệu quá dài bị xử lý/từ chối rõ ràng.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-11",
-      "related_req": "REQ-11",
-      "title": "Vòng đời allocation",
-      "precondition": "Kịch bản init -> add -> free và lỗi alloc",
-      "steps": "Theo dõi owner, chạy ASan/LSan sau khi kết thúc.",
-      "expected_result": "0 leak ở đường chạy hợp lệ; quyền sở hữu không bị thất lạc.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-12",
-      "related_req": "REQ-12",
-      "title": "realloc thành công/thất bại",
-      "precondition": "Harness mô phỏng realloc trả NULL và trả vùng mới",
-      "steps": "Quan sát owner pointer trước/sau; chạy ASan/LSan.",
-      "expected_result": "Lỗi realloc giữ block cũ; thành công cập nhật owner và capacity.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-13",
-      "related_req": "REQ-13",
-      "title": "Ngăn double-free",
-      "precondition": "Gọi free lần 1, sau đó gọi lại",
-      "steps": "Kiểm tra items=NULL, count=capacity=0; chạy ASan.",
-      "expected_result": "Không xảy ra double-free; trạng thái cleanup an toàn khi gọi lại.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-14",
-      "related_req": "REQ-14",
-      "title": "Không dereference con trỏ lỗi thời",
-      "precondition": "Lấy Product*, sau đó free/realloc làm mất hiệu lực",
-      "steps": "Tạo harness hợp lệ và lỗi có chủ đích; kiểm tra ASan.",
-      "expected_result": "Đường chạy đúng không dùng pointer cũ; harness lỗi được ASan phát hiện.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-15",
-      "related_req": "REQ-15",
-      "title": "API xử lý NULL an toàn",
-      "precondition": "Con trỏ đầu vào/đầu ra NULL theo hợp đồng từng API",
-      "steps": "Gọi từng API public với NULL, đối chiếu status/NULL.",
-      "expected_result": "Không dereference NULL, không crash ngoài hợp đồng.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-16",
-      "related_req": "REQ-17, CON-10",
-      "title": "Dòng file sai định dạng",
-      "precondition": "Tệp có 4 trường hợp lệ, 6 trường hợp lệ, 5/7/8 trường, chuỗi dài",
-      "steps": "Chạy load_products_from_file/parse_product_line gián tiếp với ASan; đối chiếu sản phẩm hợp lệ.",
-      "expected_result": "Định dạng 4/6 được chấp nhận; định dạng sai bị từ chối an toàn; không yêu cầu rollback toàn tệp nếu chưa có contract.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-17",
-      "related_req": "REQ-18",
-      "title": "Kiểm chứng số không hợp lệ",
-      "precondition": "quantity âm/vượt INT_MAX; price âm/NaN/Infinity; chuỗi sai",
-      "steps": "Kiểm thử validate_price, validate_quantity và parse_price; dùng UBSan khi phù hợp.",
-      "expected_result": "Tất cả giá trị không hợp lệ/không hữu hạn bị từ chối trước cập nhật và thống kê.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-18",
-      "related_req": "NFR-1, NFR-2, NFR-3, NFR-8",
-      "title": "Regression sanitizer",
-      "precondition": "Có finding được vá và bộ test hợp lệ/biên/bất thường",
-      "steps": "Chạy ASan/LSan/UBSan trên bản sau vá, lưu log/bản build.",
-      "expected_result": "Không có phát hiện sanitizer trên bộ kiểm thử; tất cả TC hồi quy liên quan PASS.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-19",
-      "related_req": "NFR-6, CON-1",
-      "title": "Build warnings C17",
-      "precondition": "GCC/Clang hỗ trợ C17 và cờ kiểm toán",
-      "steps": "Biên dịch với -std=c17 -Wall -Wextra -Wpedantic -Wconversion.",
-      "expected_result": "Ghi nhận và xử lý các warning mới ở module quan trọng.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-20",
-      "related_req": "NFR-7, REQ-17",
-      "title": "Fuzz parser",
-      "precondition": "Harness parser có thể chạy dưới ASan",
-      "steps": "Tạo >=10000 input bất thường; chạy và lưu seed gây lỗi.",
-      "expected_result": "Không crash/sanitizer finding chưa xử lý; seed lỗi được lưu để tái hiện.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-21",
-      "related_req": "NFR-4, NFR-5, NFR-9",
-      "title": "Kiểm tra truy vết REQ",
-      "precondition": "Đặc tả và danh sách finding/test đã hoàn thiện",
-      "steps": "Rà REQ -> hàm C -> TC -> finding/CWE (nếu có).",
-      "expected_result": "18 REQ có TC liên kết; finding có bằng chứng và nguồn gốc.",
-      "priority": "HIGH"
-    },
-    {
-      "id": "TC-22",
-      "related_req": "NFR-10",
-      "title": "Kiểm tra Excel/pipeline",
-      "precondition": "Workbook đúng schema 10 sheet và có công cụ đọc tương ứng",
-      "steps": "Mở file, soát dữ liệu, chạy parse_specification_excel và run_pipeline nếu có mã framework.",
-      "expected_result": "Không lỗi cấu trúc Excel; trạng thái tương thích pipeline phải được xác minh bằng chạy thực tế.",
-      "priority": "HIGH"
-    }
-  ],
-  "name": "inventory_memory_safety_audit_v0",
   "additional_flows": {
-    "M1-v0: Thọ — strcpy vào buffer 32 byte (CÓ LỖI)": {
-      "module": "M1_io_pipeline",
-      "member": "Nguyễn Quang Thọ",
-      "msv": "23010162",
-      "story": "Nhân viên kho đọc một dòng văn bản sản phẩm từ file hoặc bàn phím vào buffer stack 32 byte bằng hàm strcpy không kiểm tra độ dài.",
+    "M1-v0: strcpy vào ma_phieu[16] (CÓ LỖI)": {
       "states": [
-        "m1_nhan_chuoi",
-        "m1_len_nho_32",
-        "m1_len_bang_32",
-        "m1_len_lon_32",
-        "m1_chep_an_toan",
+        "m1_nhan_du_lieu",
+        "m1_dau_vao_hop_le",
         "m1_tran_1_byte",
-        "m1_tran_nhieu_byte",
-        "m1_doc_ngoai_bien_token"
+        "m1_tran_bo_dem",
+        "m1_ket_thuc_loi"
       ],
-      "initial": [
-        "m1_nhan_chuoi"
-      ],
-      "labeling": {
-        "m1_nhan_chuoi": [
-          "receiving_input"
-        ],
-        "m1_len_nho_32": [
-          "len_safe"
-        ],
-        "m1_len_bang_32": [
-          "len_boundary"
-        ],
-        "m1_len_lon_32": [
-          "len_excessive"
-        ],
-        "m1_chep_an_toan": [
-          "copy_ok",
-          "done"
-        ],
-        "m1_tran_1_byte": [
-          "stack_buffer_overflow",
-          "off_by_one",
-          "violation"
-        ],
-        "m1_tran_nhieu_byte": [
-          "stack_buffer_overflow",
-          "frame_corrupted",
-          "violation"
-        ],
-        "m1_doc_ngoai_bien_token": [
-          "out_of_bounds_read",
-          "violation"
-        ]
-      },
       "transitions": [
         [
-          "m1_nhan_chuoi",
-          "m1_len_nho_32"
+          "m1_nhan_du_lieu",
+          "m1_dau_vao_hop_le"
         ],
         [
-          "m1_nhan_chuoi",
-          "m1_len_bang_32"
-        ],
-        [
-          "m1_nhan_chuoi",
-          "m1_len_lon_32"
-        ],
-        [
-          "m1_len_nho_32",
-          "m1_chep_an_toan"
-        ],
-        [
-          "m1_len_bang_32",
+          "m1_nhan_du_lieu",
           "m1_tran_1_byte"
         ],
         [
-          "m1_len_lon_32",
-          "m1_tran_nhieu_byte"
-        ],
-        [
-          "m1_chep_an_toan",
-          "m1_doc_ngoai_bien_token"
-        ],
-        [
-          "m1_chep_an_toan",
-          "m1_chep_an_toan"
+          "m1_nhan_du_lieu",
+          "m1_tran_bo_dem"
         ],
         [
           "m1_tran_1_byte",
-          "m1_tran_1_byte"
+          "m1_ket_thuc_loi"
         ],
         [
-          "m1_tran_nhieu_byte",
-          "m1_tran_nhieu_byte"
-        ],
-        [
-          "m1_doc_ngoai_bien_token",
-          "m1_doc_ngoai_bien_token"
+          "m1_tran_bo_dem",
+          "m1_ket_thuc_loi"
         ]
       ]
     },
-    "M2-v0: Trang — realloc gán trực tiếp & thiếu NULL sau free (CÓ LỖI)": {
-      "module": "M2_heap_lifecycle",
-      "member": "Nguyễn Kiều Trang",
-      "msv": "23010495",
-      "story": "Nhân viên kho thêm hàng mới khi danh sách 16 ô đã đầy. Trang gọi realloc mở rộng dung lượng. Khi OOM gán list = realloc làm mất địa chỉ gốc gây leak; free xong không xóa con trỏ gây UAF.",
+    "M2-v0: malloc không kiểm tra và rò rỉ heap (CÓ LỖI)": {
       "states": [
-        "m2_khoi_tao",
-        "m2_danh_sach_day",
-        "m2_realloc_goi",
-        "m2_oom_null",
-        "m2_mat_con_tro_leak",
-        "m2_realloc_thanh_cong",
-        "m2_giai_phong_xong",
-        "m2_doc_con_tro_treo_uaf"
+        "m2_nhan_lenh",
+        "m2_cap_phat",
+        "m2_ro_ri_bo_nho",
+        "m2_use_after_free",
+        "m2_dung_loi"
       ],
-      "initial": [
-        "m2_khoi_tao"
-      ],
-      "labeling": {
-        "m2_khoi_tao": [
-          "initialized"
-        ],
-        "m2_danh_sach_day": [
-          "list_full"
-        ],
-        "m2_realloc_goi": [
-          "reallocating"
-        ],
-        "m2_oom_null": [
-          "oom_occurred"
-        ],
-        "m2_mat_con_tro_leak": [
-          "memory_leak",
-          "cwe_401",
-          "violation"
-        ],
-        "m2_realloc_thanh_cong": [
-          "realloc_ok"
-        ],
-        "m2_giai_phong_xong": [
-          "freed_without_null"
-        ],
-        "m2_doc_con_tro_treo_uaf": [
-          "use_after_free",
-          "cwe_416",
-          "violation"
-        ]
-      },
       "transitions": [
         [
-          "m2_khoi_tao",
-          "m2_danh_sach_day"
+          "m2_nhan_lenh",
+          "m2_cap_phat"
         ],
         [
-          "m2_danh_sach_day",
-          "m2_realloc_goi"
+          "m2_cap_phat",
+          "m2_ro_ri_bo_nho"
         ],
         [
-          "m2_realloc_goi",
-          "m2_oom_null"
+          "m2_cap_phat",
+          "m2_use_after_free"
         ],
         [
-          "m2_realloc_goi",
-          "m2_realloc_thanh_cong"
+          "m2_ro_ri_bo_nho",
+          "m2_dung_loi"
         ],
         [
-          "m2_oom_null",
-          "m2_mat_con_tro_leak"
-        ],
-        [
-          "m2_realloc_thanh_cong",
-          "m2_giai_phong_xong"
-        ],
-        [
-          "m2_giai_phong_xong",
-          "m2_doc_con_tro_treo_uaf"
-        ],
-        [
-          "m2_mat_con_tro_leak",
-          "m2_mat_con_tro_leak"
-        ],
-        [
-          "m2_doc_con_tro_treo_uaf",
-          "m2_doc_con_tro_treo_uaf"
+          "m2_use_after_free",
+          "m2_dung_loi"
         ]
       ]
     },
-    "M3-v0: Đô — cộng dồn tồn kho không kiểm tra INT_MAX (CÓ LỖI)": {
-      "module": "M3_arithmetic",
-      "member": "Hà Văn Đô",
-      "msv": "23010406",
-      "story": "Nhân viên kho nhập hàng mới cộng dồn vào tồn kho cũ. Đô dùng phép cộng signed int 32-bit trực tiếp không kiểm tra biên INT_MAX gây lật thành số âm.",
+    "M3-v0: int32 không kiểm tra tràn số (CÓ LỖI)": {
       "states": [
-        "m3_nhan_so_luong",
-        "m3_so_nhap_hop_le",
-        "m3_so_nhap_am",
-        "m3_cong_don_an_toan",
-        "m3_tran_so_lat_am",
-        "m3_nhan_gia_tran_int"
+        "m3_nhan_gia_tri",
+        "m3_nhan_dong",
+        "m3_tran_nhan",
+        "m3_cong_don",
+        "m3_tran_cong_don",
+        "m3_dung_loi"
       ],
-      "initial": [
-        "m3_nhan_so_luong"
-      ],
-      "labeling": {
-        "m3_nhan_so_luong": [
-          "receiving_quantity"
-        ],
-        "m3_so_nhap_hop_le": [
-          "valid_range"
-        ],
-        "m3_so_nhap_am": [
-          "negative_input",
-          "violation"
-        ],
-        "m3_cong_don_an_toan": [
-          "addition_ok",
-          "done"
-        ],
-        "m3_tran_so_lat_am": [
-          "integer_overflow",
-          "cwe_190",
-          "negative_stock",
-          "violation"
-        ],
-        "m3_nhan_gia_tran_int": [
-          "price_scale_overflow",
-          "violation"
-        ]
-      },
       "transitions": [
         [
-          "m3_nhan_so_luong",
-          "m3_so_nhap_hop_le"
+          "m3_nhan_gia_tri",
+          "m3_nhan_dong"
         ],
         [
-          "m3_nhan_so_luong",
-          "m3_so_nhap_am"
+          "m3_nhan_dong",
+          "m3_tran_nhan"
         ],
         [
-          "m3_so_nhap_hop_le",
-          "m3_cong_don_an_toan"
+          "m3_nhan_dong",
+          "m3_cong_don"
         ],
         [
-          "m3_so_nhap_hop_le",
-          "m3_tran_so_lat_am"
+          "m3_cong_don",
+          "m3_tran_cong_don"
         ],
         [
-          "m3_so_nhap_hop_le",
-          "m3_nhan_gia_tran_int"
+          "m3_tran_nhan",
+          "m3_dung_loi"
         ],
         [
-          "m3_cong_don_an_toan",
-          "m3_cong_don_an_toan"
-        ],
-        [
-          "m3_tran_so_lat_am",
-          "m3_tran_so_lat_am"
-        ],
-        [
-          "m3_so_nhap_am",
-          "m3_so_nhap_am"
-        ],
-        [
-          "m3_nhan_gia_tran_int",
-          "m3_nhan_gia_tran_int"
+          "m3_tran_cong_don",
+          "m3_dung_loi"
         ]
       ]
     }
-  }
+  },
+  "safety_properties": [
+    "AG(!violation)",
+    "AG(!buffer_overflow)",
+    "AG(!off_by_one)",
+    "AG(!null_deref)",
+    "AG(!memory_leak)",
+    "AG(!use_after_free)",
+    "AG(!integer_overflow)",
+    "AG(!div_by_zero)",
+    "AF(flow_end)",
+    "EF(ket_thuc_an_toan)"
+  ],
+  "arithmetic_checks": [
+    {
+      "name": "tinh_tien_nhan_lo_hang",
+      "variables": "don_gia, so_luong",
+      "condition": "don_gia >= 0 and don_gia <= 50000000 and so_luong >= 1 and so_luong <= 1000 and don_gia * so_luong > 2147483647",
+      "overflow_expression": "don_gia * so_luong"
+    },
+    {
+      "name": "tong_tien_cong_don_kho",
+      "variables": "tong_truoc, tien_lo",
+      "condition": "tong_truoc >= 0 and tong_truoc <= 2147483647 and tien_lo >= 0 and tien_lo <= 50000000 and tong_truoc + tien_lo > 2147483647",
+      "overflow_expression": "tong_truoc + tien_lo"
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "TC-01",
+      "requirement_ids": [
+        "REQ-01",
+        "CON-01"
+      ],
+      "title": "Mã phiếu dài đúng 16 ký tự và 24 ký tự",
+      "preconditions": "doc_ma_phieu (v0: buffer 16, strcpy)",
+      "steps": [
+        "1. Nạp quanly_khohang_v0.json vào công cụ của Thầy",
+        "2. Kiểm tra thuộc tính AG(!buffer_overflow) và AG(!off_by_one)",
+        "3. Chạy mã C v0 qua ASan"
+      ],
+      "expected_result": "v0: Vi phạm AG(!buffer_overflow) và AG(!off_by_one), ASan báo stack-buffer-overflow; v1: 0 vi phạm",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-02",
+      "requirement_ids": [
+        "REQ-03",
+        "REQ-04"
+      ],
+      "title": "Cấp phát mảng lô hàng và rò rỉ heap khi hủy",
+      "preconditions": "cap_phat_lo_hang trên heap",
+      "steps": [
+        "1. Nạp quanly_khohang_v0.json vào tab kiểm chứng",
+        "2. Kiểm tra AG(!memory_leak) và AG(!null_deref)",
+        "3. Chạy kịch bản hủy phiếu đột ngột trên mã C"
+      ],
+      "expected_result": "v0: Vi phạm AG(!memory_leak), ASan phát hiện rò rỉ bộ nhớ; v1: Giải phóng sạch 100%",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-03",
+      "requirement_ids": [
+        "REQ-05"
+      ],
+      "title": "Sử dụng con trỏ lô hàng sau khi giải phóng",
+      "preconditions": "truy_cap_lo_hang_sau_free",
+      "steps": [
+        "1. Kiểm tra AG(!use_after_free)",
+        "2. Thực thi mã C sau free()",
+        "3. ASan bắt địa chỉ giải phóng"
+      ],
+      "expected_result": "v0: Vi phạm AG(!use_after_free), ASan báo heap-use-after-free; v1: Gán NULL an toàn",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-04",
+      "requirement_ids": [
+        "REQ-06",
+        "CON-03",
+        "CON-04"
+      ],
+      "title": "Tổng tiền nhân lô hàng tràn int32",
+      "preconditions": "KiemTraSoHoc tinh_tien_nhan_lo_hang",
+      "steps": [
+        "1. Chạy check_satisfiability() Z3 trên điều kiện tràn",
+        "2. Đưa bộ giá trị phản ví dụ vào mã C"
+      ],
+      "expected_result": "v0: SAT (don_gia=30.000.000, so_luong=100 -> tràn âm tiền); v1: UNSAT do có guard kiểm tra",
+      "priority": "HIGH"
+    }
+  ]
 }

@@ -1,0 +1,42 @@
+=== KET QUA KIEM CHUNG MO HINH KRIPKE (CTL MODEL CHECKING) ===
+
+=======================================================
+ KIá»‚M CHá»¨NG MÃ” HÃŒNH KRIPKE CHO: Báº¢N V0 (CÃ€I Lá»–I CÃ“ CHá»¦ Ä�Ã�CH)
+ File Ä‘áº·c táº£: quanly_khohang_v0.json
+=======================================================
+ Tá»•ng sá»‘ tráº¡ng thÃ¡i: 17
+ Tráº¡ng thÃ¡i khá»Ÿi táº¡o: ['start']
+ Sá»‘ lÆ°á»£ng thuá»™c tÃ­nh an toÃ n CTL: 10
+
+ [VI PHáº M]    AG(!violation)            ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_tran_bo_dem
+ [VI PHáº M]    AG(!buffer_overflow)      ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_tran_bo_dem
+ [VI PHáº M]    AG(!off_by_one)           ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_tran_1_byte
+ [VI PHáº M]    AG(!null_deref)           ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_null
+ [VI PHáº M]    AG(!memory_leak)          ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_ro_ri_heap
+ [VI PHáº M]    AG(!use_after_free)       ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_uaf
+ [VI PHáº M]    AG(!integer_overflow)     ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_tran_cong
+ [VI PHáº M]    AG(!div_by_zero)          ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_chia_0
+ [THá»ŽA MÃƒN]   AF(flow_end)              ==> Má»�i nhÃ¡nh káº¿t thÃºc an toÃ n
+ [THá»ŽA MÃƒN]   EF(ket_thuc_an_toan)      ==> Tá»“n táº¡i Ä‘Æ°á»�ng Ä‘i thÃ nh cÃ´ng
+
+=======================================================
+ KIá»‚M CHá»¨NG MÃ” HÃŒNH KRIPKE CHO: Báº¢N V1 (Báº¢N VÃ� AN TOÃ€N PHÃ’NG THá»¦)
+ File Ä‘áº·c táº£: quanly_khohang_v1.json
+=======================================================
+ Tá»•ng sá»‘ tráº¡ng thÃ¡i: 11
+ Tráº¡ng thÃ¡i khá»Ÿi táº¡o: ['start']
+ Sá»‘ lÆ°á»£ng thuá»™c tÃ­nh an toÃ n CTL: 10
+
+ [THá»ŽA MÃƒN]   AG(!violation)            ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!buffer_overflow)      ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!off_by_one)           ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!null_deref)           ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!memory_leak)          ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!use_after_free)       ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!integer_overflow)     ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!div_by_zero)          ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AF(flow_end)              ==> Má»�i nhÃ¡nh káº¿t thÃºc an toÃ n
+ [THá»ŽA MÃƒN]   EF(ket_thuc_an_toan)      ==> Tá»“n táº¡i Ä‘Æ°á»�ng Ä‘i thÃ nh cÃ´ng
+
+===> Káº¾T LUáº¬N KIá»‚M CHá»¨NG: MÃ´ hÃ¬nh v0 phÃ¡t hiá»‡n Ä‘áº§y Ä‘á»§ cÃ¡c pháº£n vÃ­ dá»¥; MÃ´ hÃ¬nh v1 Ä‘áº¡t an toÃ n 100%!
+

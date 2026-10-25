@@ -1,0 +1,11 @@
+=================================================================
+==12048==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x00a0f828 pc 0x00412891 bp 0x00a0f7ec sp 0x00a0f7e4
+WRITE of size 24 at 0x00a0f828 thread T0
+    #0 0x00412890 in m1_doc_chuoi_buffer_v0 f:\Truong_P\atpm\03_KiemToan_MaNguon_C\v0_ban_loi\m1_doc_chuoi_buffer_v0.c:42
+    #1 0x00413010 in main f:\Truong_P\atpm\03_KiemToan_MaNguon_C\v0_ban_loi\m1_doc_chuoi_buffer_v0.c:68
+Address 0x00a0f828 is located in stack of thread T0 at offset 40 in frame:
+    #0 0x00412750 in m1_doc_chuoi_buffer_v0 f:\Truong_P\atpm\03_KiemToan_MaNguon_C\v0_ban_loi\m1_doc_chuoi_buffer_v0.c:28
+  This frame has 1 object(s):
+    [32, 48) 'ma_phieu' <== Memory access at offset 40 overflows this variable
+=================================================================
+==12048==ABORTING

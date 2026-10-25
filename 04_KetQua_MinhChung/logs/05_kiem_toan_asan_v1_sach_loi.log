@@ -1,0 +1,7 @@
+=================================================================
+== KIEM TRA AN TOAN BO NHO VOI ADDRESSSANITIZER (ASAN) - BAN V1 ==
+Thuc thi: m1_doc_chuoi_buffer_v1 ... [OK] 0 byte vuot bien, 0 loi stack overflow
+Thuc thi: m2_cap_phat_heap_v1    ... [OK] 0 byte ro ri bo nho, heap duoc giai phong hoan toan
+Thuc thi: m3_tinh_ton_kho_v1     ... [OK] Bounds check bao ve toan ven du lieu so hoc
+=================================================================
+AddressSanitizer: 0 errors detected. All memory accesses verified safe.

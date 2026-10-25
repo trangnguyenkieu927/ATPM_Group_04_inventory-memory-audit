@@ -1,0 +1,10 @@
+=== KET QUA KIEM TRA SO HOC Z3 SMT (SAT / UNSAT PROOF) ===
+
+Traceback (most recent call last):
+  File "f:\Truong_P\atpm\ATPM_Group_04_inventory-memory-audit\02_KiemChung_MoHinh\kiem_tra_so_hoc_z3.py", line 2, in <module>
+    print("=== KI\u1ec2M TRA RÀNG BU\u1ed8C S\u1ed0 H\u1eccC VÀ AN TOÀN B\u1ed8 NH\u1eda B\u1eb0NG Z3 SMT SOLVER ===")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\450G9\AppData\Local\Programs\Python\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u1ec2' in position 6: character maps to <undefined>
