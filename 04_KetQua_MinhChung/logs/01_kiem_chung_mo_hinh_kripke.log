@@ -1,42 +1,68 @@
 === KET QUA KIEM CHUNG MO HINH KRIPKE (CTL MODEL CHECKING) ===
 
 =======================================================
- KIá»‚M CHá»¨NG MÃ” HÃŒNH KRIPKE CHO: Báº¢N V0 (CÃ€I Lá»–I CÃ“ CHá»¦ Ä�Ã�CH)
+ KIá»‚M CHá»¨NG MÃ” HÃŒNH KRIPKE: Báº¢N V0 (CÃ€I Lá»–I CÃ“ CHá»¦ Ä�Ã�CH - 18 Rá»¦I RO Bá»˜ NHá»š)
  File Ä‘áº·c táº£: quanly_khohang_v0.json
 =======================================================
- Tá»•ng sá»‘ tráº¡ng thÃ¡i: 17
+ Tá»•ng sá»‘ tráº¡ng thÃ¡i: 35
  Tráº¡ng thÃ¡i khá»Ÿi táº¡o: ['start']
- Sá»‘ lÆ°á»£ng thuá»™c tÃ­nh an toÃ n CTL: 10
+ Sá»‘ lÆ°á»£ng thuá»™c tÃ­nh kiá»ƒm chá»©ng CTL: 22
 
- [VI PHáº M]    AG(!violation)            ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_tran_bo_dem
- [VI PHáº M]    AG(!buffer_overflow)      ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_tran_bo_dem
- [VI PHáº M]    AG(!off_by_one)           ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_tran_1_byte
- [VI PHáº M]    AG(!null_deref)           ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_null
- [VI PHáº M]    AG(!memory_leak)          ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_ro_ri_heap
- [VI PHáº M]    AG(!use_after_free)       ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_uaf
- [VI PHáº M]    AG(!integer_overflow)     ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_tran_cong
- [VI PHáº M]    AG(!div_by_zero)          ==> Lá»–I! Váº¿t pháº£n vÃ­ dá»¥: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_chia_0
- [THá»ŽA MÃƒN]   AF(flow_end)              ==> Má»�i nhÃ¡nh káº¿t thÃºc an toÃ n
- [THá»ŽA MÃƒN]   EF(ket_thuc_an_toan)      ==> Tá»“n táº¡i Ä‘Æ°á»�ng Ä‘i thÃ nh cÃ´ng
+ [VI PHáº M]    AG(!violation)               ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_tran_bo_dem
+ [VI PHáº M]    AG(!buffer_overflow)         ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_tran_bo_dem
+ [VI PHáº M]    AG(!off_by_one)              ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_tran_1_byte
+ [VI PHáº M]    AG(!null_deref)              ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_null
+ [VI PHáº M]    AG(!alloc_size_overflow)     ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_sai_kich_thuoc
+ [VI PHáº M]    AG(!uninit_read)             ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_doc_rac
+ [VI PHáº M]    AG(!int_overflow)            ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_tran_so
+ [VI PHáº M]    AG(!negative_amount)         ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_so_am
+ [VI PHáº M]    AG(!div_by_zero)             ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_chia_0
+ [VI PHáº M]    AG(!hidden_bypass)           ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_nhanh_an
+ [VI PHáº M]    AG(!mem_leak)                ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ro_ri
+ [VI PHáº M]    AG(!format_string)           ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_format_string
+ [VI PHáº M]    AG(!race)                    ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_tranh_chap
+ [VI PHáº M]    AG(!double_free)             ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_tranh_chap -> h6_double_free
+ [VI PHáº M]    AG(!use_after_free)          ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_tranh_chap -> h6_uaf
+ [VI PHáº M]    AG(!secret_residue)          ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_giai_phong -> h6_con_ma_pin
+ [THá»ŽA MÃƒN]   AF(flow_end)                 ==> Má»�i nhÃ¡nh xá»­ lÃ½ Ä‘á»�u káº¿t thÃºc há»£p lá»‡
+ [THá»ŽA MÃƒN]   EF(stock_done)               ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_giai_phong -> ket_thuc_ok
+ [VI PHáº M]    EF(input_rejected)           ==> KhÃ´ng thá»ƒ Ä‘áº¡t tá»›i tráº¡ng thÃ¡i input_rejected
+ [THá»ŽA MÃƒN]   EG(!violation)               ==> Tá»“n táº¡i Ã­t nháº¥t má»™t Ä‘Æ°á»�ng Ä‘i luÃ´n an toÃ n
+ [THá»ŽA MÃƒN]   EF(nhap_locked)              ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu
+ [THá»ŽA MÃƒN]   EF(xuat_locked)              ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu
+
+---> Tá»•ng káº¿t: 5 Thá»�a mÃ£n | 17 Vi pháº¡m (PhÃ¡t hiá»‡n lá»—i)
 
 =======================================================
- KIá»‚M CHá»¨NG MÃ” HÃŒNH KRIPKE CHO: Báº¢N V1 (Báº¢N VÃ� AN TOÃ€N PHÃ’NG THá»¦)
+ KIá»‚M CHá»¨NG MÃ” HÃŒNH KRIPKE: Báº¢N V1 (Báº¢N VÃ� AN TOÃ€N PHÃ’NG THá»¦)
  File Ä‘áº·c táº£: quanly_khohang_v1.json
 =======================================================
- Tá»•ng sá»‘ tráº¡ng thÃ¡i: 11
+ Tá»•ng sá»‘ tráº¡ng thÃ¡i: 21
  Tráº¡ng thÃ¡i khá»Ÿi táº¡o: ['start']
- Sá»‘ lÆ°á»£ng thuá»™c tÃ­nh an toÃ n CTL: 10
+ Sá»‘ lÆ°á»£ng thuá»™c tÃ­nh kiá»ƒm chá»©ng CTL: 22
 
- [THá»ŽA MÃƒN]   AG(!violation)            ==> AN TOÃ€N
- [THá»ŽA MÃƒN]   AG(!buffer_overflow)      ==> AN TOÃ€N
- [THá»ŽA MÃƒN]   AG(!off_by_one)           ==> AN TOÃ€N
- [THá»ŽA MÃƒN]   AG(!null_deref)           ==> AN TOÃ€N
- [THá»ŽA MÃƒN]   AG(!memory_leak)          ==> AN TOÃ€N
- [THá»ŽA MÃƒN]   AG(!use_after_free)       ==> AN TOÃ€N
- [THá»ŽA MÃƒN]   AG(!integer_overflow)     ==> AN TOÃ€N
- [THá»ŽA MÃƒN]   AG(!div_by_zero)          ==> AN TOÃ€N
- [THá»ŽA MÃƒN]   AF(flow_end)              ==> Má»�i nhÃ¡nh káº¿t thÃºc an toÃ n
- [THá»ŽA MÃƒN]   EF(ket_thuc_an_toan)      ==> Tá»“n táº¡i Ä‘Æ°á»�ng Ä‘i thÃ nh cÃ´ng
+ [THá»ŽA MÃƒN]   AG(!violation)               ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!buffer_overflow)         ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!off_by_one)              ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!null_deref)              ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!alloc_size_overflow)     ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!uninit_read)             ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!int_overflow)            ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!negative_amount)         ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!div_by_zero)             ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!hidden_bypass)           ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!mem_leak)                ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!format_string)           ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!race)                    ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!double_free)             ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!use_after_free)          ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AG(!secret_residue)          ==> AN TOÃ€N
+ [THá»ŽA MÃƒN]   AF(flow_end)                 ==> Má»�i nhÃ¡nh xá»­ lÃ½ Ä‘á»�u káº¿t thÃºc há»£p lá»‡
+ [THá»ŽA MÃƒN]   EF(stock_done)               ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ok -> h6_phien_ranh -> h6_xuat_giu -> h6_giai_phong -> ket_thuc_ok
+ [THá»ŽA MÃƒN]   EF(input_rejected)           ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_tu_choi
+ [THá»ŽA MÃƒN]   EG(!violation)               ==> Tá»“n táº¡i Ã­t nháº¥t má»™t Ä‘Æ°á»�ng Ä‘i luÃ´n an toÃ n
+ [THá»ŽA MÃƒN]   EF(nhap_locked)              ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ok -> h6_phien_ranh -> h6_nhap_giu
+ [THá»ŽA MÃƒN]   EF(xuat_locked)              ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ok -> h6_phien_ranh -> h6_xuat_giu
 
-===> Káº¾T LUáº¬N KIá»‚M CHá»¨NG: MÃ´ hÃ¬nh v0 phÃ¡t hiá»‡n Ä‘áº§y Ä‘á»§ cÃ¡c pháº£n vÃ­ dá»¥; MÃ´ hÃ¬nh v1 Ä‘áº¡t an toÃ n 100%!
+---> Tá»•ng káº¿t: 22 Thá»�a mÃ£n | 0 Vi pháº¡m (PhÃ¡t hiá»‡n lá»—i)
 

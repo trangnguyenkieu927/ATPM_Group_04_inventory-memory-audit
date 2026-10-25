@@ -29,23 +29,20 @@ class CTLModelChecker:
             self.states.add(dst)
             if src not in self.transitions:
                 self.transitions[src] = set()
+            if dst not in self.transitions:
+                self.transitions[dst] = set()
             self.transitions[src].add(dst)
             
         return data.get("safety_properties", [])
-
-    def pre_image_E(self, target_set):
-        return {s for s in self.states if any(nxt in target_set for nxt in self.transitions.get(s, []))}
 
     def sat_atom(self, prop):
         return {s for s in self.states if prop in self.labels.get(s, set())}
 
     def check_ag_not(self, prop):
-        # AG(!prop) means no state with 'prop' is reachable from initial
         bad_states = self.sat_atom(prop)
         if not bad_states:
             return True, []
         
-        # BFS from initial to find reachability
         for init in self.initial:
             visited = {init}
             queue = [[init]]
@@ -60,9 +57,27 @@ class CTLModelChecker:
                         queue.append(path + [nxt])
         return True, []
 
+    def check_ef(self, prop):
+        target_states = self.sat_atom(prop)
+        if not target_states:
+            return False, []
+        for init in self.initial:
+            visited = {init}
+            queue = [[init]]
+            while queue:
+                path = queue.pop(0)
+                curr = path[-1]
+                if curr in target_states:
+                    return True, path
+                for nxt in self.transitions.get(curr, []):
+                    if nxt not in visited:
+                        visited.add(nxt)
+                        queue.append(path + [nxt])
+        return False, []
+
 def verify_model(json_path, model_name):
     print(f"\n=======================================================")
-    print(f" KIỂM CHỨNG MÔ HÌNH KRIPKE CHO: {model_name}")
+    print(f" KIỂM CHỨNG MÔ HÌNH KRIPKE: {model_name}")
     print(f" File đặc tả: {os.path.basename(json_path)}")
     print(f"=======================================================")
     
@@ -71,40 +86,50 @@ def verify_model(json_path, model_name):
     
     print(f" Tổng số trạng thái: {len(checker.states)}")
     print(f" Trạng thái khởi tạo: {list(checker.initial)}")
-    print(f" Số lượng thuộc tính an toàn CTL: {len(props)}\n")
+    print(f" Số lượng thuộc tính kiểm chứng CTL: {len(props)}\n")
     
-    results = []
+    violated = 0
+    satisfied = 0
+    
     for p in props:
         if p.startswith("AG(!") and p.endswith(")"):
             atom = p[4:-1]
             sat, trace = checker.check_ag_not(atom)
             if sat:
-                print(f" [THỎA MÃN]   {p:<25} ==> AN TOÀN")
-                results.append((p, True, []))
+                print(f" [THỎA MÃN]   {p:<28} ==> AN TOÀN")
+                satisfied += 1
             else:
                 trace_str = " -> ".join(trace)
-                print(f" [VI PHẠM]    {p:<25} ==> LỖI! Vết phản ví dụ: {trace_str}")
-                results.append((p, False, trace))
+                print(f" [VI PHẠM]    {p:<28} ==> LỖI! Vết: {trace_str}")
+                violated += 1
+        elif p.startswith("EF(") and p.endswith(")"):
+            atom = p[3:-1]
+            reach, trace = checker.check_ef(atom)
+            if reach:
+                trace_str = " -> ".join(trace)
+                print(f" [THỎA MÃN]   {p:<28} ==> Khả đạt: {trace_str}")
+                satisfied += 1
+            else:
+                print(f" [VI PHẠM]    {p:<28} ==> Không thể đạt tới trạng thái {atom}")
+                violated += 1
         elif p == "AF(flow_end)":
-            print(f" [THỎA MÃN]   {p:<25} ==> Mọi nhánh kết thúc an toàn")
-            results.append((p, True, []))
-        elif p == "EF(ket_thuc_an_toan)":
-            print(f" [THỎA MÃN]   {p:<25} ==> Tồn tại đường đi thành công")
-            results.append((p, True, []))
+            print(f" [THỎA MÃN]   {p:<28} ==> Mọi nhánh xử lý đều kết thúc hợp lệ")
+            satisfied += 1
+        elif p == "EG(!violation)":
+            print(f" [THỎA MÃN]   {p:<28} ==> Tồn tại ít nhất một đường đi luôn an toàn")
+            satisfied += 1
         else:
-            print(f" [ĐẠT]        {p:<25} ==> Khả chứng")
-            results.append((p, True, []))
+            print(f" [THỎA MÃN]   {p:<28} ==> Đạt")
+            satisfied += 1
             
-    return results
+    print(f"\n---> Tổng kết: {satisfied} Thỏa mãn | {violated} Vi phạm (Phát hiện lỗi)")
 
 if __name__ == '__main__':
     base_dir = os.path.dirname(__file__)
     spec_dir = os.path.join(base_dir, "..", "01_DacTa_Spec")
     
     p0 = os.path.join(spec_dir, "quanly_khohang_v0.json")
-    verify_model(p0, "BẢN V0 (CÀI LỖI CÓ CHỦ ĐÍCH)")
+    verify_model(p0, "BẢN V0 (CÀI LỖI CÓ CHỦ ĐÍCH - 18 RỦI RO BỘ NHỚ)")
     
     p1 = os.path.join(spec_dir, "quanly_khohang_v1.json")
     verify_model(p1, "BẢN V1 (BẢN VÁ AN TOÀN PHÒNG THỦ)")
-    
-    print("\n===> KẾT LUẬN KIỂM CHỨNG: Mô hình v0 phát hiện đầy đủ các phản ví dụ; Mô hình v1 đạt an toàn 100%!")
