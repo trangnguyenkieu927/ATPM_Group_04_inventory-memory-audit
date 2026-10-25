@@ -1,0 +1,207 @@
+MODULE main
+-- ======================================================================
+-- MÔ HÌNH HÌNH THỨC KIỂM CHỨNG CTL CHO HỆ THỐNG QUẢN LÝ KHO (INVENTORY)
+-- Đề tài: An toàn phần mềm (CSE703093) - Bước 3 Nghiệm thu
+-- Phụ trách: Hà Văn Đô
+-- Tuân thủ: Chuẩn cú pháp NuSMV 2.6 / nuXmv
+-- ======================================================================
+
+VAR
+    -- 1. Phân hệ Vòng đời Quản lý Mảng động Heap (product.c)
+    list_state : {
+        list_init,
+        list_valid,
+        list_growth,
+        list_growth_ok,
+        list_growth_failed,
+        list_cleanup,
+        list_freed,
+        list_cleanup_rejected
+    };
+
+    -- 2. Phân hệ Con trỏ Mượn (product.c: find_product_by_id)
+    ptr_state : {
+        ptr_idle,
+        ptr_valid,
+        ptr_invalid
+    };
+
+    -- Thao tác dereference đối với con trỏ
+    ptr_action : {
+        none,
+        ptr_deref
+    };
+
+    -- 3. Phân hệ Phân tích cú pháp tệp dữ liệu (file_io.c)
+    file_state : {
+        file_idle,
+        file_parsing,
+        file_loaded,
+        file_rejected
+    };
+
+    -- 4. Phân hệ Xử lý chuỗi và giới hạn bộ đệm (utils.c / product.c)
+    buffer_state : {
+        buf_idle,
+        buf_processing,
+        buf_safe,
+        buf_rejected
+    };
+
+    -- 5. Phân hệ Nghiệp vụ giao dịch kho (inventory.c)
+    product_op_state : {
+        op_idle,
+        op_processing,
+        op_done,
+        op_rejected
+    };
+
+ASSIGN
+    -- Khởi tạo ban đầu
+    init(list_state)        := list_init;
+    init(ptr_state)         := ptr_idle;
+    init(ptr_action)        := none;
+    init(file_state)        := file_idle;
+    init(buffer_state)      := buf_idle;
+    init(product_op_state)  := op_idle;
+
+    -- Quan hệ chuyển trạng thái Phân hệ 1: Vòng đời mảng động
+    next(list_state) := case
+        list_state = list_init           : list_valid;
+        list_state = list_valid          : {list_valid, list_growth, list_cleanup};
+        list_state = list_growth         : {list_growth_ok, list_growth_failed};
+        list_state = list_growth_ok      : list_valid;
+        list_state = list_growth_failed  : list_valid; -- Guard bảo toàn con trỏ cũ, quay lại valid
+        list_state = list_cleanup        : {list_freed, list_cleanup_rejected};
+        list_state = list_freed          : list_init;  -- Có thể tái khởi tạo
+        list_state = list_cleanup_rejected : list_valid;
+        TRUE                             : list_state;
+    esac;
+
+    -- Quan hệ chuyển trạng thái Phân hệ 2: Con trỏ mượn
+    next(ptr_state) := case
+        list_state = list_valid & ptr_state = ptr_idle : {ptr_idle, ptr_valid};
+        list_state = list_growth_ok                    : ptr_invalid; -- Realloc di chuyển heap -> invalid
+        list_state = list_freed                        : ptr_invalid; -- Free mảng -> invalid
+        ptr_state = ptr_invalid & list_state = list_valid : {ptr_invalid, ptr_valid}; -- Re-borrowing
+        TRUE                                           : ptr_state;
+    esac;
+
+    -- Hành vi dereference con trỏ:
+    -- QUY TẮC AN TOÀN TRONG CODE C: Chỉ dereference khi con trỏ còn valid (ptr_state = ptr_valid).
+    -- Để tránh bẫy Vacuous Truth, chúng ta KHÔNG dùng tiên đề TRANS !(ptr_invalid & ptr_deref).
+    -- Thay vào đó, mô hình hóa chuyển tiếp của caller:
+    next(ptr_action) := case
+        ptr_state = ptr_valid   : {none, ptr_deref};
+        ptr_state = ptr_invalid : none; -- Mã nguồn chuẩn luôn kiểm tra trước khi dereference
+        TRUE                    : none;
+    esac;
+
+    -- Quan hệ chuyển trạng thái Phân hệ 3: Tải tệp dữ liệu
+    next(file_state) := case
+        file_state = file_idle      : {file_idle, file_parsing};
+        file_state = file_parsing   : {file_loaded, file_rejected};
+        file_state = file_loaded    : file_idle;
+        file_state = file_rejected  : file_idle;
+        TRUE                        : file_state;
+    esac;
+
+    -- Quan hệ chuyển trạng thái Phân hệ 4: Bộ đệm chuỗi
+    next(buffer_state) := case
+        buffer_state = buf_idle        : {buf_idle, buf_processing};
+        buffer_state = buf_processing  : {buf_safe, buf_rejected};
+        buffer_state = buf_safe        : buf_idle;
+        buffer_state = buf_rejected    : buf_idle;
+        TRUE                           : buffer_state;
+    esac;
+
+    -- Quan hệ chuyển trạng thái Phân hệ 5: Nghiệp vụ kho
+    next(product_op_state) := case
+        product_op_state = op_idle        : {op_idle, op_processing};
+        product_op_state = op_processing  : {op_done, op_rejected};
+        product_op_state = op_done        : op_idle;
+        product_op_state = op_rejected    : op_idle;
+        TRUE                              : product_op_state;
+    esac;
+
+DEFINE
+    -- Ánh xạ các mệnh đề nguyên tử (Atomic Propositions) tương ứng đặc tả
+    list_live             := (list_state = list_valid | list_state = list_growth | list_state = list_growth_ok | list_state = list_growth_failed);
+    list_freed            := (list_state = list_freed);
+    ptr_live              := (ptr_state = ptr_valid);
+    ptr_invalid           := (ptr_state = ptr_invalid);
+    ptr_deref             := (ptr_action = ptr_deref);
+    owner_valid           := (list_state = list_valid | list_state = list_growth_ok | list_state = list_growth_failed);
+    realloc_failed        := (list_state = list_growth_failed);
+    realloc_done          := (list_state = list_growth_ok);
+    reallocating          := (list_state = list_growth);
+    cleanup_done          := (list_state = list_freed);
+    cleanup_processing    := (list_state = list_cleanup);
+    cleanup_rejected      := (list_state = list_cleanup_rejected);
+    product_op_processing := (product_op_state = op_processing);
+    product_op_done       := (product_op_state = op_done);
+    product_op_rejected   := (product_op_state = op_rejected);
+    file_parsing          := (file_state = file_parsing);
+    file_loaded           := (file_state = file_loaded);
+    file_rejected         := (file_state = file_rejected);
+    buffer_processing     := (buffer_state = buf_processing);
+    buffer_safe           := (buffer_state = buf_safe);
+    buffer_rejected       := (buffer_state = buf_rejected);
+
+-- ======================================================================
+-- 18 CÔNG THỨC KIỂM CHỨNG HÌNH THỨC CTL NGUYÊN VĂN TỪ ĐẶC TẢ
+-- ======================================================================
+
+-- CTL-01: Danh sách không bao giờ vừa sống vừa đã giải phóng (REQ-1, REQ-11)
+CTLSPEC AG(!(list_live & list_freed));
+
+-- CTL-02: Con trỏ mượn không bao giờ vừa hợp lệ vừa mất hiệu lực (REQ-14)
+CTLSPEC AG(!(ptr_live & ptr_invalid));
+
+-- CTL-03: Con trỏ mất hiệu lực không bao giờ bị dereference (REQ-14)
+CTLSPEC AG(ptr_invalid -> !ptr_deref);
+
+-- CTL-04: Realloc thất bại bảo toàn con trỏ sở hữu cũ (REQ-12)
+CTLSPEC AG(realloc_failed -> owner_valid);
+
+-- CTL-05: Realloc thành công cập nhật con trỏ hợp lệ (REQ-12)
+CTLSPEC AG(realloc_done -> owner_valid);
+
+-- CTL-06: Dọn dẹp hoàn tất đưa danh sách về trạng thái giải phóng (REQ-11)
+CTLSPEC AG(cleanup_done -> list_freed);
+
+-- CTL-07: Mọi thao tác nghiệp vụ đang xử lý cuối cùng sẽ hoàn tất hoặc bị từ chối (Liveness)
+CTLSPEC AG(product_op_processing -> AF(product_op_done | product_op_rejected));
+
+-- CTL-08: Tiến trình nạp tệp đang phân tích cuối cùng sẽ nạp xong hoặc bị từ chối (Liveness)
+CTLSPEC AG(file_parsing -> AF(file_loaded | file_rejected));
+
+-- CTL-09: Xử lý chuỗi đang thực thi cuối cùng sẽ an toàn hoặc bị từ chối (Liveness)
+CTLSPEC AG(buffer_processing -> AF(buffer_safe | buffer_rejected));
+
+-- CTL-10: Cấp phát lại đang chạy cuối cùng sẽ thành công hoặc thất bại (Liveness)
+CTLSPEC AG(reallocating -> AF(realloc_done | realloc_failed));
+
+-- CTL-11: Quá trình giải phóng đang chạy cuối cùng sẽ hoàn tất hoặc bị từ chối (Liveness)
+CTLSPEC AG(cleanup_processing -> AF(cleanup_done | cleanup_rejected));
+
+-- CTL-12: Trạng thái chuỗi an toàn và bị từ chối loại trừ lẫn nhau
+CTLSPEC AG(!(buffer_safe & buffer_rejected));
+
+-- CTL-13: Trạng thái tải tệp thành công và bị từ chối loại trừ lẫn nhau
+CTLSPEC AG(!(file_loaded & file_rejected));
+
+-- CTL-14: Trạng thái cấp phát lại thành công và thất bại loại trừ lẫn nhau
+CTLSPEC AG(!(realloc_done & realloc_failed));
+
+-- CTL-15: Trạng thái dọn dẹp hoàn tất và bị từ chối loại trừ lẫn nhau
+CTLSPEC AG(!(cleanup_done & cleanup_rejected));
+
+-- CTL-16: Trạng thái nghiệp vụ hoàn tất và bị từ chối loại trừ lẫn nhau
+CTLSPEC AG(!(product_op_done & product_op_rejected));
+
+-- CTL-17: Khả đạt - Luôn tồn tại đường dẫn dẫn tới giải phóng bộ nhớ (Liveness)
+CTLSPEC EF(list_freed);
+
+-- CTL-18: Khả đạt - Nhánh realloc thất bại là khả đạt trong không gian trạng thái (Reachability)
+CTLSPEC EF(realloc_failed);

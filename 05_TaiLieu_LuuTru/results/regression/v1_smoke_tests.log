@@ -1,0 +1,25 @@
+========================================================================================================================
+                                      SMOKE TEST CHUC NANG NEN TANG - BASELINE V0                                       
+========================================================================================================================
+| ID | Thao tac               | Input                          | Expected                 | Actual                   | Code | Pass |
+|----|------------------------|--------------------------------|--------------------------|--------------------------|------|------|
+| 1  | Khoi tao danh sach     | Inventory pointer              | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 2  | Them san pham 6 truong | SP_TEST01|Dell|Laptop|10       | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 3  | Chan trung lap ID      | SP_TEST01 (da ton tai)         | STATUS_ERR_DUPLICATE_ID  | STATUS_ERR_DUPLICATE_ID  | -12  | PASS |
+| 4  | Tim kiem theo ID       | ID = SP_TEST01                 | Tim thay Dell Precision  | Tim thay Dell Precision  | 0    | PASS |
+| 5  | Tim kiem theo ten      | Keyword = 'dell'               | 1 ket qua phu hop        | 1 ket qua phu hop        | 0    | PASS |
+| 6  | Cap nhat san pham      | ID=SP_TEST01, SL=12, Gia=2600  | Cap nhat thanh cong      | Cap nhat thanh cong      | 0    | PASS |
+| 7  | Nhap kho hop le        | ID=SP_TEST01, qty=+8           | Ton kho tang len 20      | Ton kho tang len 20      | 0    | PASS |
+| 8  | Chan tran so nhap kho  | ID=SP_TEST01, qty=INT_MAX      | STATUS_ERR_OVERFLOW      | STATUS_ERR_OVERFLOW      | -6   | PASS |
+| 9  | Xuat kho hop le        | ID=SP_TEST01, qty=-5           | Ton kho giam con 15      | Ton kho giam con 15      | 0    | PASS |
+| 10 | Chan xuat qua ton kho  | ID=SP_TEST01, qty=100 (ton=15) | ERR_INSUFFICIENT_STOCK   | ERR_INSUFFICIENT_STOCK   | -5   | PASS |
+| 11 | Ghi tep du lieu 6 truong | data/test_smoke_products.txt   | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 12 | Doc tep du lieu 6 truong | data/test_smoke_products.txt   | Nap thanh cong 1 san pham | Nap thanh cong 1 san pham | 0    | PASS |
+| 13 | Tuong thich tep 4 truong | OLD01|Ban phim|25|45.00        | Default cat/unit hop le  | Default cat/unit hop le  | 0    | PASS |
+| 14 | Thong ke tong quan kho | 2 SP (1 ton 15, 1 ton 0)       | Tong 2 SP, 1 het hang    | Tong 2 SP, 1 het hang    | 0    | PASS |
+| 15 | Xuat bao cao ra tep    | data/test_smoke_report.txt     | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 16 | Xoa san pham           | ID = SP_TEST01                 | Xoa thanh cong           | Xoa thanh cong           | 0    | PASS |
+| 17 | Giai phong bo nho      | inventory_free(&inv)           | Con tro NULL, size=0     | Con tro NULL, size=0     | 0    | PASS |
+------------------------------------------------------------------------------------------------------------------------
+TONG KET SMOKE TEST: Tong so ca: 17 | Dat: 17 | Loi: 0 | Ket qua: TAT CA DEU PASS (100%)
+========================================================================================================================

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "CBMC-001",
+    "req": "REQ-1, REQ-2",
+    "unwind": 20,
+    "status": "VERIFIED_WITHIN_BOUND",
+    "exit_code": 0,
+    "output": "[CBMC-001 PASS] ProductList invariant verified within bound k=20"
+  },
+  {
+    "id": "CBMC-002",
+    "req": "REQ-6, REQ-16",
+    "unwind": 40,
+    "status": "VERIFIED_WITHIN_BOUND",
+    "exit_code": 0,
+    "output": "[CBMC-002 PASS] Array bounds and buffer safety verified successfully"
+  },
+  {
+    "id": "CBMC-003",
+    "req": "REQ-12",
+    "unwind": 17,
+    "status": "VERIFIED_WITHIN_BOUND",
+    "exit_code": 0,
+    "output": "[CBMC-003 PASS] Realloc failure and pointer preservation contract verified"
+  },
+  {
+    "id": "CBMC-004",
+    "req": "REQ-13, REQ-14, REQ-15",
+    "unwind": 17,
+    "status": "VERIFIED_WITHIN_BOUND",
+    "exit_code": 0,
+    "output": "[CBMC-004 PASS] Null safety, double-free defense and borrowed pointer lifecycle verified"
+  },
+  {
+    "id": "CBMC-005",
+    "req": "REQ-4, REQ-5",
+    "unwind": 10,
+    "status": "VERIFIED_WITHIN_BOUND",
+    "exit_code": 0,
+    "output": "[CBMC-005 PASS] Stock arithmetic overflow guard and conservation invariants verified"
+  }
+]

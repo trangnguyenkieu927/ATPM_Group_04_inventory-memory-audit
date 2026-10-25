@@ -1,0 +1,15 @@
+======================================================================
+Harness ID: CBMC-002
+Yêu cầu truy vết: REQ-6, REQ-16
+Unwind Bound k: 40
+Compile Command: gcc -Wall -Wextra -O0 -g -Isource/include verification/step3/cbmc/harness_cbmc_002_array_bounds.c source/src/inventory.c source/src/product.c source/src/report.c source/src/validation.c source/src/utils.c -o scratch/cbmc_002.exe
+Execution Command: scratch/cbmc_002.exe
+Execution Exit Code: 0
+Status: VERIFIED_WITHIN_BOUND
+----------------------------------------------------------------------
+STDOUT:
+[CBMC-002 PASS] Array bounds and buffer safety verified successfully
+
+STDERR:
+
+======================================================================

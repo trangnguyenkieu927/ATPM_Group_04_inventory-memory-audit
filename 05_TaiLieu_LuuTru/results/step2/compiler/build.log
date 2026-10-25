@@ -1,0 +1,77 @@
+﻿=========================================================================
+NHAT KY BIEN DICH BASELINE V0 (STEP 2 RE-VERIFICATION)
+Thoi diem bat dau: 2026-10-15 21:01:15 +07:00
+Commit Baseline  : 44202070c68002d9af068374478cdc83098dd4d8
+=========================================================================
+
+--- 1. LENH: make clean ---
+powershell -NoProfile -Command "Get-ChildItem -Path src/*.o, *.exe, inventory_app, inventory_tests, smoke_tests, data/test_products_output.txt, data/test_smoke_products.txt, data/test_smoke_report.txt, data/test_legacy_4field.txt -ErrorAction SilentlyContinue | Remove-Item -Force; exit 0"
+
+Exit code make clean: 0
+
+--- 2. LENH: make (Standard C17 -Wall -Wextra -Wpedantic) ---
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/file_io.c -o src/file_io.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/inventory.c -o src/inventory.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/main.c -o src/main.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/product.c -o src/product.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/report.c -o src/report.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/utils.c -o src/utils.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -c src/validation.c -o src/validation.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -o inventory_app src/file_io.o src/inventory.o src/main.o src/product.o src/report.o src/utils.o src/validation.o
+
+Exit code make: 0
+
+--- 3. LENH: make debug (-g -O0) ---
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/file_io.c -o src/file_io.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/inventory.c -o src/inventory.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/main.c -o src/main.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/product.c -o src/product.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/report.c -o src/report.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/utils.c -o src/utils.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -c src/validation.c -o src/validation.o
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -g -O0 -o inventory_app src/file_io.o src/inventory.o src/main.o src/product.o src/report.o src/utils.o src/validation.o
+
+Exit code make debug: 0
+
+--- 4. LENH: make test ---
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -o inventory_tests tests/test_inventory.c src/inventory.c src/product.c src/file_io.c src/validation.c src/utils.c
+./inventory_tests
+inventory tests passed
+
+Exit code make test: 0
+
+--- 5. LENH: make smoke-test ---
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -o smoke_tests tests/smoke_test.c src/inventory.c src/product.c src/file_io.c src/validation.c src/utils.c src/report.c
+./smoke_tests
+========================================================================================================================
+                                      SMOKE TEST CHUC NANG NEN TANG - BASELINE V0                                       
+========================================================================================================================
+| ID | Thao tac               | Input                          | Expected                 | Actual                   | Code | Pass |
+|----|------------------------|--------------------------------|--------------------------|--------------------------|------|------|
+| 1  | Khoi tao danh sach     | Inventory pointer              | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 2  | Them san pham 6 truong | SP_TEST01|Dell|Laptop|10       | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 3  | Chan trung lap ID      | SP_TEST01 (da ton tai)         | STATUS_ERR_DUPLICATE_ID  | STATUS_ERR_DUPLICATE_ID  | -12  | PASS |
+| 4  | Tim kiem theo ID       | ID = SP_TEST01                 | Tim thay Dell Precision  | Tim thay Dell Precision  | 0    | PASS |
+| 5  | Tim kiem theo ten      | Keyword = 'dell'               | 1 ket qua phu hop        | 1 ket qua phu hop        | 0    | PASS |
+| 6  | Cap nhat san pham      | ID=SP_TEST01, SL=12, Gia=2600  | Cap nhat thanh cong      | Cap nhat thanh cong      | 0    | PASS |
+| 7  | Nhap kho hop le        | ID=SP_TEST01, qty=+8           | Ton kho tang len 20      | Ton kho tang len 20      | 0    | PASS |
+| 8  | Chan tran so nhap kho  | ID=SP_TEST01, qty=INT_MAX      | STATUS_ERR_OVERFLOW      | STATUS_ERR_OVERFLOW      | -6   | PASS |
+| 9  | Xuat kho hop le        | ID=SP_TEST01, qty=-5           | Ton kho giam con 15      | Ton kho giam con 15      | 0    | PASS |
+| 10 | Chan xuat qua ton kho  | ID=SP_TEST01, qty=100 (ton=15) | ERR_INSUFFICIENT_STOCK   | ERR_INSUFFICIENT_STOCK   | -5   | PASS |
+| 11 | Ghi tep du lieu 6 truong | data/test_smoke_products.txt   | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 12 | Doc tep du lieu 6 truong | data/test_smoke_products.txt   | Nap thanh cong 1 san pham | Nap thanh cong 1 san pham | 0    | PASS |
+| 13 | Tuong thich tep 4 truong | OLD01|Ban phim|25|45.00        | Default cat/unit hop le  | Default cat/unit hop le  | 0    | PASS |
+| 14 | Thong ke tong quan kho | 2 SP (1 ton 15, 1 ton 0)       | Tong 2 SP, 1 het hang    | Tong 2 SP, 1 het hang    | 0    | PASS |
+| 15 | Xuat bao cao ra tep    | data/test_smoke_report.txt     | STATUS_SUCCESS (0)       | STATUS_SUCCESS (0)       | 0    | PASS |
+| 16 | Xoa san pham           | ID = SP_TEST01                 | Xoa thanh cong           | Xoa thanh cong           | 0    | PASS |
+| 17 | Giai phong bo nho      | inventory_free(&inv)           | Con tro NULL, size=0     | Con tro NULL, size=0     | 0    | PASS |
+------------------------------------------------------------------------------------------------------------------------
+TONG KET SMOKE TEST: Tong so ca: 17 | Dat: 17 | Loi: 0 | Ket qua: TAT CA DEU PASS (100%)
+========================================================================================================================
+
+Exit code make smoke-test: 0
+
+=========================================================================
+TONG KET BIEN DICH STEP 2: EXIT CODE = 0
+Thoi diem ket thuc: 2026-10-15 21:01:19 +07:00
+=========================================================================

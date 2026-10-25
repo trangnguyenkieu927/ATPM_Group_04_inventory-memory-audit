@@ -1,0 +1,122 @@
+﻿=========================================================================
+NHAT KY CHAY BO KIEM THU (TEST LOG) - BASELINE V0
+Thoi diem bat dau: 2026-10-15 20:31:39 +07:00
+Commit SHA       : d57e583270517dfcc6afcba071dd2621d75708aa
+=========================================================================
+
+--- 1. KIEM THU TICH HOP: make test (inventory_tests) ---
+cc -std=c17 -Wall -Wextra -Wpedantic -I./include -o inventory_tests tests/test_inventory.c src/inventory.c src/product.c src/file_io.c src/validation.c src/utils.c
+./inventory_tests
+inventory tests passed
+
+Exit code make test: 0
+
+--- 2. KIEM THU TIEN ICH: tests/test_utils.c ---
+=======================================================================
+                  UNIT TEST: MODULE TIEN ICH (UTILS.H / UTILS.C)        
+=======================================================================
+
+=== 1. Test is_empty_or_whitespace & trim_whitespace ===
+  [PASS] NULL string la empty
+  [PASS] Chuoi rong la empty
+  [PASS] Chuoi toan khoang trang la empty
+  [PASS] Chuoi co ky tu hop le khong phai empty
+  [PASS] trim_whitespace cat ca dau va cuoi
+  [PASS] trim_whitespace giu nguyen chuoi khong khoang trang
+  [PASS] trim_whitespace chuoi toan cach tro thanh rong
+
+=== 2. Test safe_string_copy (Chong tran bo dem) ===
+  [PASS] safe_string_copy thanh cong
+  [PASS] safe_string_copy phat hien tran va cat an toan
+  [PASS] safe_string_copy luon dam bao null-terminator
+  [PASS] safe_string_copy chan dest NULL
+
+=== 3. Test split_line (Tach chuoi CSV/Pipe) ===
+  [PASS] split_line tach dung 6 truong
+  [PASS] Token 0 dung
+  [PASS] Token 1 dung
+  [PASS] Token 5 dung
+  [PASS] split_line chan line NULL
+
+=== 4. Test safe_str_to_int & safe_str_to_double ===
+  [PASS] safe_str_to_int('123') = 123
+  [PASS] safe_str_to_int('-45') = -45
+  [PASS] safe_str_to_int('q╞░qw') bao loi
+  [PASS] safe_str_to_int('12a') bao loi
+  [PASS] safe_str_to_int chan tran so INT_MAX
+  [PASS] safe_str_to_double('1499.99') thanh cong
+  [PASS] safe_str_to_double('abc') bao loi
+
+=== 5. Test to_upper_case & to_lower_case ===
+  [PASS] to_upper_case chuyen thanh chu hoa
+  [PASS] to_lower_case chuyen thanh chu thuong
+
+=======================================================================
+KET QUA KIEM THU: Tong so ca: 25 | Dat: 25 | Loi: 0
+TRANG THAI: TAT CA DEU PASS [OK]
+=======================================================================
+
+Exit code test_utils: 0
+
+--- 3. KIEM THU TOAN BO MODULE CLI: ./inventory_app --test ---
+
+=========================================================================================
+                            CHAY BO KIEM THU TU DONG (UNIT TESTS)                        
+=========================================================================================
+
+--- 1. Kiem thu Module Tien ich (utils.h) ---
+1. is_empty_or_whitespace('   ')           : [PASS]
+2. trim_whitespace('  Laptop Dell  ')      : [PASS]
+3. safe_string_copy (chong tran bo dem)    : [PASS]
+4. safe_str_to_int ('q╞░qw' chan chu)       : [PASS]
+5. to_upper_case ('sp001' -> 'SP001')      : [PASS]
+
+--- 2. Kiem thu Module Kiem tra du lieu (validation.h) ---
+1. validate_id hop le ('SP001')            : [PASS]
+2. validate_id chan ky tu cam ('SP|01')    : [PASS]
+3. validate_product_name rong              : [PASS]
+4. validate_price_str chan gia am (-10.5)  : [PASS]
+5. validate_quantity_str chan chu ('q╞░qw') : [PASS]
+6. validate_price_quantity hop le          : [PASS]
+
+--- 3. Kiem thu Module San pham (product.h) ---
+1. add_product moi                         : [PASS]
+2. add_product trung ma (Duplicate)        : [PASS]
+3. update_product hop le                   : [PASS]
+4. find_product_by_id tim thay             : [PASS]
+5. delete_product xoa thanh cong           : [PASS]
+6. find_product_by_id sau khi xoa (NULL)   : [PASS]
+
+--- 4. Kiem thu Module Bao cao (report.h) ---
+1. calculate_inventory_summary hop le      : [PASS]
+2. Dem san pham het hang (SL = 0)          : [PASS]
+3. Dem san pham sap het hang (SL <= 10)    : [PASS]
+4. calculate_category_summaries (2 loai)   : [PASS]
+
+========================================================================
+                  THONG KE TON KHO (REPORT STATISTICS)                  
+========================================================================
+ 1. Tong so mat hang quan ly (SKU)       : 2 san pham
+ 2. Tong so luong ton kho (Quantity)     : 5 san pham
+ 3. Tong gia tri hang ton kho (Value)    : 125.00 $
+ 4. Gia tri ton trung binh / mat hang    : 62.50 $
+ 5. So mat hang da het hang (SL = 0)     : 1 san pham
+ 6. So mat hang sap het hang (<= 10)     : 1 san pham
+ 7. Mat hang co gia tri ton kho lon nhat : Chuot Test (R02) - 125.00 $
+ 8. San pham co don gia cao nhat         : Laptop Test (R01) - 1200.00 $
+ 9. San pham co don gia thap nhat        : Chuot Test (R02) - 25.00 $
+========================================================================
+
+5. report_statistics xuat so luong, gia tri: [PASS]
+
+=========================================================================================
+                     TAT CA CAC MODULE DEU HOAN THANH KIEM THU [OK]                      
+=========================================================================================
+
+
+Exit code inventory_app --test: 0
+
+=========================================================================
+TONG KET KIEM THU: EXIT CODE = 0 (ALL SUITES PASSED)
+Thoi diem ket thuc: 2026-10-15 20:31:41 +07:00
+=========================================================================

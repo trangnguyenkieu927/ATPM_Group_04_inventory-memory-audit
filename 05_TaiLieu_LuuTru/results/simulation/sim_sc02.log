@@ -1,0 +1,11 @@
+============================================================
+ SC-02 SIMULATION: BUFFER BOUNDS & STRING SAFETY             
+============================================================
+[PASS] TC-SC02-01: Oversized field in line rejected safely by bounds check
+[PASS] TC-SC02-02: ID length 19 chars (N-1 boundary) accepted
+[PASS] TC-SC02-03: ID length 20 chars (N boundary) rejected safely
+[PASS] TC-SC02-04: Name boundary N-1 (99B) accepted, N (100B) rejected
+[PASS] TC-SC02-05: Embedded NUL byte terminates stream safely without crash
+------------------------------------------------------------
+SC-02 RESULT: 5/5 tests PASSED (SUCCESS)
+============================================================

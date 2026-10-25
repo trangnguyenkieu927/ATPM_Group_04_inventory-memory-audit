@@ -1,0 +1,31 @@
+REGRESSION RUN ON VERSION v1 (WITH DEFENSIVE GUARDS):
+
+--- SC-03 CAPACITY REGRESSION ---
+============================================================
+ SC-03 SIMULATION: HEAP ALLOCATION & CAPACITY DOUBLING      
+============================================================
+Initial list state: count = 0, capacity = 16, items = 0000020AC39E3FE0
+[PASS] TC-SC03-01: Initial capacity correctly initialized (cap = 16)
+[PASS] TC-SC03-02: Filled to capacity (16 items) with count == capacity
+[PASS] TC-SC03-03: First capacity doubling triggered: 16 -> 32 (count=17)
+[PASS] TC-SC03-04: Multiple capacity doublings successful: final cap=64, count=45
+[PASS] TC-SC03-05: Safety Invariant count (45) <= capacity (64) maintained
+------------------------------------------------------------
+SC-03 RESULT: 5/5 tests PASSED (SUCCESS)
+============================================================
+
+--- SC-06 ARITHMETIC REGRESSION ---
+============================================================
+ SC-06 SIMULATION: INVENTORY STOCK ARITHMETIC & CONSERVATION
+============================================================
+[PASS] TC-SC06-01: Negative import quantity rejected (rc=-3)
+[PASS] TC-SC06-02: Normal import succeeded (100 + 50 = 150)
+[PASS] TC-SC06-03: Integer overflow blocked by guard STATUS_ERR_OVERFLOW (-6)
+[PASS] TC-SC06-04: Conservation Invariant: Stock remained exactly 150 after rejected overflow
+[PASS] TC-SC06-05: Excessive export blocked by STATUS_ERR_INSUFFICIENT_STOCK (-5)
+[PASS] TC-SC06-06: Conservation Invariant: Stock remained exactly 150 after rejected export
+[PASS] TC-SC06-07: Valid export succeeded (150 - 50 = 100)
+------------------------------------------------------------
+SC-06 RESULT: 7/7 tests PASSED (SUCCESS)
+============================================================
+

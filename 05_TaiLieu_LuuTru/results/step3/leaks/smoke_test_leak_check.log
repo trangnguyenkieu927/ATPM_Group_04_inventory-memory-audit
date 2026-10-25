@@ -1,0 +1,7 @@
+Build Command: gcc -Wall -Wextra -O0 -g -Isource/include source/tests/smoke_test.c source/src/product.c source/src/inventory.c source/src/report.c source/src/file_io.c source/src/validation.c source/src/utils.c -o scratch/smoke_test_run.exe
+Run Exit Code: 3221226505
+STDOUT:
+
+STDERR:
+Assertion failed: fl != NULL, file source/tests/smoke_test.c, line 132
+

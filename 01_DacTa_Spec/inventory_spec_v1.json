@@ -1,0 +1,105 @@
+{
+  "project": "Inventory Memory Safety Audit - Group 04",
+  "version": "v1_patched",
+  "defensive_guards": [
+    "Check line length < MAX_LINE (32 bytes) before copying",
+    "Check token field index < token_count before reading",
+    "Check allocation overflow and use temporary pointer tmp = realloc(...)",
+    "Zero-out pointer immediately after free()",
+    "Check added_quantity <= INT_MAX - current_stock before addition"
+  ],
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-02",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-03",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-04",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-05",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-06",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-07",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-08",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-09",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-10",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-11",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-12",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-13",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-14",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-15",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-16",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-17",
+      "status": "Enforced & Patched in v1"
+    },
+    {
+      "id": "REQ-18",
+      "status": "Enforced & Patched in v1"
+    }
+  ],
+  "sub_models": {
+    "M1": {
+      "member": "Nguyen Quang Tho",
+      "module": "audit_io_pipeline_v1",
+      "cwe": "CWE-120/121",
+      "result": "UNSAT (Formally Verified)"
+    },
+    "M2": {
+      "member": "Nguyen Kieu Trang",
+      "module": "audit_heap_lifecycle_v1",
+      "cwe": "CWE-401/416",
+      "result": "UNSAT (Formally Verified)"
+    },
+    "M3": {
+      "member": "Ha Van Do",
+      "module": "audit_arithmetic_v1",
+      "cwe": "CWE-190",
+      "result": "UNSAT (Formally Verified)"
+    }
+  }
+}

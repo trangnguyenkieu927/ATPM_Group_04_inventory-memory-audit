@@ -1,0 +1,111 @@
+{
+  "project": "Inventory Memory Safety Audit - Group 04",
+  "version": "v0_vulnerable",
+  "attack_surface": {
+    "entry_points": [
+      "products.txt",
+      "CLI / stdin inputs"
+    ],
+    "risks": [
+      "Buffer Overflow (CWE-120)",
+      "Out-of-bounds Read (CWE-125)",
+      "Integer Overflow (CWE-190)",
+      "Memory Leak (CWE-401)",
+      "Use After Free (CWE-416)"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-02",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-03",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-04",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-05",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-06",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-07",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-08",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-09",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-10",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-11",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-12",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-13",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-14",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-15",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-16",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-17",
+      "status": "Vulnerable in v0"
+    },
+    {
+      "id": "REQ-18",
+      "status": "Vulnerable in v0"
+    }
+  ],
+  "sub_models": {
+    "M1": {
+      "member": "Nguyen Quang Tho",
+      "module": "audit_io_pipeline_v0",
+      "cwe": "CWE-120/121",
+      "result": "SAT (Vulnerability Found)"
+    },
+    "M2": {
+      "member": "Nguyen Kieu Trang",
+      "module": "audit_heap_lifecycle_v0",
+      "cwe": "CWE-401/416",
+      "result": "SAT (Vulnerability Found)"
+    },
+    "M3": {
+      "member": "Ha Van Do",
+      "module": "audit_arithmetic_v0",
+      "cwe": "CWE-190",
+      "result": "SAT (Vulnerability Found)"
+    }
+  }
+}

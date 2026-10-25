@@ -1,0 +1,73 @@
+Compile Command: gcc -Wall -Wextra -O0 -g -Isource/include tests/simulation/test_sim002_parser.c source/src/file_io.c source/src/inventory.c source/src/product.c source/src/report.c source/src/validation.c source/src/utils.c -o scratch/sim002.exe
+Exit Code: 0
+STDOUT:
+============================================================
+  SIM-002: MÔ PHỎNG FILE PARSER VÀ GIỚI HẠN BỘ ĐỆM          
+============================================================
+
+[01/10] Kiểm thử: Dòng hợp lệ chuẩn 6 trường
+       Tệp: tests/simulation/corpus/corpus_01_valid_6_fields.txt
+       Mã trả về: 0 (Kỳ vọng: STATUS_SUCCESS (0))
+       Số sản phẩm đã nạp: 2 (Kỳ vọng tối thiểu: 2)
+       -> ĐÁNH GIÁ: [PASS]
+
+[02/10] Kiểm thử: Dòng cũ hợp lệ 4 trường (legacy format)
+       Tệp: tests/simulation/corpus/corpus_02_valid_4_fields.txt
+       Mã trả về: 0 (Kỳ vọng: STATUS_SUCCESS (0))
+       Số sản phẩm đã nạp: 2 (Kỳ vọng tối thiểu: 2)
+       -> ĐÁNH GIÁ: [PASS]
+
+[03/10] Kiểm thử: Dòng có quá nhiều dấu phân cách (7+ pipes)
+       Tệp: tests/simulation/corpus/corpus_03_too_many_delimiters.txt
+       Mã trả về: -7 (Kỳ vọng: LỖI (< 0))
+       Số sản phẩm đã nạp: 0 (Kỳ vọng tối thiểu: 0)
+       -> ĐÁNH GIÁ: [PASS]
+
+[04/10] Kiểm thử: Dòng có quá ít trường (1-3 trường)
+       Tệp: tests/simulation/corpus/corpus_04_too_few_fields.txt
+       Mã trả về: -7 (Kỳ vọng: LỖI (< 0))
+       Số sản phẩm đã nạp: 0 (Kỳ vọng tối thiểu: 0)
+       -> ĐÁNH GIÁ: [PASS]
+
+[05/10] Kiểm thử: Dòng dài hơn LINE_BUFFER_SIZE (512 bytes)
+       Tệp: tests/simulation/corpus/corpus_05_line_over_512.txt
+       Mã trả về: -7 (Kỳ vọng: LỖI (< 0))
+       Số sản phẩm đã nạp: 0 (Kỳ vọng tối thiểu: 0)
+       -> ĐÁNH GIÁ: [PASS]
+
+[06/10] Kiểm thử: Dòng cuối tệp không có ký tự xuống dòng (EOF)
+       Tệp: tests/simulation/corpus/corpus_06_missing_newline_eof.txt
+       Mã trả về: 0 (Kỳ vọng: STATUS_SUCCESS (0))
+       Số sản phẩm đã nạp: 1 (Kỳ vọng tối thiểu: 1)
+       -> ĐÁNH GIÁ: [PASS]
+
+[07/10] Kiểm thử: Dòng có ký tự NUL ('\0') nhúng giữa chuỗi
+       Tệp: tests/simulation/corpus/corpus_07_embedded_nul_byte.txt
+       Mã trả về: -7 (Kỳ vọng: LỖI (< 0))
+       Số sản phẩm đã nạp: 0 (Kỳ vọng tối thiểu: 0)
+       -> ĐÁNH GIÁ: [PASS]
+
+[08/10] Kiểm thử: Số lượng vượt quá giới hạn INT_MAX
+       Tệp: tests/simulation/corpus/corpus_08_quantity_overflow.txt
+       Mã trả về: -7 (Kỳ vọng: LỖI (< 0))
+       Số sản phẩm đã nạp: 0 (Kỳ vọng tối thiểu: 0)
+       -> ĐÁNH GIÁ: [PASS]
+
+[09/10] Kiểm thử: Số lượng âm (< 0)
+       Tệp: tests/simulation/corpus/corpus_09_negative_quantity.txt
+       Mã trả về: -7 (Kỳ vọng: LỖI (< 0))
+       Số sản phẩm đã nạp: 0 (Kỳ vọng tối thiểu: 0)
+       -> ĐÁNH GIÁ: [PASS]
+
+[10/10] Kiểm thử: Đơn giá không hợp lệ (NaN, Infinity, ký tự chữ)
+       Tệp: tests/simulation/corpus/corpus_10_invalid_price.txt
+       Mã trả về: -7 (Kỳ vọng: LỖI (< 0))
+       Số sản phẩm đã nạp: 0 (Kỳ vọng tối thiểu: 0)
+       -> ĐÁNH GIÁ: [PASS]
+
+============================================================
+  KẾT QUẢ TỔNG HỢP SIM-002: 10/10 TEST CASES PASS
+============================================================
+
+STDERR:
+

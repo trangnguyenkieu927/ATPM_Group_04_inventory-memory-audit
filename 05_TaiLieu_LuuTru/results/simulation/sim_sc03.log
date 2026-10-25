@@ -1,0 +1,12 @@
+============================================================
+ SC-03 SIMULATION: HEAP ALLOCATION & CAPACITY DOUBLING      
+============================================================
+Initial list state: count = 0, capacity = 16, items = 0000018673243FC0
+[PASS] TC-SC03-01: Initial capacity correctly initialized (cap = 16)
+[PASS] TC-SC03-02: Filled to capacity (16 items) with count == capacity
+[PASS] TC-SC03-03: First capacity doubling triggered: 16 -> 32 (count=17)
+[PASS] TC-SC03-04: Multiple capacity doublings successful: final cap=64, count=45
+[PASS] TC-SC03-05: Safety Invariant count (45) <= capacity (64) maintained
+------------------------------------------------------------
+SC-03 RESULT: 5/5 tests PASSED (SUCCESS)
+============================================================

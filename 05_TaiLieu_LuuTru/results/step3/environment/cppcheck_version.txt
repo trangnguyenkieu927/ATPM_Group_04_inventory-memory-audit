@@ -1,0 +1,6 @@
+Command: cppcheck --version
+Exit Code: 0
+STDOUT:
+Cppcheck 2.21.0
+STDERR:
+

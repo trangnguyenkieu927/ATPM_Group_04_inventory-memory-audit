@@ -1,0 +1,9 @@
+============================================================
+ [SEEDED_VULNERABILITY] USE-AFTER-FREE DEMO (CWE-416)       
+============================================================
+Con trỏ mượn trỏ tới: 000001E00C3321B0 (Tên: Item 1)
+Địa chỉ mảng mới sau realloc: 000001E00C54C040 (Khối nhớ cũ đã bị free)
+[NGUY HIỂM] Khối nhớ cũ đã bị giải phóng! Con trỏ borrowed_ptr (000001E00C3321B0) là Dangling Pointer!
+Đọc từ con trỏ mượn đã bị vô hiệu hóa (Use-After-Free read)...
+Giá trị đọc: ID = �?3�
+
