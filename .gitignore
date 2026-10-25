@@ -23,3 +23,7 @@ nul
 ~$*.docx
 *.tmp
 
+
+# Tai lieu rieng tu gui thanh vien (khong push len thay)
+BaoCaoCaNhan_*.docx
+HUONG_DAN_THANH_VIEN.*
