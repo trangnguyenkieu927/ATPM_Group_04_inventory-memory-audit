@@ -258,5 +258,199 @@
     "ctl_satisfaction": "18/18 properties TRUE on NuSMV model checker",
     "state_space_coverage": "21/21 states reachable (100% state coverage)",
     "regression_testing": "100% test cases pass on patched v1"
+  },
+  "name": "inventory_memory_safety_audit_v1",
+  "additional_flows": {
+    "M1-v1: Thọ — kiểm tra độ dài trước strlen >= 32 & từ chối an toàn": {
+      "module": "M1_io_pipeline",
+      "member": "Nguyễn Quang Thọ",
+      "msv": "23010162",
+      "story": "Bản vá của Thọ: Đo độ dài trước khi chép bằng strlen. Nếu độ dài >= 32 byte lập tức từ chối; kiểm tra chỉ số token trước khi đọc.",
+      "states": [
+        "m1_nhan_chuoi",
+        "m1_kiem_tra_do_dai",
+        "m1_chep_an_toan",
+        "m1_tu_choi_chuoi_dai",
+        "m1_tach_token_an_toan"
+      ],
+      "initial": [
+        "m1_nhan_chuoi"
+      ],
+      "labeling": {
+        "m1_nhan_chuoi": [
+          "receiving_input"
+        ],
+        "m1_kiem_tra_do_dai": [
+          "checking_guard"
+        ],
+        "m1_chep_an_toan": [
+          "copy_safe",
+          "done"
+        ],
+        "m1_tu_choi_chuoi_dai": [
+          "rejected_safely",
+          "done"
+        ],
+        "m1_tach_token_an_toan": [
+          "token_valid",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m1_nhan_chuoi",
+          "m1_kiem_tra_do_dai"
+        ],
+        [
+          "m1_kiem_tra_do_dai",
+          "m1_chep_an_toan"
+        ],
+        [
+          "m1_kiem_tra_do_dai",
+          "m1_tu_choi_chuoi_dai"
+        ],
+        [
+          "m1_chep_an_toan",
+          "m1_tach_token_an_toan"
+        ],
+        [
+          "m1_chep_an_toan",
+          "m1_chep_an_toan"
+        ],
+        [
+          "m1_tu_choi_chuoi_dai",
+          "m1_tu_choi_chuoi_dai"
+        ],
+        [
+          "m1_tach_token_an_toan",
+          "m1_tach_token_an_toan"
+        ]
+      ]
+    },
+    "M2-v1: Trang — con trỏ tạm tmp + gán NULL sau free (Zero Leak, Zero UAF)": {
+      "module": "M2_heap_lifecycle",
+      "member": "Nguyễn Kiều Trang",
+      "msv": "23010495",
+      "story": "Bản vá của Trang: Dùng con trỏ tạm tmp = realloc. Nếu NULL thì giữ nguyên khối nhớ cũ và thu hồi an toàn; giải phóng xong lập tức gán ptr = NULL.",
+      "states": [
+        "m2_khoi_tao",
+        "m2_danh_sach_day",
+        "m2_realloc_tam",
+        "m2_oom_bao_toan_ram",
+        "m2_realloc_thanh_cong",
+        "m2_giai_phong_an_toan"
+      ],
+      "initial": [
+        "m2_khoi_tao"
+      ],
+      "labeling": {
+        "m2_khoi_tao": [
+          "initialized"
+        ],
+        "m2_danh_sach_day": [
+          "list_full"
+        ],
+        "m2_realloc_tam": [
+          "realloc_temp"
+        ],
+        "m2_oom_bao_toan_ram": [
+          "owner_preserved",
+          "safe_exit",
+          "done"
+        ],
+        "m2_realloc_thanh_cong": [
+          "realloc_ok",
+          "owner_valid"
+        ],
+        "m2_giai_phong_an_toan": [
+          "pointer_nullified",
+          "zero_leak",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m2_khoi_tao",
+          "m2_danh_sach_day"
+        ],
+        [
+          "m2_danh_sach_day",
+          "m2_realloc_tam"
+        ],
+        [
+          "m2_realloc_tam",
+          "m2_oom_bao_toan_ram"
+        ],
+        [
+          "m2_realloc_tam",
+          "m2_realloc_thanh_cong"
+        ],
+        [
+          "m2_realloc_thanh_cong",
+          "m2_giai_phong_an_toan"
+        ],
+        [
+          "m2_oom_bao_toan_ram",
+          "m2_oom_bao_toan_ram"
+        ],
+        [
+          "m2_giai_phong_an_toan",
+          "m2_giai_phong_an_toan"
+        ]
+      ]
+    },
+    "M3-v1: Đô — kiểm tra rào chắn added > INT_MAX - stock & int64": {
+      "module": "M3_arithmetic",
+      "member": "Hà Văn Đô",
+      "msv": "23010406",
+      "story": "Bản vá của Đô: Đặt rào chắn kiểm tra added > INT_MAX - stock trước khi cộng; từ chối số âm; dùng int64_t nhân tỉ lệ giá.",
+      "states": [
+        "m3_nhan_so_luong",
+        "m3_kiem_tra_bien",
+        "m3_cong_don_thanh_cong",
+        "m3_tu_choi_tran_so"
+      ],
+      "initial": [
+        "m3_nhan_so_luong"
+      ],
+      "labeling": {
+        "m3_nhan_so_luong": [
+          "receiving_quantity"
+        ],
+        "m3_kiem_tra_bien": [
+          "checking_bound"
+        ],
+        "m3_cong_don_thanh_cong": [
+          "stock_updated_safely",
+          "done"
+        ],
+        "m3_tu_choi_tran_so": [
+          "overflow_rejected",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m3_nhan_so_luong",
+          "m3_kiem_tra_bien"
+        ],
+        [
+          "m3_kiem_tra_bien",
+          "m3_cong_don_thanh_cong"
+        ],
+        [
+          "m3_kiem_tra_bien",
+          "m3_tu_choi_tran_so"
+        ],
+        [
+          "m3_cong_don_thanh_cong",
+          "m3_cong_don_thanh_cong"
+        ],
+        [
+          "m3_tu_choi_tran_so",
+          "m3_tu_choi_tran_so"
+        ]
+      ]
+    }
   }
 }

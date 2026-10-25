@@ -725,5 +725,273 @@
       "expected_result": "Không lỗi cấu trúc Excel; trạng thái tương thích pipeline phải được xác minh bằng chạy thực tế.",
       "priority": "HIGH"
     }
-  ]
+  ],
+  "name": "inventory_memory_safety_audit_v0",
+  "additional_flows": {
+    "M1-v0: Thọ — strcpy vào buffer 32 byte (CÓ LỖI)": {
+      "module": "M1_io_pipeline",
+      "member": "Nguyễn Quang Thọ",
+      "msv": "23010162",
+      "story": "Nhân viên kho đọc một dòng văn bản sản phẩm từ file hoặc bàn phím vào buffer stack 32 byte bằng hàm strcpy không kiểm tra độ dài.",
+      "states": [
+        "m1_nhan_chuoi",
+        "m1_len_nho_32",
+        "m1_len_bang_32",
+        "m1_len_lon_32",
+        "m1_chep_an_toan",
+        "m1_tran_1_byte",
+        "m1_tran_nhieu_byte",
+        "m1_doc_ngoai_bien_token"
+      ],
+      "initial": [
+        "m1_nhan_chuoi"
+      ],
+      "labeling": {
+        "m1_nhan_chuoi": [
+          "receiving_input"
+        ],
+        "m1_len_nho_32": [
+          "len_safe"
+        ],
+        "m1_len_bang_32": [
+          "len_boundary"
+        ],
+        "m1_len_lon_32": [
+          "len_excessive"
+        ],
+        "m1_chep_an_toan": [
+          "copy_ok",
+          "done"
+        ],
+        "m1_tran_1_byte": [
+          "stack_buffer_overflow",
+          "off_by_one",
+          "violation"
+        ],
+        "m1_tran_nhieu_byte": [
+          "stack_buffer_overflow",
+          "frame_corrupted",
+          "violation"
+        ],
+        "m1_doc_ngoai_bien_token": [
+          "out_of_bounds_read",
+          "violation"
+        ]
+      },
+      "transitions": [
+        [
+          "m1_nhan_chuoi",
+          "m1_len_nho_32"
+        ],
+        [
+          "m1_nhan_chuoi",
+          "m1_len_bang_32"
+        ],
+        [
+          "m1_nhan_chuoi",
+          "m1_len_lon_32"
+        ],
+        [
+          "m1_len_nho_32",
+          "m1_chep_an_toan"
+        ],
+        [
+          "m1_len_bang_32",
+          "m1_tran_1_byte"
+        ],
+        [
+          "m1_len_lon_32",
+          "m1_tran_nhieu_byte"
+        ],
+        [
+          "m1_chep_an_toan",
+          "m1_doc_ngoai_bien_token"
+        ],
+        [
+          "m1_chep_an_toan",
+          "m1_chep_an_toan"
+        ],
+        [
+          "m1_tran_1_byte",
+          "m1_tran_1_byte"
+        ],
+        [
+          "m1_tran_nhieu_byte",
+          "m1_tran_nhieu_byte"
+        ],
+        [
+          "m1_doc_ngoai_bien_token",
+          "m1_doc_ngoai_bien_token"
+        ]
+      ]
+    },
+    "M2-v0: Trang — realloc gán trực tiếp & thiếu NULL sau free (CÓ LỖI)": {
+      "module": "M2_heap_lifecycle",
+      "member": "Nguyễn Kiều Trang",
+      "msv": "23010495",
+      "story": "Nhân viên kho thêm hàng mới khi danh sách 16 ô đã đầy. Trang gọi realloc mở rộng dung lượng. Khi OOM gán list = realloc làm mất địa chỉ gốc gây leak; free xong không xóa con trỏ gây UAF.",
+      "states": [
+        "m2_khoi_tao",
+        "m2_danh_sach_day",
+        "m2_realloc_goi",
+        "m2_oom_null",
+        "m2_mat_con_tro_leak",
+        "m2_realloc_thanh_cong",
+        "m2_giai_phong_xong",
+        "m2_doc_con_tro_treo_uaf"
+      ],
+      "initial": [
+        "m2_khoi_tao"
+      ],
+      "labeling": {
+        "m2_khoi_tao": [
+          "initialized"
+        ],
+        "m2_danh_sach_day": [
+          "list_full"
+        ],
+        "m2_realloc_goi": [
+          "reallocating"
+        ],
+        "m2_oom_null": [
+          "oom_occurred"
+        ],
+        "m2_mat_con_tro_leak": [
+          "memory_leak",
+          "cwe_401",
+          "violation"
+        ],
+        "m2_realloc_thanh_cong": [
+          "realloc_ok"
+        ],
+        "m2_giai_phong_xong": [
+          "freed_without_null"
+        ],
+        "m2_doc_con_tro_treo_uaf": [
+          "use_after_free",
+          "cwe_416",
+          "violation"
+        ]
+      },
+      "transitions": [
+        [
+          "m2_khoi_tao",
+          "m2_danh_sach_day"
+        ],
+        [
+          "m2_danh_sach_day",
+          "m2_realloc_goi"
+        ],
+        [
+          "m2_realloc_goi",
+          "m2_oom_null"
+        ],
+        [
+          "m2_realloc_goi",
+          "m2_realloc_thanh_cong"
+        ],
+        [
+          "m2_oom_null",
+          "m2_mat_con_tro_leak"
+        ],
+        [
+          "m2_realloc_thanh_cong",
+          "m2_giai_phong_xong"
+        ],
+        [
+          "m2_giai_phong_xong",
+          "m2_doc_con_tro_treo_uaf"
+        ],
+        [
+          "m2_mat_con_tro_leak",
+          "m2_mat_con_tro_leak"
+        ],
+        [
+          "m2_doc_con_tro_treo_uaf",
+          "m2_doc_con_tro_treo_uaf"
+        ]
+      ]
+    },
+    "M3-v0: Đô — cộng dồn tồn kho không kiểm tra INT_MAX (CÓ LỖI)": {
+      "module": "M3_arithmetic",
+      "member": "Hà Văn Đô",
+      "msv": "23010406",
+      "story": "Nhân viên kho nhập hàng mới cộng dồn vào tồn kho cũ. Đô dùng phép cộng signed int 32-bit trực tiếp không kiểm tra biên INT_MAX gây lật thành số âm.",
+      "states": [
+        "m3_nhan_so_luong",
+        "m3_so_nhap_hop_le",
+        "m3_so_nhap_am",
+        "m3_cong_don_an_toan",
+        "m3_tran_so_lat_am",
+        "m3_nhan_gia_tran_int"
+      ],
+      "initial": [
+        "m3_nhan_so_luong"
+      ],
+      "labeling": {
+        "m3_nhan_so_luong": [
+          "receiving_quantity"
+        ],
+        "m3_so_nhap_hop_le": [
+          "valid_range"
+        ],
+        "m3_so_nhap_am": [
+          "negative_input",
+          "violation"
+        ],
+        "m3_cong_don_an_toan": [
+          "addition_ok",
+          "done"
+        ],
+        "m3_tran_so_lat_am": [
+          "integer_overflow",
+          "cwe_190",
+          "negative_stock",
+          "violation"
+        ],
+        "m3_nhan_gia_tran_int": [
+          "price_scale_overflow",
+          "violation"
+        ]
+      },
+      "transitions": [
+        [
+          "m3_nhan_so_luong",
+          "m3_so_nhap_hop_le"
+        ],
+        [
+          "m3_nhan_so_luong",
+          "m3_so_nhap_am"
+        ],
+        [
+          "m3_so_nhap_hop_le",
+          "m3_cong_don_an_toan"
+        ],
+        [
+          "m3_so_nhap_hop_le",
+          "m3_tran_so_lat_am"
+        ],
+        [
+          "m3_so_nhap_hop_le",
+          "m3_nhan_gia_tran_int"
+        ],
+        [
+          "m3_cong_don_an_toan",
+          "m3_cong_don_an_toan"
+        ],
+        [
+          "m3_tran_so_lat_am",
+          "m3_tran_so_lat_am"
+        ],
+        [
+          "m3_so_nhap_am",
+          "m3_so_nhap_am"
+        ],
+        [
+          "m3_nhan_gia_tran_int",
+          "m3_nhan_gia_tran_int"
+        ]
+      ]
+    }
+  }
 }

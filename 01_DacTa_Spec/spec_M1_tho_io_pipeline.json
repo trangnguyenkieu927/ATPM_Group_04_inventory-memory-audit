@@ -1,0 +1,165 @@
+{
+  "v0": {
+    "module": "M1_io_pipeline",
+    "member": "Nguyễn Quang Thọ",
+    "msv": "23010162",
+    "story": "Nhân viên kho đọc một dòng văn bản sản phẩm từ file hoặc bàn phím vào buffer stack 32 byte bằng hàm strcpy không kiểm tra độ dài.",
+    "states": [
+      "m1_nhan_chuoi",
+      "m1_len_nho_32",
+      "m1_len_bang_32",
+      "m1_len_lon_32",
+      "m1_chep_an_toan",
+      "m1_tran_1_byte",
+      "m1_tran_nhieu_byte",
+      "m1_doc_ngoai_bien_token"
+    ],
+    "initial": [
+      "m1_nhan_chuoi"
+    ],
+    "labeling": {
+      "m1_nhan_chuoi": [
+        "receiving_input"
+      ],
+      "m1_len_nho_32": [
+        "len_safe"
+      ],
+      "m1_len_bang_32": [
+        "len_boundary"
+      ],
+      "m1_len_lon_32": [
+        "len_excessive"
+      ],
+      "m1_chep_an_toan": [
+        "copy_ok",
+        "done"
+      ],
+      "m1_tran_1_byte": [
+        "stack_buffer_overflow",
+        "off_by_one",
+        "violation"
+      ],
+      "m1_tran_nhieu_byte": [
+        "stack_buffer_overflow",
+        "frame_corrupted",
+        "violation"
+      ],
+      "m1_doc_ngoai_bien_token": [
+        "out_of_bounds_read",
+        "violation"
+      ]
+    },
+    "transitions": [
+      [
+        "m1_nhan_chuoi",
+        "m1_len_nho_32"
+      ],
+      [
+        "m1_nhan_chuoi",
+        "m1_len_bang_32"
+      ],
+      [
+        "m1_nhan_chuoi",
+        "m1_len_lon_32"
+      ],
+      [
+        "m1_len_nho_32",
+        "m1_chep_an_toan"
+      ],
+      [
+        "m1_len_bang_32",
+        "m1_tran_1_byte"
+      ],
+      [
+        "m1_len_lon_32",
+        "m1_tran_nhieu_byte"
+      ],
+      [
+        "m1_chep_an_toan",
+        "m1_doc_ngoai_bien_token"
+      ],
+      [
+        "m1_chep_an_toan",
+        "m1_chep_an_toan"
+      ],
+      [
+        "m1_tran_1_byte",
+        "m1_tran_1_byte"
+      ],
+      [
+        "m1_tran_nhieu_byte",
+        "m1_tran_nhieu_byte"
+      ],
+      [
+        "m1_doc_ngoai_bien_token",
+        "m1_doc_ngoai_bien_token"
+      ]
+    ]
+  },
+  "v1": {
+    "module": "M1_io_pipeline",
+    "member": "Nguyễn Quang Thọ",
+    "msv": "23010162",
+    "story": "Bản vá của Thọ: Đo độ dài trước khi chép bằng strlen. Nếu độ dài >= 32 byte lập tức từ chối; kiểm tra chỉ số token trước khi đọc.",
+    "states": [
+      "m1_nhan_chuoi",
+      "m1_kiem_tra_do_dai",
+      "m1_chep_an_toan",
+      "m1_tu_choi_chuoi_dai",
+      "m1_tach_token_an_toan"
+    ],
+    "initial": [
+      "m1_nhan_chuoi"
+    ],
+    "labeling": {
+      "m1_nhan_chuoi": [
+        "receiving_input"
+      ],
+      "m1_kiem_tra_do_dai": [
+        "checking_guard"
+      ],
+      "m1_chep_an_toan": [
+        "copy_safe",
+        "done"
+      ],
+      "m1_tu_choi_chuoi_dai": [
+        "rejected_safely",
+        "done"
+      ],
+      "m1_tach_token_an_toan": [
+        "token_valid",
+        "done"
+      ]
+    },
+    "transitions": [
+      [
+        "m1_nhan_chuoi",
+        "m1_kiem_tra_do_dai"
+      ],
+      [
+        "m1_kiem_tra_do_dai",
+        "m1_chep_an_toan"
+      ],
+      [
+        "m1_kiem_tra_do_dai",
+        "m1_tu_choi_chuoi_dai"
+      ],
+      [
+        "m1_chep_an_toan",
+        "m1_tach_token_an_toan"
+      ],
+      [
+        "m1_chep_an_toan",
+        "m1_chep_an_toan"
+      ],
+      [
+        "m1_tu_choi_chuoi_dai",
+        "m1_tu_choi_chuoi_dai"
+      ],
+      [
+        "m1_tach_token_an_toan",
+        "m1_tach_token_an_toan"
+      ]
+    ]
+  }
+}

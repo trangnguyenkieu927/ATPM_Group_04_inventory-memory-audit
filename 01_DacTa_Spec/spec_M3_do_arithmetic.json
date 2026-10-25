@@ -1,0 +1,136 @@
+{
+  "v0": {
+    "module": "M3_arithmetic",
+    "member": "Hà Văn Đô",
+    "msv": "23010406",
+    "story": "Nhân viên kho nhập hàng mới cộng dồn vào tồn kho cũ. Đô dùng phép cộng signed int 32-bit trực tiếp không kiểm tra biên INT_MAX gây lật thành số âm.",
+    "states": [
+      "m3_nhan_so_luong",
+      "m3_so_nhap_hop_le",
+      "m3_so_nhap_am",
+      "m3_cong_don_an_toan",
+      "m3_tran_so_lat_am",
+      "m3_nhan_gia_tran_int"
+    ],
+    "initial": [
+      "m3_nhan_so_luong"
+    ],
+    "labeling": {
+      "m3_nhan_so_luong": [
+        "receiving_quantity"
+      ],
+      "m3_so_nhap_hop_le": [
+        "valid_range"
+      ],
+      "m3_so_nhap_am": [
+        "negative_input",
+        "violation"
+      ],
+      "m3_cong_don_an_toan": [
+        "addition_ok",
+        "done"
+      ],
+      "m3_tran_so_lat_am": [
+        "integer_overflow",
+        "cwe_190",
+        "negative_stock",
+        "violation"
+      ],
+      "m3_nhan_gia_tran_int": [
+        "price_scale_overflow",
+        "violation"
+      ]
+    },
+    "transitions": [
+      [
+        "m3_nhan_so_luong",
+        "m3_so_nhap_hop_le"
+      ],
+      [
+        "m3_nhan_so_luong",
+        "m3_so_nhap_am"
+      ],
+      [
+        "m3_so_nhap_hop_le",
+        "m3_cong_don_an_toan"
+      ],
+      [
+        "m3_so_nhap_hop_le",
+        "m3_tran_so_lat_am"
+      ],
+      [
+        "m3_so_nhap_hop_le",
+        "m3_nhan_gia_tran_int"
+      ],
+      [
+        "m3_cong_don_an_toan",
+        "m3_cong_don_an_toan"
+      ],
+      [
+        "m3_tran_so_lat_am",
+        "m3_tran_so_lat_am"
+      ],
+      [
+        "m3_so_nhap_am",
+        "m3_so_nhap_am"
+      ],
+      [
+        "m3_nhan_gia_tran_int",
+        "m3_nhan_gia_tran_int"
+      ]
+    ]
+  },
+  "v1": {
+    "module": "M3_arithmetic",
+    "member": "Hà Văn Đô",
+    "msv": "23010406",
+    "story": "Bản vá của Đô: Đặt rào chắn kiểm tra added > INT_MAX - stock trước khi cộng; từ chối số âm; dùng int64_t nhân tỉ lệ giá.",
+    "states": [
+      "m3_nhan_so_luong",
+      "m3_kiem_tra_bien",
+      "m3_cong_don_thanh_cong",
+      "m3_tu_choi_tran_so"
+    ],
+    "initial": [
+      "m3_nhan_so_luong"
+    ],
+    "labeling": {
+      "m3_nhan_so_luong": [
+        "receiving_quantity"
+      ],
+      "m3_kiem_tra_bien": [
+        "checking_bound"
+      ],
+      "m3_cong_don_thanh_cong": [
+        "stock_updated_safely",
+        "done"
+      ],
+      "m3_tu_choi_tran_so": [
+        "overflow_rejected",
+        "done"
+      ]
+    },
+    "transitions": [
+      [
+        "m3_nhan_so_luong",
+        "m3_kiem_tra_bien"
+      ],
+      [
+        "m3_kiem_tra_bien",
+        "m3_cong_don_thanh_cong"
+      ],
+      [
+        "m3_kiem_tra_bien",
+        "m3_tu_choi_tran_so"
+      ],
+      [
+        "m3_cong_don_thanh_cong",
+        "m3_cong_don_thanh_cong"
+      ],
+      [
+        "m3_tu_choi_tran_so",
+        "m3_tu_choi_tran_so"
+      ]
+    ]
+  }
+}
