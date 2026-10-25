@@ -14,50 +14,50 @@
 
 ---
 
-## 2. CẤU TRÚC THƯ MỤC CHUẨN TIẾNG VIỆT CỦA DỰ ÁN
+## 2. CẤU TRÚC THƯ MỤC DỰ ÁN (CHUẨN NGHIỆP VỤ TIẾNG VIỆT)
 
 ```text
 ATPM_Group_04_inventory-memory-audit/
 │
 ├── 📄 BaoCao_AnToanPhanMem_N04_Group_04.docx   <-- Báo cáo chung của nhóm (mẫu [ATPM]mauchungnhomtutao.docx)
-├── 📄 BaoCaoCaNhan_NguyenKieuTrang.docx        <-- Báo cáo cá nhân Trang (Heap M2)
-├── 📄 BaoCaoCaNhan_NguyenQuangTho.docx         <-- Báo cáo cá nhân Thọ (I/O M1)
-├── 📄 BaoCaoCaNhan_HaVanDo.docx                <-- Báo cáo cá nhân Đô (Arithmetic M3)
-├── 📄 README.md                                <-- Hướng dẫn tổng quan và nghiệm thu
+├── 📄 BaoCaoCaNhan_NguyenKieuTrang.docx        <-- Báo cáo cá nhân Trang (Module 2: Heap)
+├── 📄 BaoCaoCaNhan_NguyenQuangTho.docx         <-- Báo cáo cá nhân Thọ (Module 1: I/O Buffer)
+├── 📄 BaoCaoCaNhan_HaVanDo.docx                <-- Báo cáo cá nhân Đô (Module 3: Số học)
+├── 📄 README.md                                <-- Hướng dẫn chạy lại và link GitHub
 │
 ├── 📁 01_DacTa_Spec/                           <-- [CHƯƠNG 1] Bảng đặc tả yêu cầu & ràng buộc
-│   ├── 📄 quanly_khohang_v0.xlsx               (File Excel 10 sheet đặc tả v0 - có rủi ro)
-│   ├── 📄 quanly_khohang_v1.xlsx               (File Excel 10 sheet đặc tả v1 - đã vá)
+│   ├── 📄 quanly_khohang_v0.xlsx               (Excel 10 sheet đặc tả v0 - có rủi ro)
+│   ├── 📄 quanly_khohang_v1.xlsx               (Excel 10 sheet đặc tả v1 - đã vá)
 │   ├── 📄 quanly_khohang_v0.json               (File JSON đặc tả v0 cho phần mềm)
 │   ├── 📄 quanly_khohang_v1.json               (File JSON đặc tả v1 cho phần mềm)
-│   ├── 📄 dacta_M1_tho_doc_chuoi_buffer.json   (Đặc tả riêng M1: Thọ - I/O Buffer Stack)
-│   ├── 📄 dacta_M2_trang_cap_phat_heap.json    (Đặc tả riêng M2: Trang - Heap & Con trỏ)
-│   ├── 📄 dacta_M3_do_tinh_ton_kho.json        (Đặc tả riêng M3: Đô - Số học Tồn kho)
+│   ├── 📄 dacta_M1_doc_chuoi_buffer.json       (Đặc tả riêng M1: Đọc chuỗi, Buffer Stack)
+│   ├── 📄 dacta_M2_cap_phat_heap.json          (Đặc tả riêng M2: Cấp phát Heap & Con trỏ)
+│   ├── 📄 dacta_M3_tinh_ton_kho.json           (Đặc tả riêng M3: Số học Tồn kho)
 │   └── 📄 ve_so_do_kripke.py                   (Script vẽ sơ đồ trạng thái Kripke)
 │
 ├── 📁 02_KiemChung_MoHinh/                     <-- [CHƯƠNG 1] Kiểm chứng Kripke, CTL & SMT Z3
 │   ├── 📄 chay_kiem_chung_kripke.py            (Script chạy kiểm chứng CTL: 18/18 TRUE)
 │   ├── 📄 kiem_chung_ctl_bmc.py                (Kiểm chứng thuộc tính AG(!error) đạt CT)
-│   └── 📄 kiem_tra_so_hoc_z3.py                (Z3 SMT đối chứng: v0 SAT -> v1 UNSAT)
+│   └── 📄 kiem_tra_so_hoc_z3.py                (Z3 SMT kiểm tra tràn số: v0 SAT -> v1 UNSAT)
 │
 ├── 📁 03_KiemToan_MaNguon_C/                   <-- [CHƯƠNG 2] Mã nguồn kiểm toán C v0 vs v1
 │   ├── 📁 v0_ban_loi/                          (Bản gốc C có lỗi - mô phỏng phản ví dụ)
-│   │   ├── 📄 m1_tho_doc_chuoi_v0.c            (M1: Thọ - lỗi tràn mảng do dùng strcpy)
-│   │   ├── 📄 m2_trang_cap_phat_heap_v0.c      (M2: Trang - lỗi realloc OOM mất con trỏ & UAF)
-│   │   └── 📄 m3_do_tinh_ton_kho_v0.c          (M3: Đô - lỗi cộng dồn tràn INT_MAX lật số âm)
+│   │   ├── 📄 m1_doc_chuoi_buffer_v0.c         (M1: Lỗi tràn mảng do dùng strcpy)
+│   │   ├── 📄 m2_cap_phat_heap_v0.c            (M2: Lỗi realloc OOM mất con trỏ & UAF)
+│   │   └── 📄 m3_tinh_ton_kho_v0.c             (M3: Lỗi cộng dồn tràn INT_MAX lật số âm)
 │   │
 │   ├── 📁 v1_ban_va/                           (Bản đã vá lỗi an toàn 100%)
-│   │   ├── 📄 m1_tho_doc_chuoi_v1.c            (M1: Thọ - thêm chặn strlen >= 32)
-│   │   ├── 📄 m2_trang_cap_phat_heap_v1.c      (M2: Trang - con trỏ tạm tmp & gán NULL)
-│   │   └── 📄 m3_do_tinh_ton_kho_v1.c          (M3: Đô - chặn trước tràn số MAX - stock)
+│   │   ├── 📄 m1_doc_chuoi_buffer_v1.c         (M1: Thêm chặn trước strlen >= 32)
+│   │   ├── 📄 m2_cap_phat_heap_v1.c            (M2: Con trỏ tạm tmp & gán NULL sau free)
+│   │   └── 📄 m3_tinh_ton_kho_v1.c             (M3: Chặn trước tràn số MAX - stock)
 │   │
 │   ├── 📄 chay_asan.bat                        (Biên dịch Clang / GCC AddressSanitizer)
 │   └── 📄 chay_kiem_thu_doi_chung.py           (Chạy bộ test case kiểm toán đối chứng)
 │
 ├── 📁 04_KetQua_MinhChung/                     <-- [BẰNG CHỨNG THỰC NGHIỆM]
-│   ├── 📁 anh_chay_tool_thay/                  (Ảnh giao diện chạy test trên tool của Thầy)
+│   ├── 📁 anh_chay_tool_thay/                  (16 ảnh giao diện test case trên tool của Thầy)
 │   ├── 📁 anh_minh_chung_asan/                 (Ảnh/log bắt lỗi AddressSanitizer)
-│   ├── 📁 so_do_kripke/                        (Ảnh sơ đồ Kripke tổng và 3 mô hình con)
+│   ├── 📁 so_do_kripke/                        (Ảnh sơ đồ Kripke tổng và mô hình con)
 │   └── 📁 logs/                                (Log chạy ASan, UBSan, NuSMV, Z3)
 │
 └── 📁 05_TaiLieu_LuuTru/                       <-- Lưu trữ các tệp shims, dll, tài liệu cũ
@@ -67,4 +67,4 @@ ATPM_Group_04_inventory-memory-audit/
 
 ## 3. LINK REPOSITORY GITHUB
 - **URL Repo:** [https://github.com/trangnguyenkieu927/ATPM_Group_04_inventory-memory-audit.git](https://github.com/trangnguyenkieu927/ATPM_Group_04_inventory-memory-audit.git)
-- **Nhánh hiện tại:** `refactor/clean-project-structure`
+- **Nhánh kiểm toán:** `refactor/clean-project-structure`
