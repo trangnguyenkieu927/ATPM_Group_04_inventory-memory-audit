@@ -441,5 +441,67 @@
     "AG(!integer_overflow)",
     "AG(!negative_input)",
     "EF(sum_safe)"
+  ],
+  "functions": [
+    {
+      "name": "update_stock_quantity",
+      "language": "c",
+      "kind": "arithmetic",
+      "params": [
+        "old_stock",
+        "added_quantity"
+      ]
+    }
+  ],
+  "arithmetic_checks": [
+    {
+      "name": "stock_addition_overflow",
+      "int_vars": [
+        "old_stock",
+        "added_quantity"
+      ],
+      "condition": "old_stock >= 0 and old_stock <= 2147483647 and added_quantity >= 1 and added_quantity <= 2147483647 and old_stock + added_quantity > 2147483647",
+      "overflow_expr": "old_stock + added_quantity"
+    },
+    {
+      "name": "negative_quantity_check",
+      "int_vars": [
+        "added_quantity"
+      ],
+      "condition": "added_quantity < 0",
+      "overflow_expr": "added_quantity"
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "TC-M3-01",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-4"
+      ],
+      "title": "Cộng dồn số lượng hàng hóa gây tràn số nguyên có dấu 32-bit",
+      "preconditions": "old_stock = 2.147.483.640, added_quantity = 100",
+      "steps": [
+        "Chạy check_satisfiability() trên stock_addition_overflow (Chương 3 Z3)",
+        "Kiểm tra AG(!integer_overflow) trên luồng M3-v0"
+      ],
+      "expected_result": "v0: VI PHẠM (CWE-190 Signed Integer Overflow), kết quả lật âm; v1: ĐÚNG (chặn trước khi cộng)",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M3-02",
+      "requirement_ids": [
+        "REQ-3",
+        "REQ-5"
+      ],
+      "title": "Từ chối số lượng nhập hàng là số âm",
+      "preconditions": "added_quantity = -50",
+      "steps": [
+        "Kiểm tra AG(!negative_input) trên luồng M3-v0",
+        "Kiểm tra lại trên luồng M3-v1"
+      ],
+      "expected_result": "v0: VI PHẠM (nhận số âm); v1: ĐÚNG (rào chắn từ chối ngay lập tức)",
+      "priority": "HIGH"
+    }
   ]
 }

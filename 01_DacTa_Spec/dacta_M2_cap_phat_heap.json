@@ -441,5 +441,81 @@
     "AG(!memory_leak)",
     "AG(!use_after_free)",
     "EF(realloc_ok)"
+  ],
+  "functions": [
+    {
+      "name": "expand_stock_items",
+      "language": "c",
+      "kind": "alloc_release",
+      "params": [],
+      "buffer_size": 16,
+      "bug": "memory-leak"
+    },
+    {
+      "name": "release_stock_items",
+      "language": "c",
+      "kind": "alloc_release",
+      "params": [],
+      "buffer_size": 16,
+      "bug": "use-after-free"
+    }
+  ],
+  "arithmetic_checks": [
+    {
+      "name": "heap_alloc_bytes",
+      "int_vars": [
+        "new_capacity",
+        "item_size"
+      ],
+      "condition": "new_capacity >= 1 and item_size == 48 and new_capacity * item_size > 2147483647",
+      "overflow_expr": "new_capacity * item_size"
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "TC-M2-01",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-4"
+      ],
+      "title": "Kiểm toán tái cấp phát bộ nhớ mảng động khi OOM (realloc OOM leak)",
+      "preconditions": "Hàm expand_stock_items (v0 gán trực tiếp list = realloc, v1 dùng tmp)",
+      "steps": [
+        "Nạp dacta_M2_cap_phat_heap.json vào tab Ch1",
+        "Chọn luồng M2-v0, kiểm tra AG(!memory_leak) và AG(!violation)",
+        "Chuyển sang luồng M2-v1, kiểm tra lại"
+      ],
+      "expected_result": "M2-v0: VI PHẠM (CWE-401); M2-v1: ĐÚNG (khối nhớ cũ được bảo toàn, 0 leak)",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-02",
+      "requirement_ids": [
+        "REQ-3",
+        "REQ-5"
+      ],
+      "title": "Kiểm toán giải phóng bộ nhớ và đọc con trỏ treo (Use-After-Free)",
+      "preconditions": "Hàm release_stock_items (v0 không xóa con trỏ, v1 gán ptr = NULL)",
+      "steps": [
+        "Kiểm tra AG(!use_after_free) trên luồng M2-v0",
+        "Chạy check_c_source() trên hàm release_stock_items",
+        "Kiểm tra lại trên luồng M2-v1"
+      ],
+      "expected_result": "M2-v0: VI PHẠM (CWE-416); C Static Checker phát hiện use-after-free; M2-v1: ĐÚNG",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-03",
+      "requirement_ids": [
+        "REQ-6"
+      ],
+      "title": "Kiểm toán tràn số khi tính kích thước cấp phát Heap",
+      "preconditions": "Điều kiện SMT heap_alloc_bytes: new_capacity * item_size",
+      "steps": [
+        "Chạy check_satisfiability() trên điều kiện heap_alloc_bytes (Chương 3 Z3)"
+      ],
+      "expected_result": "SAT: Phát hiện tổ hợp nghiệm gây tràn số vượt ngưỡng int32 khi cấp phát heap",
+      "priority": "HIGH"
+    }
   ]
 }

@@ -385,5 +385,49 @@
     "AG(!violation)",
     "AG(!stack_buffer_overflow)",
     "AG(!off_by_one)"
+  ],
+  "functions": [
+    {
+      "name": "parse_voucher_id",
+      "language": "c",
+      "kind": "buffer_copy",
+      "params": [
+        "input_str"
+      ],
+      "buffer_size": 16,
+      "bug": "buffer-overflow"
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "TC-M1-01",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-3"
+      ],
+      "title": "Chép chuỗi mã phiếu vượt quá kích thước bộ đệm Stack 16 byte",
+      "preconditions": "Hàm parse_voucher_id dùng strcpy (v0) / strncpy (v1)",
+      "steps": [
+        "Chạy check_c_source() trên hàm parse_voucher_id",
+        "Kiểm tra AG(!stack_buffer_overflow) trên luồng M1-v0",
+        "Kiểm tra lại trên luồng M1-v1"
+      ],
+      "expected_result": "v0: dangerous-function strcpy (CWE-120/121), VI PHẠM; v1: 0 phát hiện, ĐÚNG",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-02",
+      "requirement_ids": [
+        "REQ-4"
+      ],
+      "title": "Lỗi Off-by-one khi chuỗi có độ dài đúng bằng kích thước buffer",
+      "preconditions": "len(input_str) == 16, ghi đè byte ranh giới null terminator",
+      "steps": [
+        "Kiểm tra AG(!off_by_one) trên luồng M1-v0",
+        "Kiểm tra lại trên luồng M1-v1"
+      ],
+      "expected_result": "v0: VI PHẠM (CWE-193 Off-by-one); v1: ĐÚNG (ép gán null terminator)",
+      "priority": "HIGH"
+    }
   ]
 }
