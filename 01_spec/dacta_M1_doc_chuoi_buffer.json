@@ -1,37 +1,37 @@
 {
   "name": "dacta_M1_doc_chuoi_buffer",
-  "description": "Hệ thống tiếp nhận dữ liệu mã phiếu kho hàng (M1 - Nguyễn Quang Thọ - MSV: 23010162): tiếp nhận mã phiếu kho từ nguồn ngoài vào bộ đệm Stack (H1). Bản v0 dùng strcpy không giới hạn kích thước gây Stack Buffer Overflow (CWE-121) và Off-by-one (CWE-193). Bản v1 dùng strncpy an toàn và ép null byte cuối chuỗi.",
+  "description": "M1 - I/O Pipeline: tiep nhan ma phieu kho vao buffer stack 32 byte. v0: ingest_raw_line_v0 bo qua cap va dung strcpy, co the gay CWE-120/CWE-121 va tran dung 1 byte khi len=32 (tinh ca NUL). v1: ingest_raw_line_v1 kiem tra dst, raw_line, cap va len < cap truoc khi memcpy, sau do ghi NUL. Mo hinh Kripke la truong hop truu tuong voi cap=32.",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Hệ thống phải có thể tiến đến trạng thái chép chuỗi thành công từ trạng thái nhận chuỗi đầu vào: EF(copy_ok | copy_safe)",
+      "text": "Tu trang thai nhan chuoi, ton tai duong di den trang thai sao chep thanh cong: EF(copy_ok) (v0) / EF(copy_safe) (v1).",
       "category": "functional",
       "priority": "HIGH"
     },
     {
       "id": "REQ-2",
-      "text": "Hệ thống không được rơi vào deadlock ở bất kỳ trạng thái nào trong chu trình đọc chuỗi: AF(done)",
+      "text": "Moi duong di cuoi cung den trang thai ket thuc (thanh cong, tu choi, hoac loi duoc ghi nhan): AF(done). Day la tinh chat ket thuc, khong dong nghia rieng voi khong deadlock.",
       "category": "liveness",
       "priority": "HIGH"
     },
     {
       "id": "REQ-3",
-      "text": "Trạng thái vi phạm tràn bộ đệm (violation, stack_buffer_overflow) không được xảy ra ở bất kỳ trạng thái tương lai nào: AG(!violation)",
+      "text": "Khong co trang thai tran bo dem co the dat toi: AG(!violation). Du kien FALSE tren mo hinh v0 va TRUE tren mo hinh v1.",
       "category": "safety",
       "priority": "HIGH"
     },
     {
       "id": "REQ-4",
-      "text": "Hàm đọc mã phiếu không được ghi đè byte ranh giới khi mã dài đúng bằng dung lượng bộ đệm (CWE-193 Off-by-one): AG(!off_by_one)",
+      "text": "Khong ghi vuot 1 byte khi len=32 (can 33 byte ke ca NUL): AG(!off_by_one). Du kien FALSE tren v0 va TRUE tren v1.",
       "category": "memory",
       "priority": "HIGH"
     }
   ],
   "states": [
     "m1_nhan_chuoi",
-    "m1_len_nho_16",
-    "m1_len_bang_16",
-    "m1_len_lon_16",
+    "m1_len_nho_32",
+    "m1_len_bang_32",
+    "m1_len_lon_32",
     "m1_chep_an_toan",
     "m1_tran_1_byte",
     "m1_tran_nhieu_byte"
@@ -43,13 +43,13 @@
     "m1_nhan_chuoi": [
       "receiving_input"
     ],
-    "m1_len_nho_16": [
+    "m1_len_nho_32": [
       "len_safe"
     ],
-    "m1_len_bang_16": [
+    "m1_len_bang_32": [
       "len_boundary"
     ],
-    "m1_len_lon_16": [
+    "m1_len_lon_32": [
       "len_excessive"
     ],
     "m1_chep_an_toan": [
@@ -59,37 +59,38 @@
     "m1_tran_1_byte": [
       "stack_buffer_overflow",
       "off_by_one",
-      "violation"
+      "violation",
+      "done"
     ],
     "m1_tran_nhieu_byte": [
       "stack_buffer_overflow",
-      "frame_corrupted",
-      "violation"
+      "violation",
+      "done"
     ]
   },
   "transitions": [
     [
       "m1_nhan_chuoi",
-      "m1_len_nho_16"
+      "m1_len_nho_32"
     ],
     [
       "m1_nhan_chuoi",
-      "m1_len_bang_16"
+      "m1_len_bang_32"
     ],
     [
       "m1_nhan_chuoi",
-      "m1_len_lon_16"
+      "m1_len_lon_32"
     ],
     [
-      "m1_len_nho_16",
+      "m1_len_nho_32",
       "m1_chep_an_toan"
     ],
     [
-      "m1_len_bang_16",
+      "m1_len_bang_32",
       "m1_tran_1_byte"
     ],
     [
-      "m1_len_lon_16",
+      "m1_len_lon_32",
       "m1_tran_nhieu_byte"
     ],
     [
@@ -106,13 +107,13 @@
     ]
   ],
   "flows": {
-    "M1-v0: Cài lỗi có chủ đích (CWE-121 Overflow & CWE-193 Off-by-one)": {
-      "description": "Bản v0 của Thọ: Nhân viên kho đọc mã phiếu kho vào bộ đệm Stack 16 byte bằng hàm strcpy không kiểm tra độ dài. Khi chuỗi nhập dài hơn 15 byte, bộ đệm bị tràn ghi đè lên con trỏ khung stack frame gây Stack Buffer Overflow (CWE-121) và Off-by-one (CWE-193).",
+    "M1-v0: strcpy khong kiem tra cap (CWE-120/CWE-121; bien 1 byte CWE-193)": {
+      "description": "Mo hinh v0 voi buffer stack 32 byte: len<=31 an toan; len=32 sao chep 33 byte (tinh NUL), vuot 1 byte; len>=33 vuot nhieu byte. Vi pham bo nho khong nhat thiet gay crash.",
       "states": [
         "m1_nhan_chuoi",
-        "m1_len_nho_16",
-        "m1_len_bang_16",
-        "m1_len_lon_16",
+        "m1_len_nho_32",
+        "m1_len_bang_32",
+        "m1_len_lon_32",
         "m1_chep_an_toan",
         "m1_tran_1_byte",
         "m1_tran_nhieu_byte"
@@ -124,13 +125,13 @@
         "m1_nhan_chuoi": [
           "receiving_input"
         ],
-        "m1_len_nho_16": [
+        "m1_len_nho_32": [
           "len_safe"
         ],
-        "m1_len_bang_16": [
+        "m1_len_bang_32": [
           "len_boundary"
         ],
-        "m1_len_lon_16": [
+        "m1_len_lon_32": [
           "len_excessive"
         ],
         "m1_chep_an_toan": [
@@ -140,37 +141,38 @@
         "m1_tran_1_byte": [
           "stack_buffer_overflow",
           "off_by_one",
-          "violation"
+          "violation",
+          "done"
         ],
         "m1_tran_nhieu_byte": [
           "stack_buffer_overflow",
-          "frame_corrupted",
-          "violation"
+          "violation",
+          "done"
         ]
       },
       "transitions": [
         [
           "m1_nhan_chuoi",
-          "m1_len_nho_16"
+          "m1_len_nho_32"
         ],
         [
           "m1_nhan_chuoi",
-          "m1_len_bang_16"
+          "m1_len_bang_32"
         ],
         [
           "m1_nhan_chuoi",
-          "m1_len_lon_16"
+          "m1_len_lon_32"
         ],
         [
-          "m1_len_nho_16",
+          "m1_len_nho_32",
           "m1_chep_an_toan"
         ],
         [
-          "m1_len_bang_16",
+          "m1_len_bang_32",
           "m1_tran_1_byte"
         ],
         [
-          "m1_len_lon_16",
+          "m1_len_lon_32",
           "m1_tran_nhieu_byte"
         ],
         [
@@ -187,8 +189,8 @@
         ]
       ]
     },
-    "M1-v1: Bản vá an toàn phòng thủ (Giới hạn kích thước & Gán null)": {
-      "description": "Bản v1 của Thọ: Thay thế strcpy bằng strncpy(dest, src, sizeof(dest) - 1) kết hợp ép gán byte kết thúc dest[sizeof(dest) - 1] = '\\0'. Kiểm tra chặt chẽ biên độ dài chuỗi trước khi chép. Triệt tiêu hoàn toàn lỗi tràn bộ đệm.",
+    "M1-v1: kiem tra len < cap truoc memcpy": {
+      "description": "Mo hinh v1 voi cap=32: len<=31 duoc sao chep va them NUL; len>=32 bi tu choi. Khop ingest_raw_line_v1 dung strlen, memcpy va dst[len]='\\0'; khong dung strncpy.",
       "states": [
         "m1_nhan_chuoi",
         "m1_kiem_tra_bien",
@@ -243,9 +245,9 @@
   "state_machine": {
     "states": [
       "m1_nhan_chuoi",
-      "m1_len_nho_16",
-      "m1_len_bang_16",
-      "m1_len_lon_16",
+      "m1_len_nho_32",
+      "m1_len_bang_32",
+      "m1_len_lon_32",
       "m1_chep_an_toan",
       "m1_tran_1_byte",
       "m1_tran_nhieu_byte"
@@ -257,13 +259,13 @@
       "m1_nhan_chuoi": [
         "receiving_input"
       ],
-      "m1_len_nho_16": [
+      "m1_len_nho_32": [
         "len_safe"
       ],
-      "m1_len_bang_16": [
+      "m1_len_bang_32": [
         "len_boundary"
       ],
-      "m1_len_lon_16": [
+      "m1_len_lon_32": [
         "len_excessive"
       ],
       "m1_chep_an_toan": [
@@ -273,37 +275,38 @@
       "m1_tran_1_byte": [
         "stack_buffer_overflow",
         "off_by_one",
-        "violation"
+        "violation",
+        "done"
       ],
       "m1_tran_nhieu_byte": [
         "stack_buffer_overflow",
-        "frame_corrupted",
-        "violation"
+        "violation",
+        "done"
       ]
     },
     "transitions": [
       [
         "m1_nhan_chuoi",
-        "m1_len_nho_16"
+        "m1_len_nho_32"
       ],
       [
         "m1_nhan_chuoi",
-        "m1_len_bang_16"
+        "m1_len_bang_32"
       ],
       [
         "m1_nhan_chuoi",
-        "m1_len_lon_16"
+        "m1_len_lon_32"
       ],
       [
-        "m1_len_nho_16",
+        "m1_len_nho_32",
         "m1_chep_an_toan"
       ],
       [
-        "m1_len_bang_16",
+        "m1_len_bang_32",
         "m1_tran_1_byte"
       ],
       [
-        "m1_len_lon_16",
+        "m1_len_lon_32",
         "m1_tran_nhieu_byte"
       ],
       [
@@ -321,8 +324,8 @@
     ]
   },
   "additional_flows": {
-    "M1-v1: Bản vá an toàn phòng thủ (Giới hạn kích thước & Gán null)": {
-      "description": "Bản v1 của Thọ: Thay thế strcpy bằng strncpy(dest, src, sizeof(dest) - 1) kết hợp ép gán byte kết thúc dest[sizeof(dest) - 1] = '\\0'. Kiểm tra chặt chẽ biên độ dài chuỗi trước khi chép. Triệt tiêu hoàn toàn lỗi tràn bộ đệm.",
+    "M1-v1: kiem tra len < cap truoc memcpy": {
+      "description": "Mo hinh v1 voi cap=32: len<=31 duoc sao chep va them NUL; len>=32 bi tu choi. Khop ingest_raw_line_v1 dung strlen, memcpy va dst[len]='\\0'; khong dung strncpy.",
       "states": [
         "m1_nhan_chuoi",
         "m1_kiem_tra_bien",
@@ -388,46 +391,116 @@
   ],
   "functions": [
     {
-      "name": "parse_voucher_id",
+      "name": "ingest_raw_line_v0 / ingest_raw_line_v1",
       "language": "c",
       "kind": "buffer_copy",
       "params": [
-        "input_str"
+        "dst",
+        "cap",
+        "raw_line"
       ],
-      "buffer_size": 16,
-      "bug": "buffer-overflow"
+      "buffer_size": 32,
+      "bug": "buffer-overflow in v0 when len >= cap",
+      "fix": "v1 rejects len >= cap before memcpy"
     }
   ],
   "test_cases": [
     {
       "id": "TC-M1-01",
       "requirement_ids": [
-        "REQ-1",
-        "REQ-3"
+        "REQ-1"
       ],
-      "title": "Chép chuỗi mã phiếu vượt quá kích thước bộ đệm Stack 16 byte",
-      "preconditions": "Hàm parse_voucher_id dùng strcpy (v0) / strncpy (v1)",
+      "title": "Chuoi rong",
+      "preconditions": "dst la char buffer[32], cap=32, raw_line la chuoi C co NUL",
       "steps": [
-        "Chạy check_c_source() trên hàm parse_voucher_id",
-        "Kiểm tra AG(!stack_buffer_overflow) trên luồng M1-v0",
-        "Kiểm tra lại trên luồng M1-v1"
+        "Tao chuoi dau vao dai 0 byte ASCII",
+        "Chay v0 voi ASan (neu moi truong ho tro) va luu log",
+        "Chay v1 voi cung input, ghi ma tra ve va kiem tra buffer"
       ],
-      "expected_result": "v0: dangerous-function strcpy (CWE-120/121), VI PHẠM; v1: 0 phát hiện, ĐÚNG",
+      "expected_result": "v0/v1: tra 0, buffer ket thuc NUL",
       "priority": "HIGH"
     },
     {
       "id": "TC-M1-02",
       "requirement_ids": [
+        "REQ-1",
+        "REQ-3"
+      ],
+      "title": "Chuoi dai 31 byte (bien hop le)",
+      "preconditions": "dst la char buffer[32], cap=32, raw_line la chuoi C co NUL",
+      "steps": [
+        "Tao chuoi dau vao dai 31 byte ASCII",
+        "Chay v0 voi ASan (neu moi truong ho tro) va luu log",
+        "Chay v1 voi cung input, ghi ma tra ve va kiem tra buffer"
+      ],
+      "expected_result": "v1: tra 31, khong ghi vuot buffer",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-03",
+      "requirement_ids": [
+        "REQ-3",
         "REQ-4"
       ],
-      "title": "Lỗi Off-by-one khi chuỗi có độ dài đúng bằng kích thước buffer",
-      "preconditions": "len(input_str) == 16, ghi đè byte ranh giới null terminator",
+      "title": "Chuoi dai 32 byte (tran 1 byte NUL trong v0)",
+      "preconditions": "dst la char buffer[32], cap=32, raw_line la chuoi C co NUL",
       "steps": [
-        "Kiểm tra AG(!off_by_one) trên luồng M1-v0",
-        "Kiểm tra lại trên luồng M1-v1"
+        "Tao chuoi dau vao dai 32 byte ASCII",
+        "Chay v0 voi ASan (neu moi truong ho tro) va luu log",
+        "Chay v1 voi cung input, ghi ma tra ve va kiem tra buffer"
       ],
-      "expected_result": "v0: VI PHẠM (CWE-193 Off-by-one); v1: ĐÚNG (ép gán null terminator)",
+      "expected_result": "v0: truy cap ghi ngoai bien (ASan co the phat hien); v1: tra -2",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-04",
+      "requirement_ids": [
+        "REQ-3"
+      ],
+      "title": "Chuoi dai 33 byte (tran nhieu byte trong v0)",
+      "preconditions": "dst la char buffer[32], cap=32, raw_line la chuoi C co NUL",
+      "steps": [
+        "Tao chuoi dau vao dai 33 byte ASCII",
+        "Chay v0 voi ASan (neu moi truong ho tro) va luu log",
+        "Chay v1 voi cung input, ghi ma tra ve va kiem tra buffer"
+      ],
+      "expected_result": "v0: truy cap ghi ngoai bien; v1: tra -2",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-05",
+      "requirement_ids": [
+        "REQ-3"
+      ],
+      "title": "Chuoi dai 100 byte",
+      "preconditions": "dst la char buffer[32], cap=32, raw_line la chuoi C co NUL",
+      "steps": [
+        "Tao chuoi dau vao dai 100 byte ASCII",
+        "Chay v0 voi ASan (neu moi truong ho tro) va luu log",
+        "Chay v1 voi cung input, ghi ma tra ve va kiem tra buffer"
+      ],
+      "expected_result": "v0: truy cap ghi ngoai bien; v1: tra -2",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-06",
+      "requirement_ids": [
+        "REQ-3"
+      ],
+      "title": "Con tro dst NULL",
+      "preconditions": "cap=32, dst=NULL, raw_line=\"ABC\"",
+      "steps": [
+        "Goi v1 voi dst=NULL"
+      ],
+      "expected_result": "v1 tra -1; khong truy cap dst",
       "priority": "HIGH"
     }
+  ],
+  "model_assumptions": [
+    "Mo hinh co dinh cap=32, tuong ung char buffer[32] o caller; ham C thuc te nhan cap va khong tu biet dung luong dst.",
+    "Chi tinh chuoi ASCII/byte co NUL ket thuc; strlen tren nguon khong NUL khong nam trong pham vi mo hinh.",
+    "Trang thai vi pham mo ta ghi ngoai bien, khong khang dinh crash hay ghi de stack frame.",
+    "Cac trang thai ket thuc co self-loop de quan he Kripke la total.",
+    "Mo hinh nay tap trung SC-01 sao chep buffer, chua bao gom SC-02 get_token_field CWE-125."
   ]
 }
