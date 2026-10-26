@@ -197,5 +197,165 @@
         "m2_giai_phong_an_toan"
       ]
     ]
+  },
+  "state_machine": {
+    "states": [
+      "m2_khoi_tao",
+      "m2_danh_sach_day",
+      "m2_realloc_goi",
+      "m2_oom_null",
+      "m2_mat_con_tro_leak",
+      "m2_realloc_thanh_cong",
+      "m2_giai_phong_xong",
+      "m2_doc_con_tro_treo_uaf"
+    ],
+    "initial": [
+      "m2_khoi_tao"
+    ],
+    "labeling": {
+      "m2_khoi_tao": [
+        "initialized"
+      ],
+      "m2_danh_sach_day": [
+        "list_full"
+      ],
+      "m2_realloc_goi": [
+        "reallocating"
+      ],
+      "m2_oom_null": [
+        "oom_occurred"
+      ],
+      "m2_mat_con_tro_leak": [
+        "memory_leak",
+        "cwe_401",
+        "violation"
+      ],
+      "m2_realloc_thanh_cong": [
+        "realloc_ok"
+      ],
+      "m2_giai_phong_xong": [
+        "freed_without_null"
+      ],
+      "m2_doc_con_tro_treo_uaf": [
+        "use_after_free",
+        "cwe_416",
+        "violation"
+      ]
+    },
+    "transitions": [
+      [
+        "m2_khoi_tao",
+        "m2_danh_sach_day"
+      ],
+      [
+        "m2_danh_sach_day",
+        "m2_realloc_goi"
+      ],
+      [
+        "m2_realloc_goi",
+        "m2_oom_null"
+      ],
+      [
+        "m2_realloc_goi",
+        "m2_realloc_thanh_cong"
+      ],
+      [
+        "m2_oom_null",
+        "m2_mat_con_tro_leak"
+      ],
+      [
+        "m2_realloc_thanh_cong",
+        "m2_giai_phong_xong"
+      ],
+      [
+        "m2_giai_phong_xong",
+        "m2_doc_con_tro_treo_uaf"
+      ],
+      [
+        "m2_mat_con_tro_leak",
+        "m2_mat_con_tro_leak"
+      ],
+      [
+        "m2_doc_con_tro_treo_uaf",
+        "m2_doc_con_tro_treo_uaf"
+      ]
+    ]
+  },
+  "safety_properties": [
+    "AG(!violation)",
+    "AG(!memory_leak)",
+    "AG(!use_after_free)",
+    "AF(done)",
+    "EF(realloc_ok)"
+  ],
+  "additional_flows": {
+    "M2-v1: Bản vá của Trang — con trỏ tạm tmp + gán NULL": {
+      "states": [
+        "m2_khoi_tao",
+        "m2_danh_sach_day",
+        "m2_realloc_tam",
+        "m2_oom_bao_toan_ram",
+        "m2_realloc_thanh_cong",
+        "m2_giai_phong_an_toan"
+      ],
+      "initial": [
+        "m2_khoi_tao"
+      ],
+      "labeling": {
+        "m2_khoi_tao": [
+          "initialized"
+        ],
+        "m2_danh_sach_day": [
+          "list_full"
+        ],
+        "m2_realloc_tam": [
+          "realloc_temp"
+        ],
+        "m2_oom_bao_toan_ram": [
+          "owner_preserved",
+          "safe_exit",
+          "done"
+        ],
+        "m2_realloc_thanh_cong": [
+          "realloc_ok",
+          "owner_valid"
+        ],
+        "m2_giai_phong_an_toan": [
+          "pointer_nullified",
+          "zero_leak",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m2_khoi_tao",
+          "m2_danh_sach_day"
+        ],
+        [
+          "m2_danh_sach_day",
+          "m2_realloc_tam"
+        ],
+        [
+          "m2_realloc_tam",
+          "m2_oom_bao_toan_ram"
+        ],
+        [
+          "m2_realloc_tam",
+          "m2_realloc_thanh_cong"
+        ],
+        [
+          "m2_realloc_thanh_cong",
+          "m2_giai_phong_an_toan"
+        ],
+        [
+          "m2_oom_bao_toan_ram",
+          "m2_oom_bao_toan_ram"
+        ],
+        [
+          "m2_giai_phong_an_toan",
+          "m2_giai_phong_an_toan"
+        ]
+      ]
+    }
   }
 }
