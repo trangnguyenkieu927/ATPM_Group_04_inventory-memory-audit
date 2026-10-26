@@ -1,31 +1,30 @@
 /* =========================================================================
  * MODULE 3: DATA INGESTION ARITHMETIC & STATE UPDATE VERIFICATION (v0 - CO LOI)
- * Thanh vien phu trach: Ha Van Do
- * Muc tieu: Kiem toan tinh toan so hoc ton kho, gia tien va Chung minh SMT Z3.
- * Cac loi chu dich:
- *   - update_stock_quantity_v0 : Cong don bi tran so nguyen co dau (CWE-190)
- *   - scale_product_price_v0   : Nhan gia tien voi ti gia bi tran so nguyen (CWE-190)
+ * Thanh vien phu trach: Ha Van Do - MSV: 23010406
+ * Ma C sinh tu dac ta: 'quanly_khohang_m3_tinh_ton_kho'
  * ========================================================================= */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 
-/* KICH BAN SC-06: CWE-190 (Signed Integer Overflow khi cap nhat ton kho)
- * Giai doan RAM: Cong don so luong nhap moi vao ton kho hien tai.
- * Root cause: Thuc hien phep cong truc tiep ma khong kiem tra vuot nguong INT_MAX. */
-int update_stock_quantity_v0(int current_stock, int added_quantity) {
-    /* Khi current_stock gan INT_MAX va added_quantity duong,
-     * tong se bi overflow thanh so am (UB theo chuan C99). */
+/* sinh từ đặc tả 'quanly_khohang_m3_tinh_ton_kho', hàm 'update_stock_quantity', kind='arithmetic' */
+/* KICH BAN SC-06: CWE-190 (Signed Integer Overflow khi cong don ton kho) */
+int update_stock_quantity(int current_stock, int added_quantity) {
     return current_stock + added_quantity;
 }
 
-/* KICH BAN PHU: CWE-190 (Arithmetic Overflow khi quy doi gia san pham)
- * Giai doan RAM: Nhan gia tien co ban voi he so nhan ti gia.
- * Root cause: Khong kiem tra phep nhan so nguyen. */
-static int helper_scale_price(int price, int rate) {
-    return price * rate;
+/* sinh từ đặc tả 'quanly_khohang_m3_tinh_ton_kho', hàm 'scale_product_price', kind='arithmetic' */
+/* KICH BAN PHU: CWE-190 (Arithmetic Overflow khi quy doi gia san pham) */
+int scale_product_price(int base_price, int rate) {
+    return base_price + rate;
+}
+
+/* Alias tuong thich cho bo test kien truc v0 */
+int update_stock_quantity_v0(int current_stock, int added_quantity) {
+    return update_stock_quantity(current_stock, added_quantity);
 }
 
 int scale_product_price_v0(int base_price, int rate) {
-    return helper_scale_price(base_price, rate);
+    return scale_product_price(base_price, rate);
 }
