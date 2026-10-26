@@ -1,6 +1,6 @@
 {
   "name": "dacta_M1_doc_chuoi_buffer",
-  "description": "Hệ thống tiếp nhận dữ liệu mã phiếu kho hàng (M1 - Nguyễn Quang Thọ - MSV: 23010162): tiếp nhận mã phiếu kho từ nguồn ngoài vào bộ đệm Stack (H1). Bản v0 dùng strcpy không giới hạn kích thước gây Stack Buffer Overflow (CWE-121) và Off-by-one (CWE-193). Bản v1 dùng strncpy an toàn và ép null byte cuối chuỗi.",
+  "description": "Hệ thống tiếp nhận dữ liệu mã phiếu kho hàng (M1 - Nguyễn Quang Thọ - MSV: 23010322): tiếp nhận mã phiếu kho từ nguồn ngoài vào bộ đệm Stack (H1). Bản v0 dùng strcpy không giới hạn kích thước gây Stack Buffer Overflow (CWE-121) và Off-by-one (CWE-193). Bản v1 dùng strncpy an toàn và ép null byte cuối chuỗi.",
   "requirements": [
     {
       "id": "REQ-1",
@@ -29,9 +29,9 @@
   ],
   "states": [
     "m1_nhan_chuoi",
-    "m1_len_nho_16",
-    "m1_len_bang_16",
-    "m1_len_lon_16",
+    "m1_len_nho_32",
+    "m1_len_bang_32",
+    "m1_len_lon_32",
     "m1_chep_an_toan",
     "m1_tran_1_byte",
     "m1_tran_nhieu_byte"
@@ -43,13 +43,13 @@
     "m1_nhan_chuoi": [
       "receiving_input"
     ],
-    "m1_len_nho_16": [
+    "m1_len_nho_32": [
       "len_safe"
     ],
-    "m1_len_bang_16": [
+    "m1_len_bang_32": [
       "len_boundary"
     ],
-    "m1_len_lon_16": [
+    "m1_len_lon_32": [
       "len_excessive"
     ],
     "m1_chep_an_toan": [
@@ -70,26 +70,26 @@
   "transitions": [
     [
       "m1_nhan_chuoi",
-      "m1_len_nho_16"
+      "m1_len_nho_32"
     ],
     [
       "m1_nhan_chuoi",
-      "m1_len_bang_16"
+      "m1_len_bang_32"
     ],
     [
       "m1_nhan_chuoi",
-      "m1_len_lon_16"
+      "m1_len_lon_32"
     ],
     [
-      "m1_len_nho_16",
+      "m1_len_nho_32",
       "m1_chep_an_toan"
     ],
     [
-      "m1_len_bang_16",
+      "m1_len_bang_32",
       "m1_tran_1_byte"
     ],
     [
-      "m1_len_lon_16",
+      "m1_len_lon_32",
       "m1_tran_nhieu_byte"
     ],
     [
@@ -107,12 +107,12 @@
   ],
   "flows": {
     "M1-v0: Cài lỗi có chủ đích (CWE-121 Overflow & CWE-193 Off-by-one)": {
-      "description": "Bản v0 của Thọ: Nhân viên kho đọc mã phiếu kho vào bộ đệm Stack 16 byte bằng hàm strcpy không kiểm tra độ dài. Khi chuỗi nhập dài hơn 15 byte, bộ đệm bị tràn ghi đè lên con trỏ khung stack frame gây Stack Buffer Overflow (CWE-121) và Off-by-one (CWE-193).",
+      "description": "Bản v0 của Thọ: Nhân viên kho đọc mã phiếu kho vào bộ đệm Stack 32 byte bằng hàm strcpy không kiểm tra độ dài. Khi chuỗi nhập dài hơn 31 byte, bộ đệm bị tràn ghi đè lên con trỏ khung stack frame gây Stack Buffer Overflow (CWE-121) và Off-by-one (CWE-193).",
       "states": [
         "m1_nhan_chuoi",
-        "m1_len_nho_16",
-        "m1_len_bang_16",
-        "m1_len_lon_16",
+        "m1_len_nho_32",
+        "m1_len_bang_32",
+        "m1_len_lon_32",
         "m1_chep_an_toan",
         "m1_tran_1_byte",
         "m1_tran_nhieu_byte"
@@ -124,13 +124,13 @@
         "m1_nhan_chuoi": [
           "receiving_input"
         ],
-        "m1_len_nho_16": [
+        "m1_len_nho_32": [
           "len_safe"
         ],
-        "m1_len_bang_16": [
+        "m1_len_bang_32": [
           "len_boundary"
         ],
-        "m1_len_lon_16": [
+        "m1_len_lon_32": [
           "len_excessive"
         ],
         "m1_chep_an_toan": [
@@ -151,26 +151,26 @@
       "transitions": [
         [
           "m1_nhan_chuoi",
-          "m1_len_nho_16"
+          "m1_len_nho_32"
         ],
         [
           "m1_nhan_chuoi",
-          "m1_len_bang_16"
+          "m1_len_bang_32"
         ],
         [
           "m1_nhan_chuoi",
-          "m1_len_lon_16"
+          "m1_len_lon_32"
         ],
         [
-          "m1_len_nho_16",
+          "m1_len_nho_32",
           "m1_chep_an_toan"
         ],
         [
-          "m1_len_bang_16",
+          "m1_len_bang_32",
           "m1_tran_1_byte"
         ],
         [
-          "m1_len_lon_16",
+          "m1_len_lon_32",
           "m1_tran_nhieu_byte"
         ],
         [
@@ -243,9 +243,9 @@
   "state_machine": {
     "states": [
       "m1_nhan_chuoi",
-      "m1_len_nho_16",
-      "m1_len_bang_16",
-      "m1_len_lon_16",
+      "m1_len_nho_32",
+      "m1_len_bang_32",
+      "m1_len_lon_32",
       "m1_chep_an_toan",
       "m1_tran_1_byte",
       "m1_tran_nhieu_byte"
@@ -257,13 +257,13 @@
       "m1_nhan_chuoi": [
         "receiving_input"
       ],
-      "m1_len_nho_16": [
+      "m1_len_nho_32": [
         "len_safe"
       ],
-      "m1_len_bang_16": [
+      "m1_len_bang_32": [
         "len_boundary"
       ],
-      "m1_len_lon_16": [
+      "m1_len_lon_32": [
         "len_excessive"
       ],
       "m1_chep_an_toan": [
@@ -284,26 +284,26 @@
     "transitions": [
       [
         "m1_nhan_chuoi",
-        "m1_len_nho_16"
+        "m1_len_nho_32"
       ],
       [
         "m1_nhan_chuoi",
-        "m1_len_bang_16"
+        "m1_len_bang_32"
       ],
       [
         "m1_nhan_chuoi",
-        "m1_len_lon_16"
+        "m1_len_lon_32"
       ],
       [
-        "m1_len_nho_16",
+        "m1_len_nho_32",
         "m1_chep_an_toan"
       ],
       [
-        "m1_len_bang_16",
+        "m1_len_bang_32",
         "m1_tran_1_byte"
       ],
       [
-        "m1_len_lon_16",
+        "m1_len_lon_32",
         "m1_tran_nhieu_byte"
       ],
       [
@@ -394,7 +394,7 @@
       "params": [
         "input_str"
       ],
-      "buffer_size": 16,
+      "buffer_size": 32,
       "bug": "buffer-overflow"
     }
   ],
@@ -405,7 +405,7 @@
         "REQ-1",
         "REQ-3"
       ],
-      "title": "Chép chuỗi mã phiếu vượt quá kích thước bộ đệm Stack 16 byte",
+      "title": "Chép chuỗi mã phiếu vượt quá kích thước bộ đệm Stack 32 byte",
       "preconditions": "Hàm parse_voucher_id dùng strcpy (v0) / strncpy (v1)",
       "steps": [
         "Chạy check_c_source() trên hàm parse_voucher_id",
@@ -421,7 +421,7 @@
         "REQ-4"
       ],
       "title": "Lỗi Off-by-one khi chuỗi có độ dài đúng bằng kích thước buffer",
-      "preconditions": "len(input_str) == 16, ghi đè byte ranh giới null terminator",
+      "preconditions": "len(input_str) == 32, ghi đè byte ranh giới null terminator",
       "steps": [
         "Kiểm tra AG(!off_by_one) trên luồng M1-v0",
         "Kiểm tra lại trên luồng M1-v1"
