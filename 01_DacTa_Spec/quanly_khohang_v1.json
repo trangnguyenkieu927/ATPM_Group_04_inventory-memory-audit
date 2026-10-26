@@ -769,5 +769,625 @@
       "expected_result": "Không deadlock; v0: 16 công thức VI PHẠM; v1: 100% công thức ĐÚNG",
       "priority": "HIGH"
     }
+  ],
+  "states": [
+    "start",
+    "h1_vao",
+    "h1_ok",
+    "h1_tu_choi",
+    "h2_vao",
+    "h2_ok",
+    "h2_tu_choi",
+    "h3_vao",
+    "h3_ok",
+    "h3_tu_choi",
+    "h4_vao",
+    "h4_ok",
+    "h4_tu_choi",
+    "h5_vao",
+    "h5_ok",
+    "h6_phien_ranh",
+    "h6_nhap_giu",
+    "h6_xuat_giu",
+    "h6_giai_phong",
+    "ket_thuc_ok",
+    "ket_thuc_tu_choi"
+  ],
+  "initial": [
+    "start"
+  ],
+  "labeling": {
+    "start": [
+      "start",
+      "safe"
+    ],
+    "h1_vao": [
+      "h1",
+      "receiving"
+    ],
+    "h1_ok": [
+      "h1",
+      "input_ok",
+      "safe"
+    ],
+    "h1_tu_choi": [
+      "h1",
+      "input_rejected",
+      "safe"
+    ],
+    "h2_vao": [
+      "h2",
+      "allocating"
+    ],
+    "h2_ok": [
+      "h2",
+      "allocated",
+      "initialized",
+      "safe"
+    ],
+    "h2_tu_choi": [
+      "h2",
+      "input_rejected",
+      "safe"
+    ],
+    "h3_vao": [
+      "h3",
+      "computing"
+    ],
+    "h3_ok": [
+      "h3",
+      "amount_ok",
+      "safe"
+    ],
+    "h3_tu_choi": [
+      "h3",
+      "input_rejected",
+      "safe"
+    ],
+    "h4_vao": [
+      "h4",
+      "token_received"
+    ],
+    "h4_ok": [
+      "h4",
+      "token_verified",
+      "safe"
+    ],
+    "h4_tu_choi": [
+      "h4",
+      "input_rejected",
+      "safe"
+    ],
+    "h5_vao": [
+      "h5",
+      "logging"
+    ],
+    "h5_ok": [
+      "h5",
+      "log_freed",
+      "safe"
+    ],
+    "h6_phien_ranh": [
+      "h6",
+      "sess_free"
+    ],
+    "h6_nhap_giu": [
+      "h6",
+      "nhap_locked"
+    ],
+    "h6_xuat_giu": [
+      "h6",
+      "xuat_locked"
+    ],
+    "h6_giai_phong": [
+      "h6",
+      "releasing"
+    ],
+    "ket_thuc_ok": [
+      "flow_end",
+      "stock_done",
+      "mem_clean",
+      "safe"
+    ],
+    "ket_thuc_tu_choi": [
+      "flow_end",
+      "input_rejected",
+      "mem_clean",
+      "safe"
+    ]
+  },
+  "transitions": [
+    [
+      "start",
+      "h1_vao"
+    ],
+    [
+      "h1_vao",
+      "h1_ok"
+    ],
+    [
+      "h1_vao",
+      "h1_tu_choi"
+    ],
+    [
+      "h1_ok",
+      "h2_vao"
+    ],
+    [
+      "h1_tu_choi",
+      "ket_thuc_tu_choi"
+    ],
+    [
+      "h2_vao",
+      "h2_ok"
+    ],
+    [
+      "h2_vao",
+      "h2_tu_choi"
+    ],
+    [
+      "h2_ok",
+      "h3_vao"
+    ],
+    [
+      "h2_tu_choi",
+      "ket_thuc_tu_choi"
+    ],
+    [
+      "h3_vao",
+      "h3_ok"
+    ],
+    [
+      "h3_vao",
+      "h3_tu_choi"
+    ],
+    [
+      "h3_ok",
+      "h4_vao"
+    ],
+    [
+      "h3_tu_choi",
+      "ket_thuc_tu_choi"
+    ],
+    [
+      "h4_vao",
+      "h4_ok"
+    ],
+    [
+      "h4_vao",
+      "h4_tu_choi"
+    ],
+    [
+      "h4_ok",
+      "h5_vao"
+    ],
+    [
+      "h4_tu_choi",
+      "ket_thuc_tu_choi"
+    ],
+    [
+      "h5_vao",
+      "h5_ok"
+    ],
+    [
+      "h5_ok",
+      "h6_phien_ranh"
+    ],
+    [
+      "h6_phien_ranh",
+      "h6_nhap_giu"
+    ],
+    [
+      "h6_phien_ranh",
+      "h6_xuat_giu"
+    ],
+    [
+      "h6_nhap_giu",
+      "h6_giai_phong"
+    ],
+    [
+      "h6_xuat_giu",
+      "h6_giai_phong"
+    ],
+    [
+      "h6_giai_phong",
+      "ket_thuc_ok"
+    ],
+    [
+      "ket_thuc_ok",
+      "ket_thuc_ok"
+    ],
+    [
+      "ket_thuc_tu_choi",
+      "ket_thuc_tu_choi"
+    ]
+  ],
+  "flows": {
+    "Toàn bộ quy trình nhập kho (H1-H6 - BẢN VÁ AN TOÀN)": {
+      "description": "Quy trình tiếp nhận, quản lý và kiểm toán phiếu kho hàng điện máy BẢN VÁ AN TOÀN (v1): H1 kiểm soát biên buffer 17 byte (chống tràn stack), H2 kiểm tra con trỏ NULL sau malloc, kiểm soát kích thước n kiện (chống tràn heap), H3 kiểm tra tiền điều kiện toán học trước khi nhân/cộng dồn và chặn chia 0, H4 kiểm tra độ dài token và loại bỏ nhánh ẩn, H5 dùng printf(\"%s\") và dọn dẹp bộ nhớ trước return, H6 đồng bộ hóa khóa mutex và xóa sạch mã PIN (explicit_bzero) trước khi free. 100% thỏa mãn thuộc tính an toàn CTL và Z3 SMT UNSAT.",
+      "states": [
+        "start",
+        "h1_vao",
+        "h1_ok",
+        "h1_tu_choi",
+        "h2_vao",
+        "h2_ok",
+        "h2_tu_choi",
+        "h3_vao",
+        "h3_ok",
+        "h3_tu_choi",
+        "h4_vao",
+        "h4_ok",
+        "h4_tu_choi",
+        "h5_vao",
+        "h5_ok",
+        "h6_phien_ranh",
+        "h6_nhap_giu",
+        "h6_xuat_giu",
+        "h6_giai_phong",
+        "ket_thuc_ok",
+        "ket_thuc_tu_choi"
+      ],
+      "initial": [
+        "start"
+      ],
+      "labeling": {
+        "start": [
+          "start",
+          "safe"
+        ],
+        "h1_vao": [
+          "h1",
+          "receiving"
+        ],
+        "h1_ok": [
+          "h1",
+          "input_ok",
+          "safe"
+        ],
+        "h1_tu_choi": [
+          "h1",
+          "input_rejected",
+          "safe"
+        ],
+        "h2_vao": [
+          "h2",
+          "allocating"
+        ],
+        "h2_ok": [
+          "h2",
+          "allocated",
+          "initialized",
+          "safe"
+        ],
+        "h2_tu_choi": [
+          "h2",
+          "input_rejected",
+          "safe"
+        ],
+        "h3_vao": [
+          "h3",
+          "computing"
+        ],
+        "h3_ok": [
+          "h3",
+          "amount_ok",
+          "safe"
+        ],
+        "h3_tu_choi": [
+          "h3",
+          "input_rejected",
+          "safe"
+        ],
+        "h4_vao": [
+          "h4",
+          "token_received"
+        ],
+        "h4_ok": [
+          "h4",
+          "token_verified",
+          "safe"
+        ],
+        "h4_tu_choi": [
+          "h4",
+          "input_rejected",
+          "safe"
+        ],
+        "h5_vao": [
+          "h5",
+          "logging"
+        ],
+        "h5_ok": [
+          "h5",
+          "log_freed",
+          "safe"
+        ],
+        "h6_phien_ranh": [
+          "h6",
+          "sess_free"
+        ],
+        "h6_nhap_giu": [
+          "h6",
+          "nhap_locked"
+        ],
+        "h6_xuat_giu": [
+          "h6",
+          "xuat_locked"
+        ],
+        "h6_giai_phong": [
+          "h6",
+          "releasing"
+        ],
+        "ket_thuc_ok": [
+          "flow_end",
+          "stock_done",
+          "mem_clean",
+          "safe"
+        ],
+        "ket_thuc_tu_choi": [
+          "flow_end",
+          "input_rejected",
+          "mem_clean",
+          "safe"
+        ]
+      },
+      "transitions": [
+        [
+          "start",
+          "h1_vao"
+        ],
+        [
+          "h1_vao",
+          "h1_ok"
+        ],
+        [
+          "h1_vao",
+          "h1_tu_choi"
+        ],
+        [
+          "h1_ok",
+          "h2_vao"
+        ],
+        [
+          "h1_tu_choi",
+          "ket_thuc_tu_choi"
+        ],
+        [
+          "h2_vao",
+          "h2_ok"
+        ],
+        [
+          "h2_vao",
+          "h2_tu_choi"
+        ],
+        [
+          "h2_ok",
+          "h3_vao"
+        ],
+        [
+          "h2_tu_choi",
+          "ket_thuc_tu_choi"
+        ],
+        [
+          "h3_vao",
+          "h3_ok"
+        ],
+        [
+          "h3_vao",
+          "h3_tu_choi"
+        ],
+        [
+          "h3_ok",
+          "h4_vao"
+        ],
+        [
+          "h3_tu_choi",
+          "ket_thuc_tu_choi"
+        ],
+        [
+          "h4_vao",
+          "h4_ok"
+        ],
+        [
+          "h4_vao",
+          "h4_tu_choi"
+        ],
+        [
+          "h4_ok",
+          "h5_vao"
+        ],
+        [
+          "h4_tu_choi",
+          "ket_thuc_tu_choi"
+        ],
+        [
+          "h5_vao",
+          "h5_ok"
+        ],
+        [
+          "h5_ok",
+          "h6_phien_ranh"
+        ],
+        [
+          "h6_phien_ranh",
+          "h6_nhap_giu"
+        ],
+        [
+          "h6_phien_ranh",
+          "h6_xuat_giu"
+        ],
+        [
+          "h6_nhap_giu",
+          "h6_giai_phong"
+        ],
+        [
+          "h6_xuat_giu",
+          "h6_giai_phong"
+        ],
+        [
+          "h6_giai_phong",
+          "ket_thuc_ok"
+        ],
+        [
+          "ket_thuc_ok",
+          "ket_thuc_ok"
+        ],
+        [
+          "ket_thuc_tu_choi",
+          "ket_thuc_tu_choi"
+        ]
+      ]
+    },
+    "M1-v1b: bản sửa của nhóm — buf[17] + strnlen + từ chối": {
+      "states": [
+        "m1_nhan_du_lieu",
+        "m1_kiem_tra",
+        "m1_hop_le",
+        "m1_tu_choi"
+      ],
+      "transitions": [
+        [
+          "m1_nhan_du_lieu",
+          "m1_kiem_tra"
+        ],
+        [
+          "m1_kiem_tra",
+          "m1_hop_le"
+        ],
+        [
+          "m1_kiem_tra",
+          "m1_tu_choi"
+        ]
+      ]
+    },
+    "M2-v1: kiểm tra n, calloc, kiểm tra NULL": {
+      "states": [
+        "m2_nhan_lenh",
+        "m2_kiem_tra_n",
+        "m2_cap_phat_ok",
+        "m2_tu_choi"
+      ],
+      "transitions": [
+        [
+          "m2_nhan_lenh",
+          "m2_kiem_tra_n"
+        ],
+        [
+          "m2_kiem_tra_n",
+          "m2_cap_phat_ok"
+        ],
+        [
+          "m2_kiem_tra_n",
+          "m2_tu_choi"
+        ]
+      ]
+    },
+    "M3-v1: kiểm tra miền + int64 + hạn mức": {
+      "states": [
+        "m3_nhan_gia_tri",
+        "m3_kiem_tra_can",
+        "m3_tinh_ok",
+        "m3_tu_choi"
+      ],
+      "transitions": [
+        [
+          "m3_nhan_gia_tri",
+          "m3_kiem_tra_can"
+        ],
+        [
+          "m3_kiem_tra_can",
+          "m3_tinh_ok"
+        ],
+        [
+          "m3_kiem_tra_can",
+          "m3_tu_choi"
+        ]
+      ]
+    },
+    "M4-v1: kiểm tra độ dài, xóa nhánh ẩn": {
+      "states": [
+        "m4_nhan_token",
+        "m4_kiem_tra_token",
+        "m4_ok",
+        "m4_tu_choi"
+      ],
+      "transitions": [
+        [
+          "m4_nhan_token",
+          "m4_kiem_tra_token"
+        ],
+        [
+          "m4_kiem_tra_token",
+          "m4_ok"
+        ],
+        [
+          "m4_kiem_tra_token",
+          "m4_tu_choi"
+        ]
+      ]
+    },
+    "M5-v1: printf(\"%s\") + goto cleanup": {
+      "states": [
+        "m5_ghi_log",
+        "m5_format_chuan",
+        "m5_cleanup_ok"
+      ],
+      "transitions": [
+        [
+          "m5_ghi_log",
+          "m5_format_chuan"
+        ],
+        [
+          "m5_format_chuan",
+          "m5_cleanup_ok"
+        ]
+      ]
+    },
+    "M6-v1: mutex + status CLOSED + explicit_bzero": {
+      "states": [
+        "m6_mo_phien",
+        "m6_khoa_mutex",
+        "m6_zero_pin",
+        "m6_free_clean"
+      ],
+      "transitions": [
+        [
+          "m6_mo_phien",
+          "m6_khoa_mutex"
+        ],
+        [
+          "m6_khoa_mutex",
+          "m6_zero_pin"
+        ],
+        [
+          "m6_zero_pin",
+          "m6_free_clean"
+        ]
+      ]
+    }
+  },
+  "suggested_ctl_formulas": [
+    "AG(!violation)",
+    "AG(!buffer_overflow)",
+    "AG(!off_by_one)",
+    "AG(!null_deref)",
+    "AG(!alloc_size_overflow)",
+    "AG(!uninit_read)",
+    "AG(!int_overflow)",
+    "AG(!negative_amount)",
+    "AG(!div_by_zero)",
+    "AG(!hidden_bypass)",
+    "AG(!mem_leak)",
+    "AG(!format_string)",
+    "AG(!race)",
+    "AG(!double_free)",
+    "AG(!use_after_free)",
+    "AG(!secret_residue)",
+    "AF(flow_end)",
+    "EF(stock_done)",
+    "EF(input_rejected)",
+    "EG(!violation)",
+    "EF(nhap_locked)",
+    "EF(xuat_locked)"
   ]
 }

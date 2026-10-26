@@ -1,6 +1,6 @@
 {
   "name": "quanly_khohang_m3_tinh_ton_kho",
-  "description": "Hệ thống tính toán số học kho hàng (M3 - Hà Văn Đô - MSV: 23010406) - BẢN V0 CÀI LỖI CÓ CHỦ ĐÍCH: Nhân viên kho nhập hàng mới cộng dồn vào tồn kho cũ (tồn kho = cũ + mới) và nhân giá trị hàng hóa. Bản v0 dùng phép cộng signed int 32-bit trực tiếp không kiểm tra biên INT_MAX gây lật thành số âm (CWE-190).",
+  "description": "Hệ thống tính toán số học kho hàng (M3 - Hà Văn Đô - MSV: 23010406): cộng dồn số lượng hàng mới nhập vào tồn kho cũ (tồn kho = cũ + mới) và nhân giá trị hàng hóa. Bản v0 dùng phép cộng signed int 32-bit trực tiếp không kiểm tra biên INT_MAX gây lật thành số âm (CWE-190). Bản v1 cài rào chắn defensive guard kiểm tra added > INT_MAX - stock trước khi cộng, từ chối số âm và kiểm tra tràn phép nhân giá.",
   "requirements": [
     {
       "id": "REQ-1",
@@ -39,6 +39,239 @@
       "priority": "MEDIUM"
     }
   ],
+  "states": [
+    "m3_nhan_so_luong",
+    "m3_so_nhap_hop_le",
+    "m3_so_nhap_am",
+    "m3_cong_don_an_toan",
+    "m3_tran_so_lat_am",
+    "m3_nhan_gia_tran_int"
+  ],
+  "initial": [
+    "m3_nhan_so_luong"
+  ],
+  "labeling": {
+    "m3_nhan_so_luong": [
+      "receiving_quantity"
+    ],
+    "m3_so_nhap_hop_le": [
+      "valid_range"
+    ],
+    "m3_so_nhap_am": [
+      "negative_input",
+      "violation"
+    ],
+    "m3_cong_don_an_toan": [
+      "sum_safe",
+      "done"
+    ],
+    "m3_tran_so_lat_am": [
+      "integer_overflow",
+      "cwe_190",
+      "violation"
+    ],
+    "m3_nhan_gia_tran_int": [
+      "mul_overflow",
+      "cwe_190",
+      "violation"
+    ]
+  },
+  "transitions": [
+    [
+      "m3_nhan_so_luong",
+      "m3_so_nhap_hop_le"
+    ],
+    [
+      "m3_nhan_so_luong",
+      "m3_so_nhap_am"
+    ],
+    [
+      "m3_so_nhap_hop_le",
+      "m3_cong_don_an_toan"
+    ],
+    [
+      "m3_so_nhap_hop_le",
+      "m3_tran_so_lat_am"
+    ],
+    [
+      "m3_so_nhap_hop_le",
+      "m3_nhan_gia_tran_int"
+    ],
+    [
+      "m3_so_nhap_am",
+      "m3_so_nhap_am"
+    ],
+    [
+      "m3_cong_don_an_toan",
+      "m3_cong_don_an_toan"
+    ],
+    [
+      "m3_tran_so_lat_am",
+      "m3_tran_so_lat_am"
+    ],
+    [
+      "m3_nhan_gia_tran_int",
+      "m3_nhan_gia_tran_int"
+    ]
+  ],
+  "flows": {
+    "M3-v0: Cài lỗi có chủ đích (CWE-190 Signed Integer Overflow)": {
+      "description": "Bản v0 của Đô: Nhân viên kho nhập hàng mới cộng dồn vào tồn kho cũ (tồn kho = cũ + mới) và nhân giá trị hàng hóa. Bản v0 dùng phép cộng signed int 32-bit trực tiếp không kiểm tra biên INT_MAX gây lật thành số âm (CWE-190 Signed Integer Overflow).",
+      "states": [
+        "m3_nhan_so_luong",
+        "m3_so_nhap_hop_le",
+        "m3_so_nhap_am",
+        "m3_cong_don_an_toan",
+        "m3_tran_so_lat_am",
+        "m3_nhan_gia_tran_int"
+      ],
+      "initial": [
+        "m3_nhan_so_luong"
+      ],
+      "labeling": {
+        "m3_nhan_so_luong": [
+          "receiving_quantity"
+        ],
+        "m3_so_nhap_hop_le": [
+          "valid_range"
+        ],
+        "m3_so_nhap_am": [
+          "negative_input",
+          "violation"
+        ],
+        "m3_cong_don_an_toan": [
+          "sum_safe",
+          "done"
+        ],
+        "m3_tran_so_lat_am": [
+          "integer_overflow",
+          "cwe_190",
+          "violation"
+        ],
+        "m3_nhan_gia_tran_int": [
+          "mul_overflow",
+          "cwe_190",
+          "violation"
+        ]
+      },
+      "transitions": [
+        [
+          "m3_nhan_so_luong",
+          "m3_so_nhap_hop_le"
+        ],
+        [
+          "m3_nhan_so_luong",
+          "m3_so_nhap_am"
+        ],
+        [
+          "m3_so_nhap_hop_le",
+          "m3_cong_don_an_toan"
+        ],
+        [
+          "m3_so_nhap_hop_le",
+          "m3_tran_so_lat_am"
+        ],
+        [
+          "m3_so_nhap_hop_le",
+          "m3_nhan_gia_tran_int"
+        ],
+        [
+          "m3_so_nhap_am",
+          "m3_so_nhap_am"
+        ],
+        [
+          "m3_cong_don_an_toan",
+          "m3_cong_don_an_toan"
+        ],
+        [
+          "m3_tran_so_lat_am",
+          "m3_tran_so_lat_am"
+        ],
+        [
+          "m3_nhan_gia_tran_int",
+          "m3_nhan_gia_tran_int"
+        ]
+      ]
+    },
+    "M3-v1: Bản vá an toàn phòng thủ (Defensive Guard & Từ chối âm)": {
+      "description": "Bản v1 của Đô: Cài đặt rào chắn phòng thủ (defensive guard) kiểm tra nghiêm ngặt: từ chối số lượng nhập hàng âm (added_quantity <= 0), kiểm tra tràn trước khi cộng (if (INT_MAX - stock < added_quantity) return OVERFLOW_ERR) và kiểm tra tràn phép nhân giá. Triệt tiêu hoàn toàn CWE-190.",
+      "states": [
+        "m3_nhan_so_luong",
+        "m3_kiem_tra_rao_chan",
+        "m3_tu_choi_so_am",
+        "m3_tu_choi_tran_so",
+        "m3_cong_don_an_toan",
+        "m3_nhan_gia_an_toan"
+      ],
+      "initial": [
+        "m3_nhan_so_luong"
+      ],
+      "labeling": {
+        "m3_nhan_so_luong": [
+          "receiving_quantity"
+        ],
+        "m3_kiem_tra_rao_chan": [
+          "guard_checking"
+        ],
+        "m3_tu_choi_so_am": [
+          "negative_rejected",
+          "safe_exit",
+          "done"
+        ],
+        "m3_tu_choi_tran_so": [
+          "overflow_prevented",
+          "safe_exit",
+          "done"
+        ],
+        "m3_cong_don_an_toan": [
+          "sum_safe",
+          "done"
+        ],
+        "m3_nhan_gia_an_toan": [
+          "mul_safe",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m3_nhan_so_luong",
+          "m3_kiem_tra_rao_chan"
+        ],
+        [
+          "m3_kiem_tra_rao_chan",
+          "m3_tu_choi_so_am"
+        ],
+        [
+          "m3_kiem_tra_rao_chan",
+          "m3_tu_choi_tran_so"
+        ],
+        [
+          "m3_kiem_tra_rao_chan",
+          "m3_cong_don_an_toan"
+        ],
+        [
+          "m3_cong_don_an_toan",
+          "m3_nhan_gia_an_toan"
+        ],
+        [
+          "m3_tu_choi_so_am",
+          "m3_tu_choi_so_am"
+        ],
+        [
+          "m3_tu_choi_tran_so",
+          "m3_tu_choi_tran_so"
+        ],
+        [
+          "m3_cong_don_an_toan",
+          "m3_cong_don_an_toan"
+        ],
+        [
+          "m3_nhan_gia_an_toan",
+          "m3_nhan_gia_an_toan"
+        ]
+      ]
+    }
+  },
   "state_machine": {
     "states": [
       "m3_nhan_so_luong",
@@ -63,17 +296,17 @@
         "violation"
       ],
       "m3_cong_don_an_toan": [
-        "addition_ok",
+        "sum_safe",
         "done"
       ],
       "m3_tran_so_lat_am": [
         "integer_overflow",
         "cwe_190",
-        "negative_stock",
         "violation"
       ],
       "m3_nhan_gia_tran_int": [
-        "price_scale_overflow",
+        "mul_overflow",
+        "cwe_190",
         "violation"
       ]
     },
@@ -99,6 +332,10 @@
         "m3_nhan_gia_tran_int"
       ],
       [
+        "m3_so_nhap_am",
+        "m3_so_nhap_am"
+      ],
+      [
         "m3_cong_don_an_toan",
         "m3_cong_don_an_toan"
       ],
@@ -107,18 +344,102 @@
         "m3_tran_so_lat_am"
       ],
       [
-        "m3_so_nhap_am",
-        "m3_so_nhap_am"
-      ],
-      [
         "m3_nhan_gia_tran_int",
         "m3_nhan_gia_tran_int"
       ]
     ]
   },
+  "additional_flows": {
+    "M3-v1: Bản vá an toàn phòng thủ (Defensive Guard & Từ chối âm)": {
+      "description": "Bản v1 của Đô: Cài đặt rào chắn phòng thủ (defensive guard) kiểm tra nghiêm ngặt: từ chối số lượng nhập hàng âm (added_quantity <= 0), kiểm tra tràn trước khi cộng (if (INT_MAX - stock < added_quantity) return OVERFLOW_ERR) và kiểm tra tràn phép nhân giá. Triệt tiêu hoàn toàn CWE-190.",
+      "states": [
+        "m3_nhan_so_luong",
+        "m3_kiem_tra_rao_chan",
+        "m3_tu_choi_so_am",
+        "m3_tu_choi_tran_so",
+        "m3_cong_don_an_toan",
+        "m3_nhan_gia_an_toan"
+      ],
+      "initial": [
+        "m3_nhan_so_luong"
+      ],
+      "labeling": {
+        "m3_nhan_so_luong": [
+          "receiving_quantity"
+        ],
+        "m3_kiem_tra_rao_chan": [
+          "guard_checking"
+        ],
+        "m3_tu_choi_so_am": [
+          "negative_rejected",
+          "safe_exit",
+          "done"
+        ],
+        "m3_tu_choi_tran_so": [
+          "overflow_prevented",
+          "safe_exit",
+          "done"
+        ],
+        "m3_cong_don_an_toan": [
+          "sum_safe",
+          "done"
+        ],
+        "m3_nhan_gia_an_toan": [
+          "mul_safe",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m3_nhan_so_luong",
+          "m3_kiem_tra_rao_chan"
+        ],
+        [
+          "m3_kiem_tra_rao_chan",
+          "m3_tu_choi_so_am"
+        ],
+        [
+          "m3_kiem_tra_rao_chan",
+          "m3_tu_choi_tran_so"
+        ],
+        [
+          "m3_kiem_tra_rao_chan",
+          "m3_cong_don_an_toan"
+        ],
+        [
+          "m3_cong_don_an_toan",
+          "m3_nhan_gia_an_toan"
+        ],
+        [
+          "m3_tu_choi_so_am",
+          "m3_tu_choi_so_am"
+        ],
+        [
+          "m3_tu_choi_tran_so",
+          "m3_tu_choi_tran_so"
+        ],
+        [
+          "m3_cong_don_an_toan",
+          "m3_cong_don_an_toan"
+        ],
+        [
+          "m3_nhan_gia_an_toan",
+          "m3_nhan_gia_an_toan"
+        ]
+      ]
+    }
+  },
+  "suggested_ctl_formulas": [
+    "AG(!violation)",
+    "AG(!integer_overflow)",
+    "AG(!negative_input)",
+    "EF(sum_safe)",
+    "AF(done)"
+  ],
   "safety_properties": [
     "AG(!violation)",
     "AG(!integer_overflow)",
-    "AG(!negative_input)"
+    "AG(!negative_input)",
+    "EF(sum_safe)"
   ]
 }

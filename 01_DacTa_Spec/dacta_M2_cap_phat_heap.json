@@ -1,6 +1,6 @@
 {
   "name": "quanly_khohang_m2_cap_phat_heap",
-  "description": "Hệ thống quản lý vòng đời bộ nhớ Heap kho hàng (M2 - Nguyễn Kiều Trang - MSV: 23010495) - BẢN V0 CÀI LỖI CÓ CHỦ ĐÍCH: Nhân viên kho thêm hàng mới khi danh sách 16 ô đã đầy. Trang gọi realloc mở rộng dung lượng. Khi OOM gán list = realloc làm mất địa chỉ gốc gây rò rỉ bộ nhớ (CWE-401 Memory Leak); sau khi free xong không xóa con trỏ (dangling pointer) gây đọc vùng nhớ đã giải phóng (CWE-416 Use-After-Free).",
+  "description": "Hệ thống quản lý vòng đời bộ nhớ Heap kho hàng (M2 - Nguyễn Kiều Trang - MSV: 23010495): phụ trách cấp phát, mở rộng động danh mục hàng hóa (H3) và lưu trữ, giải phóng an toàn tài nguyên sau xử lý (H6). Bản v0 cài các lỗi bộ nhớ: (1) Cấp phát mảng động bằng realloc gán trực tiếp khiến khi OOM bị rò rỉ bộ nhớ (CWE-401 Memory Leak); (2) Sau khi free() không xóa con trỏ dẫn tới Use-After-Free (CWE-416). Bản v1 dùng con trỏ tạm tmp kiểm tra NULL bảo toàn vùng nhớ khi OOM và gán ptr = NULL ngay sau khi giải phóng.",
   "requirements": [
     {
       "id": "REQ-1",
@@ -10,7 +10,7 @@
     },
     {
       "id": "REQ-2",
-      "text": "Hệ thống không được rơi vào deadlock ở bất kỳ trạng thái nào trong chu trình quản lý vòng đời bộ nhớ Heap",
+      "text": "Hệ thống không được rơi vào deadlock ở bất kỳ trạng thái nào trong chu trình quản lý vòng đời bộ nhớ Heap: AF(done)",
       "category": "liveness",
       "priority": "HIGH"
     },
@@ -39,6 +39,242 @@
       "priority": "MEDIUM"
     }
   ],
+  "states": [
+    "m2_khoi_tao",
+    "m2_danh_sach_day",
+    "m2_realloc_goi",
+    "m2_oom_null",
+    "m2_mat_con_tro_leak",
+    "m2_realloc_thanh_cong",
+    "m2_giai_phong_xong",
+    "m2_doc_con_tro_treo_uaf"
+  ],
+  "initial": [
+    "m2_khoi_tao"
+  ],
+  "labeling": {
+    "m2_khoi_tao": [
+      "initialized"
+    ],
+    "m2_danh_sach_day": [
+      "list_full"
+    ],
+    "m2_realloc_goi": [
+      "reallocating"
+    ],
+    "m2_oom_null": [
+      "oom_occurred"
+    ],
+    "m2_mat_con_tro_leak": [
+      "memory_leak",
+      "cwe_401",
+      "violation"
+    ],
+    "m2_realloc_thanh_cong": [
+      "realloc_ok"
+    ],
+    "m2_giai_phong_xong": [
+      "freed_without_null"
+    ],
+    "m2_doc_con_tro_treo_uaf": [
+      "use_after_free",
+      "cwe_416",
+      "violation"
+    ]
+  },
+  "transitions": [
+    [
+      "m2_khoi_tao",
+      "m2_danh_sach_day"
+    ],
+    [
+      "m2_danh_sach_day",
+      "m2_realloc_goi"
+    ],
+    [
+      "m2_realloc_goi",
+      "m2_oom_null"
+    ],
+    [
+      "m2_realloc_goi",
+      "m2_realloc_thanh_cong"
+    ],
+    [
+      "m2_oom_null",
+      "m2_mat_con_tro_leak"
+    ],
+    [
+      "m2_realloc_thanh_cong",
+      "m2_giai_phong_xong"
+    ],
+    [
+      "m2_giai_phong_xong",
+      "m2_doc_con_tro_treo_uaf"
+    ],
+    [
+      "m2_mat_con_tro_leak",
+      "m2_mat_con_tro_leak"
+    ],
+    [
+      "m2_doc_con_tro_treo_uaf",
+      "m2_doc_con_tro_treo_uaf"
+    ]
+  ],
+  "flows": {
+    "M2-v0: Cài lỗi có chủ đích (CWE-401 Leak & CWE-416 UAF)": {
+      "description": "Bản v0 của Trang: Nhân viên kho thêm hàng mới khi danh sách 16 ô đã đầy. Hàm gọi realloc gán trực tiếp vào list. Khi gặp sự cố OOM (hết RAM), con trỏ list bị gán NULL làm mất địa chỉ mảng ban đầu gây rò rỉ bộ nhớ tiến trình (CWE-401 Memory Leak). Khi đóng phiên kho, hàm free(list) nhưng không gán list = NULL, sau đó đọc lại list[0] gây lỗi con trỏ treo Use-After-Free (CWE-416).",
+      "states": [
+        "m2_khoi_tao",
+        "m2_danh_sach_day",
+        "m2_realloc_goi",
+        "m2_oom_null",
+        "m2_mat_con_tro_leak",
+        "m2_realloc_thanh_cong",
+        "m2_giai_phong_xong",
+        "m2_doc_con_tro_treo_uaf"
+      ],
+      "initial": [
+        "m2_khoi_tao"
+      ],
+      "labeling": {
+        "m2_khoi_tao": [
+          "initialized"
+        ],
+        "m2_danh_sach_day": [
+          "list_full"
+        ],
+        "m2_realloc_goi": [
+          "reallocating"
+        ],
+        "m2_oom_null": [
+          "oom_occurred"
+        ],
+        "m2_mat_con_tro_leak": [
+          "memory_leak",
+          "cwe_401",
+          "violation"
+        ],
+        "m2_realloc_thanh_cong": [
+          "realloc_ok"
+        ],
+        "m2_giai_phong_xong": [
+          "freed_without_null"
+        ],
+        "m2_doc_con_tro_treo_uaf": [
+          "use_after_free",
+          "cwe_416",
+          "violation"
+        ]
+      },
+      "transitions": [
+        [
+          "m2_khoi_tao",
+          "m2_danh_sach_day"
+        ],
+        [
+          "m2_danh_sach_day",
+          "m2_realloc_goi"
+        ],
+        [
+          "m2_realloc_goi",
+          "m2_oom_null"
+        ],
+        [
+          "m2_realloc_goi",
+          "m2_realloc_thanh_cong"
+        ],
+        [
+          "m2_oom_null",
+          "m2_mat_con_tro_leak"
+        ],
+        [
+          "m2_realloc_thanh_cong",
+          "m2_giai_phong_xong"
+        ],
+        [
+          "m2_giai_phong_xong",
+          "m2_doc_con_tro_treo_uaf"
+        ],
+        [
+          "m2_mat_con_tro_leak",
+          "m2_mat_con_tro_leak"
+        ],
+        [
+          "m2_doc_con_tro_treo_uaf",
+          "m2_doc_con_tro_treo_uaf"
+        ]
+      ]
+    },
+    "M2-v1: Bản vá an toàn phòng thủ (Con trỏ tạm & Gán NULL)": {
+      "description": "Bản v1 của Trang: Sử dụng con trỏ tạm tmp = realloc(list, new_cap). Nếu OOM (tmp == NULL), giữ nguyên con trỏ list ban đầu, bảo toàn khối nhớ cũ và thu hồi an toàn. Khi mở rộng thành công gán list = tmp. Khi giải phóng tài nguyên, lưu giá trị thống kê ra biến đệm, gọi free(list) và lập tức gán list = NULL để triệt tiêu hoàn toàn con trỏ lơ lửng dangling pointer.",
+      "states": [
+        "m2_khoi_tao",
+        "m2_danh_sach_day",
+        "m2_realloc_tam",
+        "m2_oom_bao_toan_ram",
+        "m2_realloc_thanh_cong",
+        "m2_giai_phong_an_toan"
+      ],
+      "initial": [
+        "m2_khoi_tao"
+      ],
+      "labeling": {
+        "m2_khoi_tao": [
+          "initialized"
+        ],
+        "m2_danh_sach_day": [
+          "list_full"
+        ],
+        "m2_realloc_tam": [
+          "realloc_temp"
+        ],
+        "m2_oom_bao_toan_ram": [
+          "owner_preserved",
+          "safe_exit",
+          "done"
+        ],
+        "m2_realloc_thanh_cong": [
+          "realloc_ok",
+          "owner_valid"
+        ],
+        "m2_giai_phong_an_toan": [
+          "pointer_nullified",
+          "zero_leak",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m2_khoi_tao",
+          "m2_danh_sach_day"
+        ],
+        [
+          "m2_danh_sach_day",
+          "m2_realloc_tam"
+        ],
+        [
+          "m2_realloc_tam",
+          "m2_oom_bao_toan_ram"
+        ],
+        [
+          "m2_realloc_tam",
+          "m2_realloc_thanh_cong"
+        ],
+        [
+          "m2_realloc_thanh_cong",
+          "m2_giai_phong_an_toan"
+        ],
+        [
+          "m2_oom_bao_toan_ram",
+          "m2_oom_bao_toan_ram"
+        ],
+        [
+          "m2_giai_phong_an_toan",
+          "m2_giai_phong_an_toan"
+        ]
+      ]
+    }
+  },
   "state_machine": {
     "states": [
       "m2_khoi_tao",
@@ -122,9 +358,88 @@
       ]
     ]
   },
+  "additional_flows": {
+    "M2-v1: Bản vá an toàn phòng thủ (Con trỏ tạm & Gán NULL)": {
+      "description": "Bản v1 của Trang: Sử dụng con trỏ tạm tmp = realloc(list, new_cap). Nếu OOM (tmp == NULL), giữ nguyên con trỏ list ban đầu, bảo toàn khối nhớ cũ và thu hồi an toàn. Khi mở rộng thành công gán list = tmp. Khi giải phóng tài nguyên, lưu giá trị thống kê ra biến đệm, gọi free(list) và lập tức gán list = NULL để triệt tiêu hoàn toàn con trỏ lơ lửng dangling pointer.",
+      "states": [
+        "m2_khoi_tao",
+        "m2_danh_sach_day",
+        "m2_realloc_tam",
+        "m2_oom_bao_toan_ram",
+        "m2_realloc_thanh_cong",
+        "m2_giai_phong_an_toan"
+      ],
+      "initial": [
+        "m2_khoi_tao"
+      ],
+      "labeling": {
+        "m2_khoi_tao": [
+          "initialized"
+        ],
+        "m2_danh_sach_day": [
+          "list_full"
+        ],
+        "m2_realloc_tam": [
+          "realloc_temp"
+        ],
+        "m2_oom_bao_toan_ram": [
+          "owner_preserved",
+          "safe_exit",
+          "done"
+        ],
+        "m2_realloc_thanh_cong": [
+          "realloc_ok",
+          "owner_valid"
+        ],
+        "m2_giai_phong_an_toan": [
+          "pointer_nullified",
+          "zero_leak",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m2_khoi_tao",
+          "m2_danh_sach_day"
+        ],
+        [
+          "m2_danh_sach_day",
+          "m2_realloc_tam"
+        ],
+        [
+          "m2_realloc_tam",
+          "m2_oom_bao_toan_ram"
+        ],
+        [
+          "m2_realloc_tam",
+          "m2_realloc_thanh_cong"
+        ],
+        [
+          "m2_realloc_thanh_cong",
+          "m2_giai_phong_an_toan"
+        ],
+        [
+          "m2_oom_bao_toan_ram",
+          "m2_oom_bao_toan_ram"
+        ],
+        [
+          "m2_giai_phong_an_toan",
+          "m2_giai_phong_an_toan"
+        ]
+      ]
+    }
+  },
+  "suggested_ctl_formulas": [
+    "AG(!violation)",
+    "AG(!memory_leak)",
+    "AG(!use_after_free)",
+    "EF(realloc_ok)",
+    "AF(done)"
+  ],
   "safety_properties": [
     "AG(!violation)",
     "AG(!memory_leak)",
-    "AG(!use_after_free)"
+    "AG(!use_after_free)",
+    "EF(realloc_ok)"
   ]
 }
