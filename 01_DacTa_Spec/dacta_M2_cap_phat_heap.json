@@ -458,6 +458,15 @@
       "params": [],
       "buffer_size": 16,
       "bug": "use-after-free"
+    },
+    {
+      "name": "calc_batch_capacity",
+      "language": "python",
+      "kind": "divide",
+      "params": [
+        "total_items",
+        "batch_size"
+      ]
     }
   ],
   "arithmetic_checks": [
@@ -475,46 +484,199 @@
     {
       "id": "TC-M2-01",
       "requirement_ids": [
-        "REQ-1",
-        "REQ-4"
+        "REQ-1"
       ],
-      "title": "Kiểm toán tái cấp phát bộ nhớ mảng động khi OOM (realloc OOM leak)",
-      "preconditions": "Hàm expand_stock_items (v0 gán trực tiếp list = realloc, v1 dùng tmp)",
+      "title": "Khởi tạo mảng động danh mục hàng ban đầu (Initial Capacity)",
+      "preconditions": "Khởi tạo danh sách rỗng product_list_init(&list)",
       "steps": [
-        "Nạp dacta_M2_cap_phat_heap.json vào tab Ch1",
-        "Chọn luồng M2-v0, kiểm tra AG(!memory_leak) và AG(!violation)",
-        "Chuyển sang luồng M2-v1, kiểm tra lại"
+        "Gọi hàm khởi tạo danh mục",
+        "Kiểm tra count == 0, capacity == 16, con trỏ items != NULL"
       ],
-      "expected_result": "M2-v0: VI PHẠM (CWE-401); M2-v1: ĐÚNG (khối nhớ cũ được bảo toàn, 0 leak)",
+      "expected_result": "Thành công: Cấp phát đúng 16 ô nhớ ban đầu trên Heap",
       "priority": "HIGH"
     },
     {
       "id": "TC-M2-02",
       "requirement_ids": [
-        "REQ-3",
-        "REQ-5"
+        "REQ-1"
       ],
-      "title": "Kiểm toán giải phóng bộ nhớ và đọc con trỏ treo (Use-After-Free)",
-      "preconditions": "Hàm release_stock_items (v0 không xóa con trỏ, v1 gán ptr = NULL)",
+      "title": "Thêm sản phẩm tới chạm ngưỡng dung lượng chưa mở rộng (Fill to Capacity)",
+      "preconditions": "Danh sách đang có capacity = 16",
       "steps": [
-        "Kiểm tra AG(!use_after_free) trên luồng M2-v0",
-        "Chạy check_c_source() trên hàm release_stock_items",
-        "Kiểm tra lại trên luồng M2-v1"
+        "Thêm liên tiếp 16 sản phẩm hợp lệ vào danh sách",
+        "Kiểm tra count == 16, capacity == 16"
       ],
-      "expected_result": "M2-v0: VI PHẠM (CWE-416); C Static Checker phát hiện use-after-free; M2-v1: ĐÚNG",
-      "priority": "HIGH"
+      "expected_result": "Thành công: 16 sản phẩm được lưu trọn vẹn, chưa kích hoạt realloc",
+      "priority": "MEDIUM"
     },
     {
       "id": "TC-M2-03",
       "requirement_ids": [
+        "REQ-1",
         "REQ-6"
       ],
-      "title": "Kiểm toán tràn số khi tính kích thước cấp phát Heap",
-      "preconditions": "Điều kiện SMT heap_alloc_bytes: new_capacity * item_size",
+      "title": "Tự động nhân đôi dung lượng khi thêm sản phẩm thứ 17 (Capacity Doubling)",
+      "preconditions": "Danh sách đã đầy 16 phần tử, thêm phần tử thứ 17",
       "steps": [
-        "Chạy check_satisfiability() trên điều kiện heap_alloc_bytes (Chương 3 Z3)"
+        "Gọi add_product thêm sản phẩm thứ 17",
+        "Kiểm tra capacity tăng từ 16 lên 32, count == 17"
       ],
-      "expected_result": "SAT: Phát hiện tổ hợp nghiệm gây tràn số vượt ngưỡng int32 khi cấp phát heap",
+      "expected_result": "Thành công: Thuật toán nhân đôi mảng động cấp phát vùng nhớ mới an toàn",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-04",
+      "requirement_ids": [
+        "REQ-6"
+      ],
+      "title": "Kiểm tra tràn số nguyên khi tính toán kích thước mở rộng (Integer Overflow in Capacity)",
+      "preconditions": "current_capacity vượt ngưỡng an toàn (ví dụ: SIZE_MAX / 2)",
+      "steps": [
+        "Chạy kiểm tra SMT Z3 trên điều kiện heap_alloc_bytes",
+        "Thực thi hàm calc_expand_capacity_v0 với factor lớn"
+      ],
+      "expected_result": "v0: Phép nhân tràn số âm/nhỏ gây cấp phát thiếu ô nhớ; v1: Rào chắn từ chối mở rộng",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-05",
+      "requirement_ids": [
+        "REQ-4"
+      ],
+      "title": "Mô phỏng sự cố OOM khi realloc mảng động (Fault Injection OOM NULL)",
+      "preconditions": "Hệ thống cạn kiệt RAM, mock_realloc trả về NULL",
+      "steps": [
+        "Ép hàm realloc trả về NULL khi mảng đầy cần mở rộng",
+        "Quan sát phản ứng của hàm mở rộng"
+      ],
+      "expected_result": "v0: Gán list = NULL làm mất sạch địa chỉ vùng nhớ cũ; v1: Trả về STATUS_ERR_ALLOC",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-06",
+      "requirement_ids": [
+        "REQ-4"
+      ],
+      "title": "Bảo toàn địa chỉ và quyền sở hữu vùng nhớ cũ khi OOM (Ownership Retention)",
+      "preconditions": "realloc trả về NULL",
+      "steps": [
+        "So sánh địa chỉ con trỏ items trước và sau khi realloc thất bại"
+      ],
+      "expected_result": "v0: Con trỏ gốc bị ghi đè thành NULL; v1: Địa chỉ cũ được bảo toàn 100%",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-07",
+      "requirement_ids": [
+        "REQ-4"
+      ],
+      "title": "Bảo toàn tính toàn vẹn của dữ liệu đã có khi OOM (Data Integrity on Failure)",
+      "preconditions": "Danh sách chứa sẵn 16 mặt hàng ban đầu",
+      "steps": [
+        "Sau khi mở rộng thất bại, duyệt đọc lại 16 mặt hàng cũ"
+      ],
+      "expected_result": "v0: Crash bộ nhớ do con trỏ bị NULL hóa; v1: 16 mặt hàng cũ còn nguyên vẹn",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-08",
+      "requirement_ids": [
+        "REQ-4"
+      ],
+      "title": "Kiểm toán rò rỉ bộ nhớ bằng LeakSanitizer (LSan Memory Leak Audit)",
+      "preconditions": "Biên dịch bản v0 và v1 với flag -fsanitize=leak",
+      "steps": [
+        "Chạy kịch bản nhập kho OOM trên bản v0 và v1",
+        "Kiểm tra log của LeakSanitizer"
+      ],
+      "expected_result": "v0: LSan bắt lỗi leaked 16 blocks (CWE-401); v1: LSan báo 0 byte leaked",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-09",
+      "requirement_ids": [
+        "REQ-5"
+      ],
+      "title": "Con trỏ mượn bị vô hiệu hóa sau khi mảng động dời địa chỉ (Dangling Pointer on Resize)",
+      "preconditions": "Lưu con trỏ mượn p = find_product_by_id(&list, \"P0001\")",
+      "steps": [
+        "Gọi add_product kích hoạt realloc sang địa chỉ RAM mới",
+        "Đọc dữ liệu qua con trỏ p ban đầu"
+      ],
+      "expected_result": "v0: p trỏ vào vùng nhớ cũ đã bị OS thu hồi; v1: Cảnh báo Borrowed Pointer Invalidation",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-10",
+      "requirement_ids": [
+        "REQ-5"
+      ],
+      "title": "Đọc con trỏ sau khi free phiên kho (Use-After-Free Audit)",
+      "preconditions": "Hàm cleanup_and_read_uaf_v0 giải phóng struct nhưng vẫn return *ptr",
+      "steps": [
+        "Gọi hàm giải phóng tài nguyên phiên kho",
+        "Thực hiện đọc/ghi vào con trỏ vừa giải phóng"
+      ],
+      "expected_result": "v0: Đọc dữ liệu rác/vùng nhớ tự do (CWE-416); v1: Triệt tiêu hoàn toàn vì con trỏ đã set NULL",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-11",
+      "requirement_ids": [
+        "REQ-5"
+      ],
+      "title": "Bắt lỗi Heap-Use-After-Free bằng AddressSanitizer (ASan Crash Trigger)",
+      "preconditions": "Biên dịch mã nguồn với flag -fsanitize=address",
+      "steps": [
+        "Thực thi test_sim001_heap trên bản v0",
+        "Ghi nhận crash log do ASan sinh ra"
+      ],
+      "expected_result": "v0: ASan sinh log crash: ERROR: AddressSanitizer: heap-use-after-free on address; v1: 0 crash",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-12",
+      "requirement_ids": [
+        "REQ-5"
+      ],
+      "title": "Phòng thủ giải phóng hai lần trên cùng một con trỏ (Double-Free Defense)",
+      "preconditions": "Gọi product_list_free(&list) liên tiếp 2 lần",
+      "steps": [
+        "Thực hiện lệnh free(list->items) lần 1",
+        "Thực hiện tiếp lệnh free(list->items) lần 2"
+      ],
+      "expected_result": "v0: Crash OS double free or corruption (CWE-415); v1: Lần 2 gặp con trỏ NULL nên bỏ qua an toàn",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-13",
+      "requirement_ids": [
+        "REQ-3"
+      ],
+      "title": "Kiểm toán bất biến an toàn bộ nhớ (Safety Invariant: count <= capacity)",
+      "preconditions": "Chạy qua 50 lần thêm/xóa ngẫu nhiên",
+      "steps": [
+        "Kiểm tra điều kiện list.count <= list.capacity tại mọi thời điểm"
+      ],
+      "expected_result": "Bất biến an toàn luôn được duy trì 100% trong suốt vòng đời mảng động",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": "TC-M2-14",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-2",
+        "REQ-3",
+        "REQ-4",
+        "REQ-5"
+      ],
+      "title": "Kiểm thử hồi quy đối chứng toàn diện pytest (Regression Verification Suite)",
+      "preconditions": "Bộ test pytest test_verify_v0_cases_on_v1.py",
+      "steps": [
+        "Chạy toàn bộ test cases trên bản lỗi v0",
+        "Chạy lại toàn bộ test cases trên bản vá v1"
+      ],
+      "expected_result": "v0: Phát hiện đầy đủ lỗi CWE-190, CWE-401, CWE-416; v1: 100% PASSED (Xanh toàn bộ)",
       "priority": "HIGH"
     }
   ]
