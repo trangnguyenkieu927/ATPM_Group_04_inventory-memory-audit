@@ -1,0 +1,433 @@
+{
+  "name": "dacta_M1_doc_chuoi_buffer",
+  "description": "Hệ thống tiếp nhận dữ liệu mã phiếu kho hàng (M1 - Nguyễn Quang Thọ - MSV: 23010162): tiếp nhận mã phiếu kho từ nguồn ngoài vào bộ đệm Stack (H1). Bản v0 dùng strcpy không giới hạn kích thước gây Stack Buffer Overflow (CWE-121) và Off-by-one (CWE-193). Bản v1 dùng strncpy an toàn và ép null byte cuối chuỗi.",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Hệ thống phải có thể tiến đến trạng thái chép chuỗi thành công từ trạng thái nhận chuỗi đầu vào: EF(copy_ok | copy_safe)",
+      "category": "functional",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-2",
+      "text": "Hệ thống không được rơi vào deadlock ở bất kỳ trạng thái nào trong chu trình đọc chuỗi: AF(done)",
+      "category": "liveness",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-3",
+      "text": "Trạng thái vi phạm tràn bộ đệm (violation, stack_buffer_overflow) không được xảy ra ở bất kỳ trạng thái tương lai nào: AG(!violation)",
+      "category": "safety",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-4",
+      "text": "Hàm đọc mã phiếu không được ghi đè byte ranh giới khi mã dài đúng bằng dung lượng bộ đệm (CWE-193 Off-by-one): AG(!off_by_one)",
+      "category": "memory",
+      "priority": "HIGH"
+    }
+  ],
+  "states": [
+    "m1_nhan_chuoi",
+    "m1_len_nho_16",
+    "m1_len_bang_16",
+    "m1_len_lon_16",
+    "m1_chep_an_toan",
+    "m1_tran_1_byte",
+    "m1_tran_nhieu_byte"
+  ],
+  "initial": [
+    "m1_nhan_chuoi"
+  ],
+  "labeling": {
+    "m1_nhan_chuoi": [
+      "receiving_input"
+    ],
+    "m1_len_nho_16": [
+      "len_safe"
+    ],
+    "m1_len_bang_16": [
+      "len_boundary"
+    ],
+    "m1_len_lon_16": [
+      "len_excessive"
+    ],
+    "m1_chep_an_toan": [
+      "copy_ok",
+      "done"
+    ],
+    "m1_tran_1_byte": [
+      "stack_buffer_overflow",
+      "off_by_one",
+      "violation"
+    ],
+    "m1_tran_nhieu_byte": [
+      "stack_buffer_overflow",
+      "frame_corrupted",
+      "violation"
+    ]
+  },
+  "transitions": [
+    [
+      "m1_nhan_chuoi",
+      "m1_len_nho_16"
+    ],
+    [
+      "m1_nhan_chuoi",
+      "m1_len_bang_16"
+    ],
+    [
+      "m1_nhan_chuoi",
+      "m1_len_lon_16"
+    ],
+    [
+      "m1_len_nho_16",
+      "m1_chep_an_toan"
+    ],
+    [
+      "m1_len_bang_16",
+      "m1_tran_1_byte"
+    ],
+    [
+      "m1_len_lon_16",
+      "m1_tran_nhieu_byte"
+    ],
+    [
+      "m1_chep_an_toan",
+      "m1_chep_an_toan"
+    ],
+    [
+      "m1_tran_1_byte",
+      "m1_tran_1_byte"
+    ],
+    [
+      "m1_tran_nhieu_byte",
+      "m1_tran_nhieu_byte"
+    ]
+  ],
+  "flows": {
+    "M1-v0: Cài lỗi có chủ đích (CWE-121 Overflow & CWE-193 Off-by-one)": {
+      "description": "Bản v0 của Thọ: Nhân viên kho đọc mã phiếu kho vào bộ đệm Stack 16 byte bằng hàm strcpy không kiểm tra độ dài. Khi chuỗi nhập dài hơn 15 byte, bộ đệm bị tràn ghi đè lên con trỏ khung stack frame gây Stack Buffer Overflow (CWE-121) và Off-by-one (CWE-193).",
+      "states": [
+        "m1_nhan_chuoi",
+        "m1_len_nho_16",
+        "m1_len_bang_16",
+        "m1_len_lon_16",
+        "m1_chep_an_toan",
+        "m1_tran_1_byte",
+        "m1_tran_nhieu_byte"
+      ],
+      "initial": [
+        "m1_nhan_chuoi"
+      ],
+      "labeling": {
+        "m1_nhan_chuoi": [
+          "receiving_input"
+        ],
+        "m1_len_nho_16": [
+          "len_safe"
+        ],
+        "m1_len_bang_16": [
+          "len_boundary"
+        ],
+        "m1_len_lon_16": [
+          "len_excessive"
+        ],
+        "m1_chep_an_toan": [
+          "copy_ok",
+          "done"
+        ],
+        "m1_tran_1_byte": [
+          "stack_buffer_overflow",
+          "off_by_one",
+          "violation"
+        ],
+        "m1_tran_nhieu_byte": [
+          "stack_buffer_overflow",
+          "frame_corrupted",
+          "violation"
+        ]
+      },
+      "transitions": [
+        [
+          "m1_nhan_chuoi",
+          "m1_len_nho_16"
+        ],
+        [
+          "m1_nhan_chuoi",
+          "m1_len_bang_16"
+        ],
+        [
+          "m1_nhan_chuoi",
+          "m1_len_lon_16"
+        ],
+        [
+          "m1_len_nho_16",
+          "m1_chep_an_toan"
+        ],
+        [
+          "m1_len_bang_16",
+          "m1_tran_1_byte"
+        ],
+        [
+          "m1_len_lon_16",
+          "m1_tran_nhieu_byte"
+        ],
+        [
+          "m1_chep_an_toan",
+          "m1_chep_an_toan"
+        ],
+        [
+          "m1_tran_1_byte",
+          "m1_tran_1_byte"
+        ],
+        [
+          "m1_tran_nhieu_byte",
+          "m1_tran_nhieu_byte"
+        ]
+      ]
+    },
+    "M1-v1: Bản vá an toàn phòng thủ (Giới hạn kích thước & Gán null)": {
+      "description": "Bản v1 của Thọ: Thay thế strcpy bằng strncpy(dest, src, sizeof(dest) - 1) kết hợp ép gán byte kết thúc dest[sizeof(dest) - 1] = '\\0'. Kiểm tra chặt chẽ biên độ dài chuỗi trước khi chép. Triệt tiêu hoàn toàn lỗi tràn bộ đệm.",
+      "states": [
+        "m1_nhan_chuoi",
+        "m1_kiem_tra_bien",
+        "m1_tu_choi_chuoi_dai",
+        "m1_chep_gioi_han_an_toan"
+      ],
+      "initial": [
+        "m1_nhan_chuoi"
+      ],
+      "labeling": {
+        "m1_nhan_chuoi": [
+          "receiving_input"
+        ],
+        "m1_kiem_tra_bien": [
+          "checking_bounds"
+        ],
+        "m1_tu_choi_chuoi_dai": [
+          "input_rejected",
+          "safe_exit",
+          "done"
+        ],
+        "m1_chep_gioi_han_an_toan": [
+          "copy_safe",
+          "null_terminated",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m1_nhan_chuoi",
+          "m1_kiem_tra_bien"
+        ],
+        [
+          "m1_kiem_tra_bien",
+          "m1_tu_choi_chuoi_dai"
+        ],
+        [
+          "m1_kiem_tra_bien",
+          "m1_chep_gioi_han_an_toan"
+        ],
+        [
+          "m1_tu_choi_chuoi_dai",
+          "m1_tu_choi_chuoi_dai"
+        ],
+        [
+          "m1_chep_gioi_han_an_toan",
+          "m1_chep_gioi_han_an_toan"
+        ]
+      ]
+    }
+  },
+  "state_machine": {
+    "states": [
+      "m1_nhan_chuoi",
+      "m1_len_nho_16",
+      "m1_len_bang_16",
+      "m1_len_lon_16",
+      "m1_chep_an_toan",
+      "m1_tran_1_byte",
+      "m1_tran_nhieu_byte"
+    ],
+    "initial": [
+      "m1_nhan_chuoi"
+    ],
+    "labeling": {
+      "m1_nhan_chuoi": [
+        "receiving_input"
+      ],
+      "m1_len_nho_16": [
+        "len_safe"
+      ],
+      "m1_len_bang_16": [
+        "len_boundary"
+      ],
+      "m1_len_lon_16": [
+        "len_excessive"
+      ],
+      "m1_chep_an_toan": [
+        "copy_ok",
+        "done"
+      ],
+      "m1_tran_1_byte": [
+        "stack_buffer_overflow",
+        "off_by_one",
+        "violation"
+      ],
+      "m1_tran_nhieu_byte": [
+        "stack_buffer_overflow",
+        "frame_corrupted",
+        "violation"
+      ]
+    },
+    "transitions": [
+      [
+        "m1_nhan_chuoi",
+        "m1_len_nho_16"
+      ],
+      [
+        "m1_nhan_chuoi",
+        "m1_len_bang_16"
+      ],
+      [
+        "m1_nhan_chuoi",
+        "m1_len_lon_16"
+      ],
+      [
+        "m1_len_nho_16",
+        "m1_chep_an_toan"
+      ],
+      [
+        "m1_len_bang_16",
+        "m1_tran_1_byte"
+      ],
+      [
+        "m1_len_lon_16",
+        "m1_tran_nhieu_byte"
+      ],
+      [
+        "m1_chep_an_toan",
+        "m1_chep_an_toan"
+      ],
+      [
+        "m1_tran_1_byte",
+        "m1_tran_1_byte"
+      ],
+      [
+        "m1_tran_nhieu_byte",
+        "m1_tran_nhieu_byte"
+      ]
+    ]
+  },
+  "additional_flows": {
+    "M1-v1: Bản vá an toàn phòng thủ (Giới hạn kích thước & Gán null)": {
+      "description": "Bản v1 của Thọ: Thay thế strcpy bằng strncpy(dest, src, sizeof(dest) - 1) kết hợp ép gán byte kết thúc dest[sizeof(dest) - 1] = '\\0'. Kiểm tra chặt chẽ biên độ dài chuỗi trước khi chép. Triệt tiêu hoàn toàn lỗi tràn bộ đệm.",
+      "states": [
+        "m1_nhan_chuoi",
+        "m1_kiem_tra_bien",
+        "m1_tu_choi_chuoi_dai",
+        "m1_chep_gioi_han_an_toan"
+      ],
+      "initial": [
+        "m1_nhan_chuoi"
+      ],
+      "labeling": {
+        "m1_nhan_chuoi": [
+          "receiving_input"
+        ],
+        "m1_kiem_tra_bien": [
+          "checking_bounds"
+        ],
+        "m1_tu_choi_chuoi_dai": [
+          "input_rejected",
+          "safe_exit",
+          "done"
+        ],
+        "m1_chep_gioi_han_an_toan": [
+          "copy_safe",
+          "null_terminated",
+          "done"
+        ]
+      },
+      "transitions": [
+        [
+          "m1_nhan_chuoi",
+          "m1_kiem_tra_bien"
+        ],
+        [
+          "m1_kiem_tra_bien",
+          "m1_tu_choi_chuoi_dai"
+        ],
+        [
+          "m1_kiem_tra_bien",
+          "m1_chep_gioi_han_an_toan"
+        ],
+        [
+          "m1_tu_choi_chuoi_dai",
+          "m1_tu_choi_chuoi_dai"
+        ],
+        [
+          "m1_chep_gioi_han_an_toan",
+          "m1_chep_gioi_han_an_toan"
+        ]
+      ]
+    }
+  },
+  "suggested_ctl_formulas": [
+    "AG(!violation)",
+    "AG(!stack_buffer_overflow)",
+    "AG(!off_by_one)",
+    "EF(copy_ok)",
+    "AF(done)"
+  ],
+  "safety_properties": [
+    "AG(!violation)",
+    "AG(!stack_buffer_overflow)",
+    "AG(!off_by_one)"
+  ],
+  "functions": [
+    {
+      "name": "parse_voucher_id",
+      "language": "c",
+      "kind": "buffer_copy",
+      "params": [
+        "input_str"
+      ],
+      "buffer_size": 16,
+      "bug": "buffer-overflow"
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "TC-M1-01",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-3"
+      ],
+      "title": "Chép chuỗi mã phiếu vượt quá kích thước bộ đệm Stack 16 byte",
+      "preconditions": "Hàm parse_voucher_id dùng strcpy (v0) / strncpy (v1)",
+      "steps": [
+        "Chạy check_c_source() trên hàm parse_voucher_id",
+        "Kiểm tra AG(!stack_buffer_overflow) trên luồng M1-v0",
+        "Kiểm tra lại trên luồng M1-v1"
+      ],
+      "expected_result": "v0: dangerous-function strcpy (CWE-120/121), VI PHẠM; v1: 0 phát hiện, ĐÚNG",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-02",
+      "requirement_ids": [
+        "REQ-4"
+      ],
+      "title": "Lỗi Off-by-one khi chuỗi có độ dài đúng bằng kích thước buffer",
+      "preconditions": "len(input_str) == 16, ghi đè byte ranh giới null terminator",
+      "steps": [
+        "Kiểm tra AG(!off_by_one) trên luồng M1-v0",
+        "Kiểm tra lại trên luồng M1-v1"
+      ],
+      "expected_result": "v0: VI PHẠM (CWE-193 Off-by-one); v1: ĐÚNG (ép gán null terminator)",
+      "priority": "HIGH"
+    }
+  ]
+}

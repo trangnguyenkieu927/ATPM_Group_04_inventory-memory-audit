@@ -1,0 +1,32 @@
+========================================================================
+ KIỂM CHỨNG HÌNH THỨC BOUNDED MODEL CHECKING (BMC): BẢN V0 (CÀI LỖI CÓ CHỦ ĐÍCH)
+ Tệp nguồn đặc tả: quanly_khohang_v0.json
+========================================================================
+ [1] Quy mô mô hình Kripke: |S| = 35 trạng thái, |S0| = 1
+     Trạng thái khởi tạo: ['start']
+     Số lượng trạng thái gán nhãn [violation]: 16
+     Danh sách trạng thái lỗi: ['h1_tran_1_byte', 'h1_tran_bo_dem', 'h2_doc_rac', 'h2_null', 'h2_sai_kich_thuoc', 'h3_chia_0', 'h3_so_am', 'h3_tran_so', 'h4_nhanh_an', 'h4_tran_token', 'h5_format_string', 'h5_ro_ri', 'h6_con_ma_pin', 'h6_double_free', 'h6_tranh_chap', 'h6_uaf']
+
+ [2] Tiến trình kiểm chứng thuộc tính Safety: AG(!violation) với k_max = 50:
+     ==> KẾT LUẬN: VI PHẠM (SAT - Phát hiện lỗ hổng an toàn tại bước k = 2)
+     Độ dài vết phản ví dụ: 3 bước chuyển trạng thái
+     Vết phản ví dụ (Counterexample Trace):
+        Bước 0: [start] (nhãn: safe, start)
+        Bước 1: [h1_vao] (nhãn: receiving, h1)
+        Bước 2: [h1_tran_1_byte] (nhãn: buffer_overflow, violation, off_by_one, h1)
+     Trạng thái vi phạm đích: h1_tran_1_byte
+------------------------------------------------------------------------
+========================================================================
+ KIỂM CHỨNG HÌNH THỨC BOUNDED MODEL CHECKING (BMC): BẢN V1 (BẢN VÁ PHÒNG THỦ AN TOÀN)
+ Tệp nguồn đặc tả: quanly_khohang_v1.json
+========================================================================
+ [1] Quy mô mô hình Kripke: |S| = 21 trạng thái, |S0| = 1
+     Trạng thái khởi tạo: ['start']
+     Số lượng trạng thái gán nhãn [violation]: 0
+
+ [2] Tiến trình kiểm chứng thuộc tính Safety: AG(!violation) với k_max = 50:
+     ==> KẾT LUẬN: THỎA MÃN (UNSAT - Không tồn tại bất kỳ đường đi nào tới trạng thái lỗi)
+     Chứng minh tính đầy đủ: ĐẠT NGƯỠNG ĐẦY ĐỦ (Completeness Threshold - CT) tại bước k = 15
+     Toàn bộ 21 trạng thái khả đạt từ S0 đã được duyệt đầy đủ.
+     Kết luận an toàn đạt cấp độ chứng minh hình thức tuyệt đối (Formal Proof).
+------------------------------------------------------------------------
