@@ -1,6 +1,6 @@
 {
   "name": "quanly_khohang_m2_cap_phat_heap",
-  "description": "Hệ thống quản lý vòng đời bộ nhớ Heap kho hàng (M2 - Nguyễn Kiều Trang - MSV: 23010495): phụ trách cấp phát, mở rộng động danh mục hàng hóa (H3) và lưu trữ, giải phóng an toàn tài nguyên sau xử lý (H6). Bản v0 cài các lỗi bộ nhớ: (1) Tính toán kích thước mở rộng không kiểm tra cận trên gây tràn số và kích thước sai; (2) Dùng realloc gán trực tiếp vào con trỏ gốc khiến khi gặp sự cố OOM (hết RAM/NULL) làm mất địa chỉ khối nhớ ban đầu, gây rò rỉ bộ nhớ tiến trình (CWE-401 Memory Leak); (3) Sau khi free() không xóa con trỏ (dangling pointer) dẫn tới đọc vùng nhớ đã giải phóng (CWE-416 Use-After-Free). Bản v1 cài đặt kỹ thuật phòng thủ: dùng con trỏ tạm tmp kiểm tra NULL bảo toàn khối nhớ cũ khi OOM, kiểm soát cận trên MAX_SAFE_CAPACITY, lưu giá trị ra biến đệm trước khi giải phóng và lập tức gán ptr = NULL để triệt tiêu hoàn toàn lỗi Use-After-Free.",
+  "description": "Hệ thống quản lý vòng đời bộ nhớ Heap kho hàng (M2 - Nguyễn Kiều Trang - MSV: 23010495) - BẢN V0 CÀI LỖI CÓ CHỦ ĐÍCH: Nhân viên kho thêm hàng mới khi danh sách 16 ô đã đầy. Trang gọi realloc mở rộng dung lượng. Khi OOM gán list = realloc làm mất địa chỉ gốc gây rò rỉ bộ nhớ (CWE-401 Memory Leak); sau khi free xong không xóa con trỏ (dangling pointer) gây đọc vùng nhớ đã giải phóng (CWE-416 Use-After-Free).",
   "requirements": [
     {
       "id": "REQ-1",
@@ -10,7 +10,7 @@
     },
     {
       "id": "REQ-2",
-      "text": "Hệ thống không được rơi vào deadlock ở bất kỳ trạng thái nào trong chu trình quản lý vòng đời bộ nhớ Heap: AF(done)",
+      "text": "Hệ thống không được rơi vào deadlock ở bất kỳ trạng thái nào trong chu trình quản lý vòng đời bộ nhớ Heap",
       "category": "liveness",
       "priority": "HIGH"
     },
@@ -39,165 +39,6 @@
       "priority": "MEDIUM"
     }
   ],
-  "v0": {
-    "module": "M2_heap_lifecycle",
-    "member": "Nguyễn Kiều Trang",
-    "msv": "23010495",
-    "story": "Nhân viên kho thêm hàng mới khi danh sách 16 ô đã đầy. Trang gọi realloc mở rộng dung lượng. Khi OOM gán list = realloc làm mất địa chỉ gốc gây leak; free xong không xóa con trỏ gây UAF.",
-    "states": [
-      "m2_khoi_tao",
-      "m2_danh_sach_day",
-      "m2_realloc_goi",
-      "m2_oom_null",
-      "m2_mat_con_tro_leak",
-      "m2_realloc_thanh_cong",
-      "m2_giai_phong_xong",
-      "m2_doc_con_tro_treo_uaf"
-    ],
-    "initial": [
-      "m2_khoi_tao"
-    ],
-    "labeling": {
-      "m2_khoi_tao": [
-        "initialized"
-      ],
-      "m2_danh_sach_day": [
-        "list_full"
-      ],
-      "m2_realloc_goi": [
-        "reallocating"
-      ],
-      "m2_oom_null": [
-        "oom_occurred"
-      ],
-      "m2_mat_con_tro_leak": [
-        "memory_leak",
-        "cwe_401",
-        "violation"
-      ],
-      "m2_realloc_thanh_cong": [
-        "realloc_ok"
-      ],
-      "m2_giai_phong_xong": [
-        "freed_without_null"
-      ],
-      "m2_doc_con_tro_treo_uaf": [
-        "use_after_free",
-        "cwe_416",
-        "violation"
-      ]
-    },
-    "transitions": [
-      [
-        "m2_khoi_tao",
-        "m2_danh_sach_day"
-      ],
-      [
-        "m2_danh_sach_day",
-        "m2_realloc_goi"
-      ],
-      [
-        "m2_realloc_goi",
-        "m2_oom_null"
-      ],
-      [
-        "m2_realloc_goi",
-        "m2_realloc_thanh_cong"
-      ],
-      [
-        "m2_oom_null",
-        "m2_mat_con_tro_leak"
-      ],
-      [
-        "m2_realloc_thanh_cong",
-        "m2_giai_phong_xong"
-      ],
-      [
-        "m2_giai_phong_xong",
-        "m2_doc_con_tro_treo_uaf"
-      ],
-      [
-        "m2_mat_con_tro_leak",
-        "m2_mat_con_tro_leak"
-      ],
-      [
-        "m2_doc_con_tro_treo_uaf",
-        "m2_doc_con_tro_treo_uaf"
-      ]
-    ]
-  },
-  "v1": {
-    "module": "M2_heap_lifecycle",
-    "member": "Nguyễn Kiều Trang",
-    "msv": "23010495",
-    "story": "Bản vá của Trang: Dùng con trỏ tạm tmp = realloc. Nếu NULL thì giữ nguyên khối nhớ cũ và thu hồi an toàn; giải phóng xong lập tức gán ptr = NULL.",
-    "states": [
-      "m2_khoi_tao",
-      "m2_danh_sach_day",
-      "m2_realloc_tam",
-      "m2_oom_bao_toan_ram",
-      "m2_realloc_thanh_cong",
-      "m2_giai_phong_an_toan"
-    ],
-    "initial": [
-      "m2_khoi_tao"
-    ],
-    "labeling": {
-      "m2_khoi_tao": [
-        "initialized"
-      ],
-      "m2_danh_sach_day": [
-        "list_full"
-      ],
-      "m2_realloc_tam": [
-        "realloc_temp"
-      ],
-      "m2_oom_bao_toan_ram": [
-        "owner_preserved",
-        "safe_exit",
-        "done"
-      ],
-      "m2_realloc_thanh_cong": [
-        "realloc_ok",
-        "owner_valid"
-      ],
-      "m2_giai_phong_an_toan": [
-        "pointer_nullified",
-        "zero_leak",
-        "done"
-      ]
-    },
-    "transitions": [
-      [
-        "m2_khoi_tao",
-        "m2_danh_sach_day"
-      ],
-      [
-        "m2_danh_sach_day",
-        "m2_realloc_tam"
-      ],
-      [
-        "m2_realloc_tam",
-        "m2_oom_bao_toan_ram"
-      ],
-      [
-        "m2_realloc_tam",
-        "m2_realloc_thanh_cong"
-      ],
-      [
-        "m2_realloc_thanh_cong",
-        "m2_giai_phong_an_toan"
-      ],
-      [
-        "m2_oom_bao_toan_ram",
-        "m2_oom_bao_toan_ram"
-      ],
-      [
-        "m2_giai_phong_an_toan",
-        "m2_giai_phong_an_toan"
-      ]
-    ]
-  },
   "state_machine": {
     "states": [
       "m2_khoi_tao",
@@ -284,78 +125,6 @@
   "safety_properties": [
     "AG(!violation)",
     "AG(!memory_leak)",
-    "AG(!use_after_free)",
-    "AF(done)",
-    "EF(realloc_ok)"
-  ],
-  "additional_flows": {
-    "M2-v1: Bản vá của Trang — con trỏ tạm tmp + gán NULL": {
-      "states": [
-        "m2_khoi_tao",
-        "m2_danh_sach_day",
-        "m2_realloc_tam",
-        "m2_oom_bao_toan_ram",
-        "m2_realloc_thanh_cong",
-        "m2_giai_phong_an_toan"
-      ],
-      "initial": [
-        "m2_khoi_tao"
-      ],
-      "labeling": {
-        "m2_khoi_tao": [
-          "initialized"
-        ],
-        "m2_danh_sach_day": [
-          "list_full"
-        ],
-        "m2_realloc_tam": [
-          "realloc_temp"
-        ],
-        "m2_oom_bao_toan_ram": [
-          "owner_preserved",
-          "safe_exit",
-          "done"
-        ],
-        "m2_realloc_thanh_cong": [
-          "realloc_ok",
-          "owner_valid"
-        ],
-        "m2_giai_phong_an_toan": [
-          "pointer_nullified",
-          "zero_leak",
-          "done"
-        ]
-      },
-      "transitions": [
-        [
-          "m2_khoi_tao",
-          "m2_danh_sach_day"
-        ],
-        [
-          "m2_danh_sach_day",
-          "m2_realloc_tam"
-        ],
-        [
-          "m2_realloc_tam",
-          "m2_oom_bao_toan_ram"
-        ],
-        [
-          "m2_realloc_tam",
-          "m2_realloc_thanh_cong"
-        ],
-        [
-          "m2_realloc_thanh_cong",
-          "m2_giai_phong_an_toan"
-        ],
-        [
-          "m2_oom_bao_toan_ram",
-          "m2_oom_bao_toan_ram"
-        ],
-        [
-          "m2_giai_phong_an_toan",
-          "m2_giai_phong_an_toan"
-        ]
-      ]
-    }
-  }
+    "AG(!use_after_free)"
+  ]
 }
