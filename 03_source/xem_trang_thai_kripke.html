@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trực quan hóa Mô hình Trạng thái Kripke - Nhóm 04</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --accent-red: #f87171;
+            --accent-yellow: #facc15;
+            --border-color: #334155;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg-primary); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar { width: 360px; background: var(--bg-secondary); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .header { padding: 20px; border-bottom: 1px solid var(--border-color); }
+        .header h1 { font-size: 16px; font-weight: 700; color: var(--accent-blue); line-height: 1.4; }
+        .header p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        
+        .controls { padding: 12px 20px; border-bottom: 1px solid var(--border-color); display: flex; gap: 8px; }
+        .btn-tab { flex: 1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border-color); background: transparent; color: var(--text-muted); transition: all 0.2s; }
+        .btn-tab.active { background: var(--accent-blue); color: #000; border-color: var(--accent-blue); }
+        
+        .state-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .behavior-group { margin-bottom: 15px; }
+        .group-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 4px 8px; font-weight: 700; }
+        .state-item { padding: 10px 12px; margin: 3px 0; border-radius: 6px; cursor: pointer; background: rgba(255,255,255,0.02); border: 1px solid transparent; transition: all 0.15s; display: flex; justify-content: space-between; align-items: center; }
+        .state-item:hover { background: rgba(255,255,255,0.06); border-color: var(--border-color); }
+        .state-item.selected { background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue); }
+        .state-name { font-size: 13px; font-weight: 600; font-family: monospace; }
+        
+        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        .badge-err { background: rgba(248, 113, 113, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
+        .badge-safe { background: rgba(74, 222, 128, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+        
+        /* Main View */
+        .main-panel { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 30px; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 24px; margin-bottom: 24px; }
+        .card h2 { font-size: 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        
+        .label-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+        .tag { font-family: monospace; font-size: 12px; padding: 4px 10px; border-radius: 20px; background: #334155; color: #e2e8f0; }
+        .tag.violation { background: #991b1b; color: #fecaca; }
+        .tag.safe { background: #166534; color: #bbf7d0; }
+        
+        .detail-row { display: flex; margin: 8px 0; font-size: 14px; line-height: 1.6; }
+        .detail-label { width: 180px; color: var(--text-muted); font-weight: 600; }
+        .detail-val { flex: 1; color: var(--text-main); }
+        
+        .table-ctl { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        .table-ctl th, .table-ctl td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .table-ctl th { color: var(--text-muted); font-weight: 600; }
+        .status-pass { color: var(--accent-green); font-weight: 700; }
+        .status-fail { color: var(--accent-red); font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="header">
+            <h1>MÔ HÌNH KRIPKE 35 TRẠNG THÁI</h1>
+            <p>Đề tài: Kiểm toán an toàn bộ nhớ quản lý kho (Nhóm 04)</p>
+        </div>
+        <div class="controls">
+            <button class="btn-tab active" onclick="setVersion('v0')">Bản v0 (18 Lỗi)</button>
+            <button class="btn-tab" onclick="setVersion('v1')">Bản v1 (Đã vá)</button>
+        </div>
+        <div class="state-list" id="stateList"></div>
+    </div>
+
+    <div class="main-panel">
+        <div class="card" id="detailCard">
+            <h2 id="stTitle">Chọn một trạng thái để xem chi tiết kiểm chứng</h2>
+            <div class="label-tags" id="stTags"></div>
+            <div id="stDetails"></div>
+        </div>
+
+        <div class="card">
+            <h2>KẾT QUẢ KIỂM CHỨNG CÔNG THỨC CTL & BOUNDED MODEL CHECKING</h2>
+            <table class="table-ctl">
+                <thead>
+                    <tr>
+                        <th>Công thức CTL</th>
+                        <th>Ý nghĩa học thuật & An toàn</th>
+                        <th>Bản v0 (Cài lỗi)</th>
+                        <th>Bản v1 (Bản vá)</th>
+                    </tr>
+                </thead>
+                <tbody id="ctlBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let curVer = 'v0';
+        let selState = 'h1_tran_1_byte';
+
+        const STATES = [
+            { name: 'start', init: true, labels: ['start', 'safe'], h: 'Khởi tạo', note: 'Bắt đầu tiếp nhận và xử lý 1 phiếu kho hàng', v0_succ: ['h1_vao'], v1_succ: ['h1_vao'] },
+            { name: 'h1_vao', labels: ['h1', 'receiving'], h: 'H1: Tiếp nhận', note: 'Nhận chuỗi mã phiếu kho từ giao diện', v0_succ: ['h1_ok', 'h1_tran_1_byte', 'h1_tran_bo_dem'], v1_succ: ['h1_ok', 'ket_thuc_tu_choi'] },
+            { name: 'h1_ok', labels: ['h1', 'input_ok'], h: 'H1: Tiếp nhận', note: 'Mã phiếu chép đủ, có ký tự kết thúc chuỗi \\0 (An toàn)', v0_succ: ['h2_vao'], v1_succ: ['h2_vao'] },
+            { name: 'h1_tran_1_byte', labels: ['h1', 'buffer_overflow', 'off_by_one', 'violation'], h: 'H1: Tiếp nhận', note: 'Mã ĐÚNG 16 ký tự: strcpy ghi 17 byte, \\0 đè sang biến kề (Lỗi ẩn CWE-193)', v0_succ: ['dung_khong_an_toan'], v1_succ: [] },
+            { name: 'h1_tran_bo_dem', labels: ['h1', 'buffer_overflow', 'violation'], h: 'H1: Tiếp nhận', note: 'Mã > 16 ký tự: tràn bộ đệm stack (CWE-120/121)', v0_succ: ['dung_khong_an_toan'], v1_succ: [] },
+            { name: 'h2_vao', labels: ['h2', 'allocating'], h: 'H2: Cấp phát', note: 'Cấp phát mảng động các kiện hàng trên heap', v0_succ: ['h2_ok', 'h2_null', 'h2_sai_kich_thuoc', 'h2_doc_rac'], v1_succ: ['h2_ok', 'ket_thuc_tu_choi'] },
+            { name: 'h2_ok', labels: ['h2', 'allocated', 'initialized'], h: 'H2: Cấp phát', note: 'Cấp phát thành công và đã khởi tạo cấu trúc (An toàn)', v0_succ: ['h3_vao'], v1_succ: ['h3_vao'] },
+            { name: 'h2_null', labels: ['h2', 'null_deref', 'violation'], h: 'H2: Cấp phát', note: 'malloc trả NULL nhưng vẫn giải tham chiếu ghi vào (CWE-476)', v0_succ: ['dung_khong_an_toan'], v1_succ: [] },
+            { name: 'h2_sai_kich_thuoc', labels: ['h2', 'alloc_size_overflow', 'heap_overflow', 'violation'], h: 'H2: Cấp phát', note: 'n*48 byte tràn int32 hoặc n âm: cấp phát sai kích thước gây Heap Overflow', v0_succ: ['dung_khong_an_toan'], v1_succ: [] },
+            { name: 'h3_vao', labels: ['h3', 'computing'], h: 'H3: Số học', note: 'Tính tổng giá trị tồn kho = Σ đơn giá x SL + phí đóng gói - chiết khấu', v0_succ: ['h3_ok', 'h3_tran_so', 'h3_so_am'], v1_succ: ['h3_ok', 'ket_thuc_tu_choi'] },
+            { name: 'h3_tran_so', labels: ['h3', 'int_overflow', 'violation'], h: 'H3: Số học', note: 'Tràn số nguyên có dấu int32 khi nhân đơn giá x SL hoặc cộng dồn (CWE-190)', v0_succ: ['dung_khong_an_toan'], v1_succ: [] },
+            { name: 'h6_nhap_giu', labels: ['h6', 'nhap_locked'], h: 'H6: Đồng thời', note: 'Worker nhập kho đang giữ khóa phiên quản lý kho', v0_succ: ['h6_giai_phong', 'h6_tranh_chap'], v1_succ: ['h6_giai_phong'] },
+            { name: 'h6_xuat_giu', labels: ['h6', 'xuat_locked'], h: 'H6: Đồng thời', note: 'Worker xuất kho tự động (15 phút) đang giữ phiên', v0_succ: ['h6_giai_phong', 'h6_tranh_chap'], v1_succ: ['h6_giai_phong'] },
+            { name: 'h6_tranh_chap', labels: ['h6', 'race', 'violation'], h: 'H6: Đồng thời', note: 'Cả 2 worker cùng giữ phiên: vi phạm loại trừ lẫn nhau (CWE-667)', v0_succ: ['h6_double_free', 'h6_uaf'], v1_succ: [] },
+            { name: 'h6_uaf', labels: ['h6', 'use_after_free', 'violation'], h: 'H6: Đóng phiên', note: 'Worker đến sau đọc/ghi vào con trỏ phiên kho đã bị giải phóng (CWE-416)', v0_succ: ['dung_khong_an_toan'], v1_succ: [] },
+            { name: 'ket_thuc_ok', labels: ['flow_end', 'stock_done', 'mem_clean'], h: 'Kết thúc', note: 'Hoàn tất giao dịch quản lý kho an toàn, RAM sạch', v0_succ: ['ket_thuc_ok'], v1_succ: ['ket_thuc_ok'] },
+            { name: 'ket_thuc_tu_choi', labels: ['flow_end', 'input_rejected', 'mem_clean'], h: 'Kết thúc', note: 'Từ chối đầu vào độc hại một cách an toàn (Phòng thủ v1)', v0_succ: ['ket_thuc_tu_choi'], v1_succ: ['ket_thuc_tu_choi'] }
+        ];
+
+        const CTL_PROPS = [
+            { f: 'AG(!violation)', desc: 'Safety tổng: Không bao giờ rơi vào bất kỳ trạng thái vi phạm nào', v0: 'VI PHẠM (k=2)', v1: 'ĐÚNG (CT=15)' },
+            { f: 'AG(!buffer_overflow)', desc: 'Safety H1, H4: Chống tràn bộ đệm stack (CWE-120/121)', v0: 'VI PHẠM (k=2)', v1: 'ĐÚNG' },
+            { f: 'AG(!off_by_one)', desc: 'Safety H1: Chống lỗi ghi lệch 1 byte biên (CWE-193)', v0: 'VI PHẠM (k=2)', v1: 'ĐÚNG' },
+            { f: 'AG(!null_deref)', desc: 'Safety H2: Chống giải tham chiếu con trỏ NULL sau malloc (CWE-476)', v0: 'VI PHẠM (k=3)', v1: 'ĐÚNG' },
+            { f: 'AG(!int_overflow)', desc: 'Safety H3: Chống tràn số nguyên có dấu 32-bit (CWE-190)', v0: 'VI PHẠM (k=3)', v1: 'ĐÚNG' },
+            { f: 'AG(!use_after_free)', desc: 'Safety H6: Chống truy cập con trỏ treo sau free (CWE-416)', v0: 'VI PHẠM (k=5)', v1: 'ĐÚNG' },
+            { f: 'AF(flow_end)', desc: 'Liveness: Mọi đường xử lý đều kết thúc hợp lệ, không deadlock', v0: 'VI PHẠM (Kẹt tại halt)', v1: 'ĐÚNG' },
+            { f: 'EF(input_rejected)', desc: 'Reachability: Tồn tại nhánh từ chối an toàn khi phát hiện dữ liệu xấu', v0: 'VI PHẠM (Không có nhánh)', v1: 'ĐÚNG (Khả đạt)' }
+        ];
+
+        function setVersion(ver) {
+            curVer = ver;
+            document.querySelectorAll('.btn-tab').forEach((b, i) => {
+                b.classList.toggle('active', (ver === 'v0' && i === 0) || (ver === 'v1' && i === 1));
+            });
+            renderList();
+            renderDetail();
+            renderCTL();
+        }
+
+        function renderList() {
+            const list = document.getElementById('stateList');
+            list.innerHTML = '';
+            
+            STATES.forEach(st => {
+                const isErr = st.labels.includes('violation');
+                const isReach = curVer === 'v0' || !isErr;
+                
+                const item = document.createElement('div');
+                item.className = 'state-item' + (st.name === selState ? ' selected' : '');
+                item.onclick = () => { selState = st.name; renderList(); renderDetail(); };
+                
+                let badge = isErr ? '<span class="badge badge-err">LỖI v0</span>' : '<span class="badge badge-safe">AN TOÀN</span>';
+                if (!isReach) badge = '<span class="badge" style="background:#334155;color:#94a3b8">CẮT BỎ v1</span>';
+                
+                item.innerHTML = `
+                    <div>
+                        <div class="state-name">${st.name}</div>
+                        <div style="font-size:11px;color:#94a3b8">${st.h}</div>
+                    </div>
+                    ${badge}
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function renderDetail() {
+            const st = STATES.find(x => x.name === selState);
+            if (!st) return;
+            
+            document.getElementById('stTitle').innerText = `Trạng thái: ${st.name}`;
+            
+            const tags = document.getElementById('stTags');
+            tags.innerHTML = st.labels.map(l => {
+                let cls = 'tag';
+                if (l === 'violation') cls += ' violation';
+                if (l === 'safe' || l === 'mem_clean' || l === 'stock_done') cls += ' safe';
+                return `<span class="${cls}">${l}</span>`;
+            }).join('');
+            
+            const succ = curVer === 'v0' ? st.v0_succ : st.v1_succ;
+            document.getElementById('stDetails').innerHTML = `
+                <div class="detail-row"><div class="detail-label">Hành vi quy trình:</div><div class="detail-val">${st.h}</div></div>
+                <div class="detail-row"><div class="detail-label">Mô tả kỹ thuật RAM:</div><div class="detail-val">${st.note}</div></div>
+                <div class="detail-row"><div class="detail-label">Chuyển tiếp (${curVer}):</div><div class="detail-val"><code>${succ.length > 0 ? succ.join(' → ') : '(Đã cắt bỏ đường chuyển tiếp trong bản v1)'}</code></div></div>
+                <div class="detail-row"><div class="detail-label">Đánh giá tính an toàn:</div><div class="detail-val">${st.labels.includes('violation') ? (curVer === 'v0' ? '<span class="status-fail">TRẠNG THÁI VI PHẠM (Được kích hoạt trong v0)</span>' : '<span class="status-pass">ĐÃ ĐƯỢC CÔ LẬP HOÀN TOÀN (Không thể đạt tới trong v1)</span>') : '<span class="status-pass">TRẠNG THÁI HỢP LỆ VÀ AN TOÀN</span>'}</div></div>
+            `;
+        }
+
+        function renderCTL() {
+            const body = document.getElementById('ctlBody');
+            body.innerHTML = CTL_PROPS.map(c => `
+                <tr>
+                    <td><code>${c.f}</code></td>
+                    <td>${c.desc}</td>
+                    <td class="${c.v0.includes('VI PHẠM') ? 'status-fail' : 'status-pass'}">${c.v0}</td>
+                    <td class="${c.v1.includes('VI PHẠM') ? 'status-fail' : 'status-pass'}">${c.v1}</td>
+                </tr>
+            `).join('');
+        }
+
+        setVersion('v0');
+    </script>
+</body>
+</html>

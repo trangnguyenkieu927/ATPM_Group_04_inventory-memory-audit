@@ -1,0 +1,82 @@
+
+===========================================================================
+ KIỂM CHỨNG MÔ HÌNH HÌNH THỨC KRIPKE: MÔ HÌNH KẾT HỢP BẢN V0 (CÀI LỖI CÓ CHỦ ĐÍCH - 18 RỦI RO)
+ Tệp đặc tả: quanly_khohang_v0.json
+===========================================================================
+ [Mô hình] Tổng số trạng thái: 35 | Trạng thái khởi tạo: ['start']
+ [Kiểm tra Deadlock]: ĐẠT CHUẨN (Không có deadlock)
+ [Số thuộc tính CTL]: 22 công thức kiểm định
+
+  [VI PHẠM]    AG(!violation)             ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_tran_1_byte
+  [VI PHẠM]    AG(!buffer_overflow)       ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_tran_1_byte
+  [VI PHẠM]    AG(!off_by_one)            ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_tran_1_byte
+  [VI PHẠM]    AG(!null_deref)            ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_null
+  [VI PHẠM]    AG(!alloc_size_overflow)   ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_sai_kich_thuoc
+  [VI PHẠM]    AG(!uninit_read)           ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_doc_rac
+  [VI PHẠM]    AG(!int_overflow)          ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_tran_so
+  [VI PHẠM]    AG(!negative_amount)       ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_so_am
+  [VI PHẠM]    AG(!div_by_zero)           ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_chia_0
+  [VI PHẠM]    AG(!hidden_bypass)         ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_nhanh_an
+  [VI PHẠM]    AG(!mem_leak)              ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ro_ri
+  [VI PHẠM]    AG(!format_string)         ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_format_string
+  [VI PHẠM]    AG(!race)                  ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_tranh_chap
+  [VI PHẠM]    AG(!double_free)           ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_tranh_chap -> h6_double_free
+  [VI PHẠM]    AG(!use_after_free)        ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_tranh_chap -> h6_uaf
+  [VI PHẠM]    AG(!secret_residue)        ==> PHÁT HIỆN LỖI! Vết: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_giai_phong -> h6_con_ma_pin
+  [THỎA MÃN]   AF(flow_end)               ==> Mọi nhánh xử lý đều kết thúc hợp lệ
+  [THỎA MÃN]   EF(stock_done)             ==> Khả đạt: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_giai_phong -> ket_thuc_ok
+  [VI PHẠM]    EF(input_rejected)         ==> Không thể đạt tới trạng thái có nhãn 'input_rejected'
+  [THỎA MÃN]   EG(!violation)             ==> Tồn tại ít nhất một đường đi luôn an toàn
+  [THỎA MÃN]   EF(nhap_locked)            ==> Khả đạt: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu
+  [THỎA MÃN]   EF(xuat_locked)            ==> Khả đạt: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu
+
+ [Kiểm tra Loại trừ lẫn nhau (Mutual Exclusion)]:
+  [VI PHẠM]   Mutual Exclusion (nhap_locked, xuat_locked) ==> Xảy ra tranh chấp tại: ['h6_tranh_chap']
+  [ĐẠT CHUẨN]  Mutual Exclusion (violation, flow_end) ==> An toàn (Không đồng thời kích hoạt)
+  [ĐẠT CHUẨN]  Mutual Exclusion (stock_done, input_rejected) ==> An toàn (Không đồng thời kích hoạt)
+  [ĐẠT CHUẨN]  Mutual Exclusion (unsafe_halt, mem_clean) ==> An toàn (Không đồng thời kích hoạt)
+  [ĐẠT CHUẨN]  Mutual Exclusion (use_after_free, mem_clean) ==> An toàn (Không đồng thời kích hoạt)
+  [ĐẠT CHUẨN]  Mutual Exclusion (secret_residue, mem_clean) ==> An toàn (Không đồng thời kích hoạt)
+
+---> TỔNG KẾT: 5 Thuộc tính Thỏa mãn | 17 Thuộc tính Vi phạm an toàn.
+---------------------------------------------------------------------------
+
+===========================================================================
+ KIỂM CHỨNG MÔ HÌNH HÌNH THỨC KRIPKE: MÔ HÌNH KẾT HỢP BẢN V1 (BẢN VÁ PHÒNG THỦ AN TOÀN)
+ Tệp đặc tả: quanly_khohang_v1.json
+===========================================================================
+ [Mô hình] Tổng số trạng thái: 21 | Trạng thái khởi tạo: ['start']
+ [Kiểm tra Deadlock]: ĐẠT CHUẨN (Không có deadlock)
+ [Số thuộc tính CTL]: 22 công thức kiểm định
+
+  [THỎA MÃN]   AG(!violation)             ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!buffer_overflow)       ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!off_by_one)            ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!null_deref)            ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!alloc_size_overflow)   ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!uninit_read)           ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!int_overflow)          ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!negative_amount)       ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!div_by_zero)           ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!hidden_bypass)         ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!mem_leak)              ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!format_string)         ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!race)                  ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!double_free)           ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!use_after_free)        ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AG(!secret_residue)        ==> AN TOÀN (Không có vết vi phạm)
+  [THỎA MÃN]   AF(flow_end)               ==> Mọi nhánh xử lý đều kết thúc hợp lệ
+  [THỎA MÃN]   EF(stock_done)             ==> Khả đạt: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ok -> h6_phien_ranh -> h6_nhap_giu -> h6_giai_phong -> ket_thuc_ok
+  [THỎA MÃN]   EF(input_rejected)         ==> Khả đạt: start -> h1_vao -> h1_tu_choi
+  [THỎA MÃN]   EG(!violation)             ==> Tồn tại ít nhất một đường đi luôn an toàn
+  [THỎA MÃN]   EF(nhap_locked)            ==> Khả đạt: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ok -> h6_phien_ranh -> h6_nhap_giu
+  [THỎA MÃN]   EF(xuat_locked)            ==> Khả đạt: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ok -> h6_phien_ranh -> h6_xuat_giu
+
+ [Kiểm tra Loại trừ lẫn nhau (Mutual Exclusion)]:
+  [ĐẠT CHUẨN]  Mutual Exclusion (nhap_locked, xuat_locked) ==> An toàn (Không đồng thời kích hoạt)
+  [ĐẠT CHUẨN]  Mutual Exclusion (violation, flow_end) ==> An toàn (Không đồng thời kích hoạt)
+  [ĐẠT CHUẨN]  Mutual Exclusion (stock_done, input_rejected) ==> An toàn (Không đồng thời kích hoạt)
+  [ĐẠT CHUẨN]  Mutual Exclusion (unsafe_halt, mem_clean) ==> An toàn (Không đồng thời kích hoạt)
+
+---> TỔNG KẾT: 22 Thuộc tính Thỏa mãn | 0 Thuộc tính Vi phạm an toàn.
+---------------------------------------------------------------------------

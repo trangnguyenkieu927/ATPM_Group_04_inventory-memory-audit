@@ -1,0 +1,21 @@
+===========================================================================
+ KIỂM CHỨNG BỘ NHỚ HEAP MỨC CON TRỎ BẰNG Z3 SMT BOUNDED MODEL CHECKING
+ Z3 Engine Version: 5.1.0
+===========================================================================
+
+--- [1] KIỂM CHỨNG BẢN V0 (MÃ NGUỒN CÀI LỖI CÓ CHỦ ĐÍCH) ---
+  ==> KẾT QUẢ V0: SAT (Phát hiện vi phạm an toàn Use-After-Free CWE-416!)
+      Vết thực thi vi phạm (Counterexample Trace):
+        k=0: ptr_state = STATE_NULL (0)
+        k=1: malloc() -> ptr_state = STATE_ALLOCATED (1)
+        k=2: free() mà không gán NULL -> ptr_state = STATE_DANGLING (3)
+        k=3: read_op = True khi ptr_state = STATE_DANGLING -> VI PHẠM UAF!
+
+--- [2] KIỂM CHỨNG BẢN V1 (BẢN VÁ PHÒNG THỦ AN TOÀN) ---
+  ==> KẾT QUẢ V1: UNSAT (Chứng minh toán học: Không thể xảy ra Use-After-Free)
+      Tại mọi bước thực thi, mọi thao tác đọc đều diễn ra khi con trỏ đang ở ALLOCATED_VALID.
+      Con trỏ được gán NULL ngay sau khi free() giúp loại bỏ hoàn toàn con trỏ treo (Dangling Pointer).
+
+===========================================================================
+ KẾT LUẬN: ĐỐI CHỨNG HÌNH THỨC SMT ĐẠT CHUẨN KHOA HỌC (v0: SAT -> v1: UNSAT)!
+===========================================================================

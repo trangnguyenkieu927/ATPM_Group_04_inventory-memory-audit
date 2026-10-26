@@ -1,0 +1,22 @@
+=====================================================================
+ KIỂM TRA RÀNG BUỘC SỐ HỌC VÀ AN TOÀN BỘ NHỚ BẰNG Z3 SMT SOLVER
+ Phiên bản Z3 Engine: 5.1.0
+=====================================================================
+
+--- Kiểm tra 1. Phép nhân tiền lô hàng (line_amount_mul = price * qty) ---
+  [v0_ban_loi]  ==> SAT   (Phát hiện lỗ hổng! Bộ số phản ví dụ: qty = 512, price = 44564485)
+  [v1_ban_va]   ==> UNSAT (Chứng minh toán học: Không thể xảy ra lỗi với rào chắn guard)
+
+--- Kiểm tra 2. Cộng dồn tổng giá trị kho hàng (accumulated_total) ---
+  [v0_ban_loi]  ==> SAT   (Phát hiện lỗ hổng! Bộ số phản ví dụ: total_before = 2147483647, line_total = 1)
+  [v1_ban_va]   ==> UNSAT (Chứng minh toán học: Không thể xảy ra lỗi với rào chắn guard)
+
+--- Kiểm tra 3. Kích thước cấp phát mảng kiện hàng (alloc_bytes = n * 48) ---
+  [v0_ban_loi]  ==> SAT   (Phát hiện lỗ hổng! Bộ số phản ví dụ: n_items = 44739243)
+  [v1_ban_va]   ==> UNSAT (Chứng minh toán học: Không thể xảy ra lỗi với rào chắn guard)
+
+--- Kiểm tra 4. Số tiền tồn kho âm sau chiết khấu (negative_stock_total) ---
+  [v0_ban_loi]  ==> SAT   (Phát hiện lỗ hổng! Bộ số phản ví dụ: discount = 1, subtotal = 0)
+  [v1_ban_va]   ==> UNSAT (Chứng minh toán học: Không thể xảy ra lỗi với rào chắn guard)
+
+===> TỔNG KẾT: 100% công thức số học đạt chuẩn đối chứng v0 (SAT) -> v1 (UNSAT chứng minh an toàn)!
