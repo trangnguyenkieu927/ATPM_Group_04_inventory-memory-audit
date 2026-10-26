@@ -1,1297 +1,433 @@
 {
   "name": "quanly_khohang_m1_doc_chuoi_buffer",
-  "description": "Hệ thống xử lý chuỗi và nạp dữ liệu kho hàng (M1 - Nguyễn Quang Thọ - MSV: 23010322): phụ trách nạp chuỗi mã phiếu kho vào bộ đệm stack 32 byte (H1 - ingest_raw_line) và đọc trường token theo chỉ số mảng (H2 - get_token_field). Bản v0 cài các lỗi bộ nhớ: (1) Nạp chuỗi bằng strcpy bỏ qua dung lượng đệm gây tràn stack và lỗi off-by-one (CWE-120/121 Stack Buffer Overflow, CWE-193 Off-by-one); (2) Đọc phần tử mảng token không kiểm tra chỉ số gây đọc ngoài biên (CWE-125 Out-of-bounds Read). Bản v1 cài rào chắn kiểm tra con trỏ, dung lượng đệm cap, chặn trước len >= 32 trước khi memcpy và kiểm tra chỉ số 0 <= field_idx < token_count.",
+  "description": "Hệ thống nạp chuỗi và phân giải trường dữ liệu kho hàng (M1 - Nguyễn Quang Thọ - MSV: 23010322): phụ trách đọc chuỗi ký tự thô vào bộ đệm stack 32 byte (H1 - ingest_raw_line) và phân tách, truy xuất trường token danh mục hàng hóa (H2 - get_token_field). Bản v0 cài các lỗi bộ nhớ: (1) Nạp chuỗi bằng strcpy không kiểm tra độ dài gây tràn bộ đệm stack và lỗi off-by-one khi chuỗi đúng 32 byte thiếu ký tự null (CWE-120/121 Stack Buffer Overflow, CWE-193 Off-by-one); (2) Đọc phần tử mảng token không kiểm tra cận biên chỉ số gây đọc ngoài biên (CWE-125 Out-of-bounds Read). Bản v1 sử dụng kiểm tra cận trên an toàn trước khi nạp chuỗi và xác thực chỉ số 0 <= field_idx < token_count trước khi đọc.",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "H1: Hệ thống phải có thể tiến đến trạng thái sao chép chuỗi thành công từ chuỗi đầu vào hợp lệ: EF(copy_ok) trên v0, EF(copy_safe) trên v1",
+      "text": "Hệ thống phải có thể tiến đến trạng thái nạp chuỗi dữ liệu kho hàng thành công vào bộ đệm stack từ đầu vào hợp lệ: EF(copy_ok)",
       "category": "functional",
       "priority": "HIGH"
     },
     {
       "id": "REQ-2",
-      "text": "H1: Trạng thái vi phạm tràn bộ đệm stack hoặc lỗi off-by-one không được xảy ra ở bất kỳ trạng thái tương lai nào: AG(!stack_buffer_overflow) và AG(!off_by_one)",
-      "category": "safety",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-3",
-      "text": "H2: Hệ thống phải có thể tiến đến trạng thái đọc trường token thành công khi chỉ số nằm trong phạm vi mảng: EF(read_ok) trên v0, EF(read_safe) trên v1",
+      "text": "Hệ thống phải có thể tiến đến trạng thái truy xuất trường token thành công khi chỉ số nằm trong phạm vi mảng hợp lệ: EF(read_ok)",
       "category": "functional",
       "priority": "HIGH"
     },
     {
-      "id": "REQ-4",
-      "text": "H2: Trạng thái đọc ngoài biên mảng token (CWE-125 Out-of-bounds Read) không được xảy ra ở bất kỳ trạng thái tương lai nào: AG(!out_of_bounds_read)",
+      "id": "REQ-3",
+      "text": "Toàn bộ chu trình xử lý I/O không được xảy ra bất kỳ trạng thái vi phạm an toàn bộ nhớ nào (violation, stack_buffer_overflow, out_of_bounds_read): AG(!violation)",
       "category": "safety",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-4",
+      "text": "Bộ đệm stack 32 byte phải được bảo vệ an toàn, cấm sao chép vượt quá dung lượng đệm hoặc làm mất ký tự null kết thúc chuỗi (CWE-120/121 Buffer Overflow & CWE-193 Off-by-one): AG(!stack_buffer_overflow)",
+      "category": "memory",
       "priority": "HIGH"
     },
     {
       "id": "REQ-5",
-      "text": "Toàn bộ chu trình xử lý I/O không được xảy ra bất kỳ vi phạm an toàn bộ nhớ nào: AG(!violation)",
-      "category": "safety",
+      "text": "Mọi truy cập phần tử mảng phân tách token phải kiểm tra cận biên [0, token_count - 1], cấm đọc ngoài biên vùng nhớ (CWE-125 Out-of-bounds Read): AG(!out_of_bounds_read)",
+      "category": "bounds_checking",
       "priority": "HIGH"
     },
     {
       "id": "REQ-6",
-      "text": "Hệ thống không được rơi vào deadlock ở bất kỳ trạng thái nào; mọi luồng xử lý đều phải kết thúc có kiểm soát: AF(done)",
+      "text": "Hệ thống I/O không được rơi vào deadlock ở bất kỳ trạng thái nào và mọi luồng xử lý đều kết thúc có kiểm soát: AF(done)",
       "category": "liveness",
       "priority": "HIGH"
-    },
-    {
-      "id": "REQ-7",
-      "text": "Chuỗi đầu vào có độ dài vượt quá dung lượng bộ đệm (len >= 32) hoặc chỉ số token không hợp lệ phải bị từ chối trước khi thao tác",
-      "category": "bounds_checking",
-      "priority": "MEDIUM"
     }
   ],
   "states": [
-    "m1_khoi_tao",
-    "m1_h1_nhan_chuoi",
-    "m1_h1_len_nho_32",
-    "m1_h1_len_bang_32",
-    "m1_h1_len_lon_32",
-    "m1_h1_chep_an_toan",
-    "m1_h1_tran_1_byte",
-    "m1_h1_tran_nhieu_byte",
-    "m1_h2_nhan_chi_so",
-    "m1_h2_chi_so_hop_le",
-    "m1_h2_chi_so_ngoai_bien",
-    "m1_h2_doc_thanh_cong",
-    "m1_h2_doc_ngoai_bien"
+    "m1_nhan_dong_dulieu",
+    "m1_kiem_tra_chieu_dai",
+    "m1_tran_stack_buffer",
+    "m1_chep_buffer_thanh_cong",
+    "m1_tach_token_hang_hoa",
+    "m1_truy_cap_ngoai_bien",
+    "m1_hoan_tat_doc_an_toan"
   ],
   "initial": [
-    "m1_khoi_tao"
+    "m1_nhan_dong_dulieu"
   ],
   "labeling": {
-    "m1_khoi_tao": [
-      "receiving_input",
-      "initialized"
+    "m1_nhan_dong_dulieu": [
+      "initialized",
+      "input_received"
     ],
-    "m1_h1_nhan_chuoi": [
-      "receiving_input"
+    "m1_kiem_tra_chieu_dai": [
+      "checking_bounds"
     ],
-    "m1_h1_len_nho_32": [
-      "len_safe"
-    ],
-    "m1_h1_len_bang_32": [
-      "len_boundary"
-    ],
-    "m1_h1_len_lon_32": [
-      "len_excessive"
-    ],
-    "m1_h1_chep_an_toan": [
-      "copy_ok",
-      "done"
-    ],
-    "m1_h1_tran_1_byte": [
+    "m1_tran_stack_buffer": [
       "stack_buffer_overflow",
       "off_by_one",
-      "violation",
-      "done"
+      "cwe_120",
+      "violation"
     ],
-    "m1_h1_tran_nhieu_byte": [
-      "stack_buffer_overflow",
-      "violation",
-      "done"
+    "m1_chep_buffer_thanh_cong": [
+      "copy_ok",
+      "buffer_valid"
     ],
-    "m1_h2_nhan_chi_so": [
+    "m1_tach_token_hang_hoa": [
+      "tokenizing",
       "receiving_index"
     ],
-    "m1_h2_chi_so_hop_le": [
-      "index_valid"
-    ],
-    "m1_h2_chi_so_ngoai_bien": [
-      "index_invalid"
-    ],
-    "m1_h2_doc_thanh_cong": [
-      "read_ok",
-      "done"
-    ],
-    "m1_h2_doc_ngoai_bien": [
+    "m1_truy_cap_ngoai_bien": [
       "out_of_bounds_read",
-      "violation",
+      "cwe_125",
+      "violation"
+    ],
+    "m1_hoan_tat_doc_an_toan": [
+      "read_ok",
+      "token_safe",
+      "safe_exit",
       "done"
     ]
   },
   "transitions": [
     [
-      "m1_khoi_tao",
-      "m1_h1_nhan_chuoi"
+      "m1_nhan_dong_dulieu",
+      "m1_kiem_tra_chieu_dai"
     ],
     [
-      "m1_khoi_tao",
-      "m1_h2_nhan_chi_so"
+      "m1_kiem_tra_chieu_dai",
+      "m1_tran_stack_buffer"
     ],
     [
-      "m1_h1_nhan_chuoi",
-      "m1_h1_len_nho_32"
+      "m1_kiem_tra_chieu_dai",
+      "m1_chep_buffer_thanh_cong"
     ],
     [
-      "m1_h1_nhan_chuoi",
-      "m1_h1_len_bang_32"
+      "m1_chep_buffer_thanh_cong",
+      "m1_tach_token_hang_hoa"
     ],
     [
-      "m1_h1_nhan_chuoi",
-      "m1_h1_len_lon_32"
+      "m1_tach_token_hang_hoa",
+      "m1_truy_cap_ngoai_bien"
     ],
     [
-      "m1_h1_len_nho_32",
-      "m1_h1_chep_an_toan"
+      "m1_tach_token_hang_hoa",
+      "m1_hoan_tat_doc_an_toan"
     ],
     [
-      "m1_h1_len_bang_32",
-      "m1_h1_tran_1_byte"
+      "m1_tran_stack_buffer",
+      "m1_tran_stack_buffer"
     ],
     [
-      "m1_h1_len_lon_32",
-      "m1_h1_tran_nhieu_byte"
+      "m1_truy_cap_ngoai_bien",
+      "m1_truy_cap_ngoai_bien"
     ],
     [
-      "m1_h1_chep_an_toan",
-      "m1_h1_chep_an_toan"
-    ],
-    [
-      "m1_h1_chep_an_toan",
-      "m1_h2_nhan_chi_so"
-    ],
-    [
-      "m1_h1_tran_1_byte",
-      "m1_h1_tran_1_byte"
-    ],
-    [
-      "m1_h1_tran_nhieu_byte",
-      "m1_h1_tran_nhieu_byte"
-    ],
-    [
-      "m1_h2_nhan_chi_so",
-      "m1_h2_chi_so_hop_le"
-    ],
-    [
-      "m1_h2_nhan_chi_so",
-      "m1_h2_chi_so_ngoai_bien"
-    ],
-    [
-      "m1_h2_chi_so_hop_le",
-      "m1_h2_doc_thanh_cong"
-    ],
-    [
-      "m1_h2_chi_so_ngoai_bien",
-      "m1_h2_doc_ngoai_bien"
-    ],
-    [
-      "m1_h2_doc_thanh_cong",
-      "m1_h2_doc_thanh_cong"
-    ],
-    [
-      "m1_h2_doc_ngoai_bien",
-      "m1_h2_doc_ngoai_bien"
+      "m1_hoan_tat_doc_an_toan",
+      "m1_hoan_tat_doc_an_toan"
     ]
   ],
   "flows": {
-    "M1-v0: Cài lỗi có chủ đích (CWE-121 Tràn bộ đệm & CWE-125 Đọc ngoài biên)": {
-      "description": "Bản v0 của Thọ: Nạp chuỗi bằng strcpy bỏ qua dung lượng bộ đệm stack 32 byte gây tràn bộ nhớ và lỗi off-by-one (CWE-120/121, CWE-193); đọc trường token bằng chỉ số trực tiếp không kiểm tra biên mảng (CWE-125).",
+    "M1-v0: Cài lỗi có chủ đích (CWE-120/121 Tràn Stack & CWE-125 Đọc ngoài biên)": {
+      "description": "Bản v0 của Thọ: Nạp chuỗi thô từ file phiếu kho vào mảng stack char buffer[32] bằng hàm strcpy. Khi gặp chuỗi >= 32 byte (ví dụ mã phiếu dài hoặc chuỗi 32 byte thiếu null), strcpy ghi đè vùng nhớ stack gây lỗi tràn bộ đệm (CWE-120/121) và lỗi off-by-one (CWE-193). Tiếp theo khi truy xuất token trường dữ liệu, hàm get_token_field không kiểm tra cận biên chỉ số, truy cập mảng token với field_idx >= token_count gây lỗi đọc ngoài biên bộ nhớ (CWE-125 Out-of-bounds Read).",
       "states": [
-        "m1_khoi_tao",
-        "m1_h1_nhan_chuoi",
-        "m1_h1_len_nho_32",
-        "m1_h1_len_bang_32",
-        "m1_h1_len_lon_32",
-        "m1_h1_chep_an_toan",
-        "m1_h1_tran_1_byte",
-        "m1_h1_tran_nhieu_byte",
-        "m1_h2_nhan_chi_so",
-        "m1_h2_chi_so_hop_le",
-        "m1_h2_chi_so_ngoai_bien",
-        "m1_h2_doc_thanh_cong",
-        "m1_h2_doc_ngoai_bien"
+        "m1_nhan_dong_dulieu",
+        "m1_kiem_tra_chieu_dai",
+        "m1_tran_stack_buffer",
+        "m1_chep_buffer_thanh_cong",
+        "m1_tach_token_hang_hoa",
+        "m1_truy_cap_ngoai_bien",
+        "m1_hoan_tat_doc_an_toan"
       ],
       "initial": [
-        "m1_khoi_tao"
+        "m1_nhan_dong_dulieu"
       ],
       "labeling": {
-        "m1_khoi_tao": [
-          "receiving_input",
-          "initialized"
+        "m1_nhan_dong_dulieu": [
+          "initialized",
+          "input_received"
         ],
-        "m1_h1_nhan_chuoi": [
-          "receiving_input"
-        ],
-        "m1_h1_len_nho_32": [
-          "len_safe"
-        ],
-        "m1_h1_len_bang_32": [
-          "len_boundary"
-        ],
-        "m1_h1_len_lon_32": [
-          "len_excessive"
-        ],
-        "m1_h1_chep_an_toan": [
-          "copy_ok",
-          "done"
-        ],
-        "m1_h1_tran_1_byte": [
-          "stack_buffer_overflow",
-          "off_by_one",
-          "violation",
-          "done"
-        ],
-        "m1_h1_tran_nhieu_byte": [
-          "stack_buffer_overflow",
-          "violation",
-          "done"
-        ],
-        "m1_h2_nhan_chi_so": [
-          "receiving_index"
-        ],
-        "m1_h2_chi_so_hop_le": [
-          "index_valid"
-        ],
-        "m1_h2_chi_so_ngoai_bien": [
-          "index_invalid"
-        ],
-        "m1_h2_doc_thanh_cong": [
-          "read_ok",
-          "done"
-        ],
-        "m1_h2_doc_ngoai_bien": [
-          "out_of_bounds_read",
-          "violation",
-          "done"
-        ]
-      },
-      "transitions": [
-        [
-          "m1_khoi_tao",
-          "m1_h1_nhan_chuoi"
-        ],
-        [
-          "m1_khoi_tao",
-          "m1_h2_nhan_chi_so"
-        ],
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_len_nho_32"
-        ],
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_len_bang_32"
-        ],
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_len_lon_32"
-        ],
-        [
-          "m1_h1_len_nho_32",
-          "m1_h1_chep_an_toan"
-        ],
-        [
-          "m1_h1_len_bang_32",
-          "m1_h1_tran_1_byte"
-        ],
-        [
-          "m1_h1_len_lon_32",
-          "m1_h1_tran_nhieu_byte"
-        ],
-        [
-          "m1_h1_chep_an_toan",
-          "m1_h1_chep_an_toan"
-        ],
-        [
-          "m1_h1_chep_an_toan",
-          "m1_h2_nhan_chi_so"
-        ],
-        [
-          "m1_h1_tran_1_byte",
-          "m1_h1_tran_1_byte"
-        ],
-        [
-          "m1_h1_tran_nhieu_byte",
-          "m1_h1_tran_nhieu_byte"
-        ],
-        [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_chi_so_hop_le"
-        ],
-        [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_chi_so_ngoai_bien"
-        ],
-        [
-          "m1_h2_chi_so_hop_le",
-          "m1_h2_doc_thanh_cong"
-        ],
-        [
-          "m1_h2_chi_so_ngoai_bien",
-          "m1_h2_doc_ngoai_bien"
-        ],
-        [
-          "m1_h2_doc_thanh_cong",
-          "m1_h2_doc_thanh_cong"
-        ],
-        [
-          "m1_h2_doc_ngoai_bien",
-          "m1_h2_doc_ngoai_bien"
-        ]
-      ]
-    },
-    "M1-v1: Bản vá an toàn phòng thủ (Giới hạn kích thước & Kiểm tra chỉ số)": {
-      "description": "Bản v1 của Thọ: Cài rào chắn kiểm tra con trỏ, cap == 32, từ chối chuỗi len >= 32 trước khi memcpy và kết thúc NUL; kiểm tra con trỏ mảng token, token_count > 0 và chỉ số 0 <= field_idx < token_count.",
-      "states": [
-        "m1_khoi_tao",
-        "m1_h1_nhan_chuoi",
-        "m1_h1_kiem_tra_bien",
-        "m1_h1_tu_choi_chuoi_dai",
-        "m1_h1_chep_gioi_han_an_toan",
-        "m1_h2_nhan_chi_so",
-        "m1_h2_kiem_tra_mang",
-        "m1_h2_kiem_tra_chi_so",
-        "m1_h2_tu_choi_mang",
-        "m1_h2_tu_choi_chi_so",
-        "m1_h2_doc_an_toan"
-      ],
-      "initial": [
-        "m1_khoi_tao"
-      ],
-      "labeling": {
-        "m1_khoi_tao": [
-          "receiving_input",
-          "initialized"
-        ],
-        "m1_h1_nhan_chuoi": [
-          "receiving_input"
-        ],
-        "m1_h1_kiem_tra_bien": [
+        "m1_kiem_tra_chieu_dai": [
           "checking_bounds"
         ],
-        "m1_h1_tu_choi_chuoi_dai": [
-          "input_rejected",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h1_chep_gioi_han_an_toan": [
-          "copy_safe",
-          "null_terminated",
-          "done"
-        ],
-        "m1_h2_nhan_chi_so": [
-          "receiving_index"
-        ],
-        "m1_h2_kiem_tra_mang": [
-          "checking_array"
-        ],
-        "m1_h2_kiem_tra_chi_so": [
-          "checking_index"
-        ],
-        "m1_h2_tu_choi_mang": [
-          "invalid_array",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h2_tu_choi_chi_so": [
-          "index_rejected",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h2_doc_an_toan": [
-          "read_safe",
-          "done"
-        ]
-      },
-      "transitions": [
-        [
-          "m1_khoi_tao",
-          "m1_h1_nhan_chuoi"
-        ],
-        [
-          "m1_khoi_tao",
-          "m1_h2_nhan_chi_so"
-        ],
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_kiem_tra_bien"
-        ],
-        [
-          "m1_h1_kiem_tra_bien",
-          "m1_h1_tu_choi_chuoi_dai"
-        ],
-        [
-          "m1_h1_kiem_tra_bien",
-          "m1_h1_chep_gioi_han_an_toan"
-        ],
-        [
-          "m1_h1_chep_gioi_han_an_toan",
-          "m1_h1_chep_gioi_han_an_toan"
-        ],
-        [
-          "m1_h1_chep_gioi_han_an_toan",
-          "m1_h2_nhan_chi_so"
-        ],
-        [
-          "m1_h1_tu_choi_chuoi_dai",
-          "m1_h1_tu_choi_chuoi_dai"
-        ],
-        [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_kiem_tra_mang"
-        ],
-        [
-          "m1_h2_kiem_tra_mang",
-          "m1_h2_tu_choi_mang"
-        ],
-        [
-          "m1_h2_kiem_tra_mang",
-          "m1_h2_kiem_tra_chi_so"
-        ],
-        [
-          "m1_h2_kiem_tra_chi_so",
-          "m1_h2_tu_choi_chi_so"
-        ],
-        [
-          "m1_h2_kiem_tra_chi_so",
-          "m1_h2_doc_an_toan"
-        ],
-        [
-          "m1_h2_tu_choi_mang",
-          "m1_h2_tu_choi_mang"
-        ],
-        [
-          "m1_h2_tu_choi_chi_so",
-          "m1_h2_tu_choi_chi_so"
-        ],
-        [
-          "m1_h2_doc_an_toan",
-          "m1_h2_doc_an_toan"
-        ]
-      ]
-    },
-    "H1-v0: Nạp chuỗi bỏ qua kiểm tra biên (CWE-120/121 & CWE-193)": {
-      "description": "Hành vi H1-v0: ingest_raw_line_v0 bỏ qua cap, gọi strcpy vào buffer[32]. len<=31 an toàn, len=32 tràn 1 byte NUL, len>=33 tràn nhiều byte.",
-      "states": [
-        "m1_h1_nhan_chuoi",
-        "m1_h1_len_nho_32",
-        "m1_h1_len_bang_32",
-        "m1_h1_len_lon_32",
-        "m1_h1_chep_an_toan",
-        "m1_h1_tran_1_byte",
-        "m1_h1_tran_nhieu_byte"
-      ],
-      "initial": [
-        "m1_h1_nhan_chuoi"
-      ],
-      "labeling": {
-        "m1_h1_nhan_chuoi": [
-          "receiving_input"
-        ],
-        "m1_h1_len_nho_32": [
-          "len_safe"
-        ],
-        "m1_h1_len_bang_32": [
-          "len_boundary"
-        ],
-        "m1_h1_len_lon_32": [
-          "len_excessive"
-        ],
-        "m1_h1_chep_an_toan": [
-          "copy_ok",
-          "done"
-        ],
-        "m1_h1_tran_1_byte": [
+        "m1_tran_stack_buffer": [
           "stack_buffer_overflow",
           "off_by_one",
-          "violation",
-          "done"
+          "cwe_120",
+          "violation"
         ],
-        "m1_h1_tran_nhieu_byte": [
-          "stack_buffer_overflow",
-          "violation",
+        "m1_chep_buffer_thanh_cong": [
+          "copy_ok",
+          "buffer_valid"
+        ],
+        "m1_tach_token_hang_hoa": [
+          "tokenizing",
+          "receiving_index"
+        ],
+        "m1_truy_cap_ngoai_bien": [
+          "out_of_bounds_read",
+          "cwe_125",
+          "violation"
+        ],
+        "m1_hoan_tat_doc_an_toan": [
+          "read_ok",
+          "token_safe",
+          "safe_exit",
           "done"
         ]
       },
       "transitions": [
         [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_len_nho_32"
+          "m1_nhan_dong_dulieu",
+          "m1_kiem_tra_chieu_dai"
         ],
         [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_len_bang_32"
+          "m1_kiem_tra_chieu_dai",
+          "m1_tran_stack_buffer"
         ],
         [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_len_lon_32"
+          "m1_kiem_tra_chieu_dai",
+          "m1_chep_buffer_thanh_cong"
         ],
         [
-          "m1_h1_len_nho_32",
-          "m1_h1_chep_an_toan"
+          "m1_chep_buffer_thanh_cong",
+          "m1_tach_token_hang_hoa"
         ],
         [
-          "m1_h1_len_bang_32",
-          "m1_h1_tran_1_byte"
+          "m1_tach_token_hang_hoa",
+          "m1_truy_cap_ngoai_bien"
         ],
         [
-          "m1_h1_len_lon_32",
-          "m1_h1_tran_nhieu_byte"
+          "m1_tach_token_hang_hoa",
+          "m1_hoan_tat_doc_an_toan"
         ],
         [
-          "m1_h1_chep_an_toan",
-          "m1_h1_chep_an_toan"
+          "m1_tran_stack_buffer",
+          "m1_tran_stack_buffer"
         ],
         [
-          "m1_h1_tran_1_byte",
-          "m1_h1_tran_1_byte"
+          "m1_truy_cap_ngoai_bien",
+          "m1_truy_cap_ngoai_bien"
         ],
         [
-          "m1_h1_tran_nhieu_byte",
-          "m1_h1_tran_nhieu_byte"
+          "m1_hoan_tat_doc_an_toan",
+          "m1_hoan_tat_doc_an_toan"
         ]
       ]
     },
-    "H1-v1: Giới hạn kích thước bộ đệm và gán null (Safe Ingest)": {
-      "description": "Hành vi H1-v1: ingest_raw_line_v1 kiểm tra con trỏ, cap == 32, len < 32; dùng memcpy an toàn và gán ký tự NUL kết thúc chuỗi.",
+    "M1-v1: Bản vá an toàn phòng thủ (Kiểm tra cận chuỗi & Chỉ số token)": {
+      "description": "Bản v1 của Thọ: Sử dụng kỹ thuật lập trình phòng thủ: kiểm tra độ dài chuỗi strlen(raw_line) < 32 trước khi sao chép và luôn gán buffer[31] = '\\0' triệt tiêu lỗi tràn stack và off-by-one. Khi truy xuất trường token, thực hiện kiểm tra điều kiện nghiêm ngặt 0 <= field_idx && field_idx < token_count, từ chối an toàn mọi chỉ số âm hoặc vượt quá số lượng token thực tế.",
       "states": [
-        "m1_h1_nhan_chuoi",
-        "m1_h1_kiem_tra_bien",
-        "m1_h1_tu_choi_chuoi_dai",
-        "m1_h1_chep_gioi_han_an_toan"
+        "m1_nhan_dong_dulieu",
+        "m1_kiem_tra_chieu_dai",
+        "m1_chep_buffer_thanh_cong",
+        "m1_tach_token_hang_hoa",
+        "m1_hoan_tat_doc_an_toan"
       ],
       "initial": [
-        "m1_h1_nhan_chuoi"
+        "m1_nhan_dong_dulieu"
       ],
       "labeling": {
-        "m1_h1_nhan_chuoi": [
-          "receiving_input"
+        "m1_nhan_dong_dulieu": [
+          "initialized",
+          "input_received"
         ],
-        "m1_h1_kiem_tra_bien": [
+        "m1_kiem_tra_chieu_dai": [
           "checking_bounds"
         ],
-        "m1_h1_tu_choi_chuoi_dai": [
-          "input_rejected",
-          "safe_exit",
-          "done"
+        "m1_chep_buffer_thanh_cong": [
+          "copy_ok",
+          "buffer_valid"
         ],
-        "m1_h1_chep_gioi_han_an_toan": [
-          "copy_safe",
-          "null_terminated",
-          "done"
-        ]
-      },
-      "transitions": [
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_kiem_tra_bien"
-        ],
-        [
-          "m1_h1_kiem_tra_bien",
-          "m1_h1_tu_choi_chuoi_dai"
-        ],
-        [
-          "m1_h1_kiem_tra_bien",
-          "m1_h1_chep_gioi_han_an_toan"
-        ],
-        [
-          "m1_h1_tu_choi_chuoi_dai",
-          "m1_h1_tu_choi_chuoi_dai"
-        ],
-        [
-          "m1_h1_chep_gioi_han_an_toan",
-          "m1_h1_chep_gioi_han_an_toan"
-        ]
-      ]
-    },
-    "H2-v0: Đọc token không kiểm tra chỉ số (CWE-125)": {
-      "description": "Hành vi H2-v0: get_token_field_v0 không kiểm tra field_idx với token_count, đọc trực tiếp token_offsets[field_idx] gây lỗi CWE-125.",
-      "states": [
-        "m1_h2_nhan_chi_so",
-        "m1_h2_chi_so_hop_le",
-        "m1_h2_chi_so_ngoai_bien",
-        "m1_h2_doc_thanh_cong",
-        "m1_h2_doc_ngoai_bien"
-      ],
-      "initial": [
-        "m1_h2_nhan_chi_so"
-      ],
-      "labeling": {
-        "m1_h2_nhan_chi_so": [
+        "m1_tach_token_hang_hoa": [
+          "tokenizing",
           "receiving_index"
         ],
-        "m1_h2_chi_so_hop_le": [
-          "index_valid"
-        ],
-        "m1_h2_chi_so_ngoai_bien": [
-          "index_invalid"
-        ],
-        "m1_h2_doc_thanh_cong": [
+        "m1_hoan_tat_doc_an_toan": [
           "read_ok",
-          "done"
-        ],
-        "m1_h2_doc_ngoai_bien": [
-          "out_of_bounds_read",
-          "violation",
+          "token_safe",
+          "safe_exit",
           "done"
         ]
       },
       "transitions": [
         [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_chi_so_hop_le"
+          "m1_nhan_dong_dulieu",
+          "m1_kiem_tra_chieu_dai"
         ],
         [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_chi_so_ngoai_bien"
+          "m1_kiem_tra_chieu_dai",
+          "m1_chep_buffer_thanh_cong"
         ],
         [
-          "m1_h2_chi_so_hop_le",
-          "m1_h2_doc_thanh_cong"
+          "m1_chep_buffer_thanh_cong",
+          "m1_tach_token_hang_hoa"
         ],
         [
-          "m1_h2_chi_so_ngoai_bien",
-          "m1_h2_doc_ngoai_bien"
+          "m1_tach_token_hang_hoa",
+          "m1_hoan_tat_doc_an_toan"
         ],
         [
-          "m1_h2_doc_thanh_cong",
-          "m1_h2_doc_thanh_cong"
-        ],
-        [
-          "m1_h2_doc_ngoai_bien",
-          "m1_h2_doc_ngoai_bien"
-        ]
-      ]
-    },
-    "H2-v1: Kiểm tra biên mảng và chỉ số (Safe Token Read)": {
-      "description": "Hành vi H2-v1: get_token_field_v1 kiểm tra token_offsets != NULL, token_count > 0 và 0 <= field_idx < token_count.",
-      "states": [
-        "m1_h2_nhan_chi_so",
-        "m1_h2_kiem_tra_mang",
-        "m1_h2_kiem_tra_chi_so",
-        "m1_h2_tu_choi_mang",
-        "m1_h2_tu_choi_chi_so",
-        "m1_h2_doc_an_toan"
-      ],
-      "initial": [
-        "m1_h2_nhan_chi_so"
-      ],
-      "labeling": {
-        "m1_h2_nhan_chi_so": [
-          "receiving_index"
-        ],
-        "m1_h2_kiem_tra_mang": [
-          "checking_array"
-        ],
-        "m1_h2_kiem_tra_chi_so": [
-          "checking_index"
-        ],
-        "m1_h2_tu_choi_mang": [
-          "invalid_array",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h2_tu_choi_chi_so": [
-          "index_rejected",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h2_doc_an_toan": [
-          "read_safe",
-          "done"
-        ]
-      },
-      "transitions": [
-        [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_kiem_tra_mang"
-        ],
-        [
-          "m1_h2_kiem_tra_mang",
-          "m1_h2_tu_choi_mang"
-        ],
-        [
-          "m1_h2_kiem_tra_mang",
-          "m1_h2_kiem_tra_chi_so"
-        ],
-        [
-          "m1_h2_kiem_tra_chi_so",
-          "m1_h2_tu_choi_chi_so"
-        ],
-        [
-          "m1_h2_kiem_tra_chi_so",
-          "m1_h2_doc_an_toan"
-        ],
-        [
-          "m1_h2_tu_choi_mang",
-          "m1_h2_tu_choi_mang"
-        ],
-        [
-          "m1_h2_tu_choi_chi_so",
-          "m1_h2_tu_choi_chi_so"
-        ],
-        [
-          "m1_h2_doc_an_toan",
-          "m1_h2_doc_an_toan"
+          "m1_hoan_tat_doc_an_toan",
+          "m1_hoan_tat_doc_an_toan"
         ]
       ]
     }
   },
   "state_machine": {
     "states": [
-      "m1_khoi_tao",
-      "m1_h1_nhan_chuoi",
-      "m1_h1_len_nho_32",
-      "m1_h1_len_bang_32",
-      "m1_h1_len_lon_32",
-      "m1_h1_chep_an_toan",
-      "m1_h1_tran_1_byte",
-      "m1_h1_tran_nhieu_byte",
-      "m1_h2_nhan_chi_so",
-      "m1_h2_chi_so_hop_le",
-      "m1_h2_chi_so_ngoai_bien",
-      "m1_h2_doc_thanh_cong",
-      "m1_h2_doc_ngoai_bien"
+      "m1_nhan_dong_dulieu",
+      "m1_kiem_tra_chieu_dai",
+      "m1_tran_stack_buffer",
+      "m1_chep_buffer_thanh_cong",
+      "m1_tach_token_hang_hoa",
+      "m1_truy_cap_ngoai_bien",
+      "m1_hoan_tat_doc_an_toan"
     ],
     "initial": [
-      "m1_khoi_tao"
+      "m1_nhan_dong_dulieu"
     ],
     "labeling": {
-      "m1_khoi_tao": [
-        "receiving_input",
-        "initialized"
+      "m1_nhan_dong_dulieu": [
+        "initialized",
+        "input_received"
       ],
-      "m1_h1_nhan_chuoi": [
-        "receiving_input"
+      "m1_kiem_tra_chieu_dai": [
+        "checking_bounds"
       ],
-      "m1_h1_len_nho_32": [
-        "len_safe"
-      ],
-      "m1_h1_len_bang_32": [
-        "len_boundary"
-      ],
-      "m1_h1_len_lon_32": [
-        "len_excessive"
-      ],
-      "m1_h1_chep_an_toan": [
-        "copy_ok",
-        "done"
-      ],
-      "m1_h1_tran_1_byte": [
+      "m1_tran_stack_buffer": [
         "stack_buffer_overflow",
         "off_by_one",
-        "violation",
-        "done"
+        "cwe_120",
+        "violation"
       ],
-      "m1_h1_tran_nhieu_byte": [
-        "stack_buffer_overflow",
-        "violation",
-        "done"
+      "m1_chep_buffer_thanh_cong": [
+        "copy_ok",
+        "buffer_valid"
       ],
-      "m1_h2_nhan_chi_so": [
+      "m1_tach_token_hang_hoa": [
+        "tokenizing",
         "receiving_index"
       ],
-      "m1_h2_chi_so_hop_le": [
-        "index_valid"
-      ],
-      "m1_h2_chi_so_ngoai_bien": [
-        "index_invalid"
-      ],
-      "m1_h2_doc_thanh_cong": [
-        "read_ok",
-        "done"
-      ],
-      "m1_h2_doc_ngoai_bien": [
+      "m1_truy_cap_ngoai_bien": [
         "out_of_bounds_read",
-        "violation",
+        "cwe_125",
+        "violation"
+      ],
+      "m1_hoan_tat_doc_an_toan": [
+        "read_ok",
+        "token_safe",
+        "safe_exit",
         "done"
       ]
     },
     "transitions": [
       [
-        "m1_khoi_tao",
-        "m1_h1_nhan_chuoi"
+        "m1_nhan_dong_dulieu",
+        "m1_kiem_tra_chieu_dai"
       ],
       [
-        "m1_khoi_tao",
-        "m1_h2_nhan_chi_so"
+        "m1_kiem_tra_chieu_dai",
+        "m1_tran_stack_buffer"
       ],
       [
-        "m1_h1_nhan_chuoi",
-        "m1_h1_len_nho_32"
+        "m1_kiem_tra_chieu_dai",
+        "m1_chep_buffer_thanh_cong"
       ],
       [
-        "m1_h1_nhan_chuoi",
-        "m1_h1_len_bang_32"
+        "m1_chep_buffer_thanh_cong",
+        "m1_tach_token_hang_hoa"
       ],
       [
-        "m1_h1_nhan_chuoi",
-        "m1_h1_len_lon_32"
+        "m1_tach_token_hang_hoa",
+        "m1_truy_cap_ngoai_bien"
       ],
       [
-        "m1_h1_len_nho_32",
-        "m1_h1_chep_an_toan"
+        "m1_tach_token_hang_hoa",
+        "m1_hoan_tat_doc_an_toan"
       ],
       [
-        "m1_h1_len_bang_32",
-        "m1_h1_tran_1_byte"
+        "m1_tran_stack_buffer",
+        "m1_tran_stack_buffer"
       ],
       [
-        "m1_h1_len_lon_32",
-        "m1_h1_tran_nhieu_byte"
+        "m1_truy_cap_ngoai_bien",
+        "m1_truy_cap_ngoai_bien"
       ],
       [
-        "m1_h1_chep_an_toan",
-        "m1_h1_chep_an_toan"
-      ],
-      [
-        "m1_h1_chep_an_toan",
-        "m1_h2_nhan_chi_so"
-      ],
-      [
-        "m1_h1_tran_1_byte",
-        "m1_h1_tran_1_byte"
-      ],
-      [
-        "m1_h1_tran_nhieu_byte",
-        "m1_h1_tran_nhieu_byte"
-      ],
-      [
-        "m1_h2_nhan_chi_so",
-        "m1_h2_chi_so_hop_le"
-      ],
-      [
-        "m1_h2_nhan_chi_so",
-        "m1_h2_chi_so_ngoai_bien"
-      ],
-      [
-        "m1_h2_chi_so_hop_le",
-        "m1_h2_doc_thanh_cong"
-      ],
-      [
-        "m1_h2_chi_so_ngoai_bien",
-        "m1_h2_doc_ngoai_bien"
-      ],
-      [
-        "m1_h2_doc_thanh_cong",
-        "m1_h2_doc_thanh_cong"
-      ],
-      [
-        "m1_h2_doc_ngoai_bien",
-        "m1_h2_doc_ngoai_bien"
+        "m1_hoan_tat_doc_an_toan",
+        "m1_hoan_tat_doc_an_toan"
       ]
     ]
   },
   "additional_flows": {
-    "M1-v1: Bản vá an toàn phòng thủ (Giới hạn kích thước & Kiểm tra chỉ số)": {
-      "description": "Bản v1 của Thọ: Cài rào chắn kiểm tra con trỏ, cap == 32, từ chối chuỗi len >= 32 trước khi memcpy và kết thúc NUL; kiểm tra con trỏ mảng token, token_count > 0 và chỉ số 0 <= field_idx < token_count.",
+    "M1-v1: Bản vá an toàn phòng thủ (Kiểm tra cận chuỗi & Chỉ số token)": {
+      "description": "Bản v1 của Thọ: Sử dụng kỹ thuật lập trình phòng thủ: kiểm tra độ dài chuỗi strlen(raw_line) < 32 trước khi sao chép và luôn gán buffer[31] = '\\0' triệt tiêu lỗi tràn stack và off-by-one. Khi truy xuất trường token, thực hiện kiểm tra điều kiện nghiêm ngặt 0 <= field_idx && field_idx < token_count, từ chối an toàn mọi chỉ số âm hoặc vượt quá số lượng token thực tế.",
       "states": [
-        "m1_khoi_tao",
-        "m1_h1_nhan_chuoi",
-        "m1_h1_kiem_tra_bien",
-        "m1_h1_tu_choi_chuoi_dai",
-        "m1_h1_chep_gioi_han_an_toan",
-        "m1_h2_nhan_chi_so",
-        "m1_h2_kiem_tra_mang",
-        "m1_h2_kiem_tra_chi_so",
-        "m1_h2_tu_choi_mang",
-        "m1_h2_tu_choi_chi_so",
-        "m1_h2_doc_an_toan"
+        "m1_nhan_dong_dulieu",
+        "m1_kiem_tra_chieu_dai",
+        "m1_chep_buffer_thanh_cong",
+        "m1_tach_token_hang_hoa",
+        "m1_hoan_tat_doc_an_toan"
       ],
       "initial": [
-        "m1_khoi_tao"
+        "m1_nhan_dong_dulieu"
       ],
       "labeling": {
-        "m1_khoi_tao": [
-          "receiving_input",
-          "initialized"
+        "m1_nhan_dong_dulieu": [
+          "initialized",
+          "input_received"
         ],
-        "m1_h1_nhan_chuoi": [
-          "receiving_input"
-        ],
-        "m1_h1_kiem_tra_bien": [
+        "m1_kiem_tra_chieu_dai": [
           "checking_bounds"
         ],
-        "m1_h1_tu_choi_chuoi_dai": [
-          "input_rejected",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h1_chep_gioi_han_an_toan": [
-          "copy_safe",
-          "null_terminated",
-          "done"
-        ],
-        "m1_h2_nhan_chi_so": [
-          "receiving_index"
-        ],
-        "m1_h2_kiem_tra_mang": [
-          "checking_array"
-        ],
-        "m1_h2_kiem_tra_chi_so": [
-          "checking_index"
-        ],
-        "m1_h2_tu_choi_mang": [
-          "invalid_array",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h2_tu_choi_chi_so": [
-          "index_rejected",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h2_doc_an_toan": [
-          "read_safe",
-          "done"
-        ]
-      },
-      "transitions": [
-        [
-          "m1_khoi_tao",
-          "m1_h1_nhan_chuoi"
-        ],
-        [
-          "m1_khoi_tao",
-          "m1_h2_nhan_chi_so"
-        ],
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_kiem_tra_bien"
-        ],
-        [
-          "m1_h1_kiem_tra_bien",
-          "m1_h1_tu_choi_chuoi_dai"
-        ],
-        [
-          "m1_h1_kiem_tra_bien",
-          "m1_h1_chep_gioi_han_an_toan"
-        ],
-        [
-          "m1_h1_chep_gioi_han_an_toan",
-          "m1_h1_chep_gioi_han_an_toan"
-        ],
-        [
-          "m1_h1_chep_gioi_han_an_toan",
-          "m1_h2_nhan_chi_so"
-        ],
-        [
-          "m1_h1_tu_choi_chuoi_dai",
-          "m1_h1_tu_choi_chuoi_dai"
-        ],
-        [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_kiem_tra_mang"
-        ],
-        [
-          "m1_h2_kiem_tra_mang",
-          "m1_h2_tu_choi_mang"
-        ],
-        [
-          "m1_h2_kiem_tra_mang",
-          "m1_h2_kiem_tra_chi_so"
-        ],
-        [
-          "m1_h2_kiem_tra_chi_so",
-          "m1_h2_tu_choi_chi_so"
-        ],
-        [
-          "m1_h2_kiem_tra_chi_so",
-          "m1_h2_doc_an_toan"
-        ],
-        [
-          "m1_h2_tu_choi_mang",
-          "m1_h2_tu_choi_mang"
-        ],
-        [
-          "m1_h2_tu_choi_chi_so",
-          "m1_h2_tu_choi_chi_so"
-        ],
-        [
-          "m1_h2_doc_an_toan",
-          "m1_h2_doc_an_toan"
-        ]
-      ]
-    },
-    "H1-v0: Nạp chuỗi bỏ qua kiểm tra biên (CWE-120/121 & CWE-193)": {
-      "description": "Hành vi H1-v0: ingest_raw_line_v0 bỏ qua cap, gọi strcpy vào buffer[32]. len<=31 an toàn, len=32 tràn 1 byte NUL, len>=33 tràn nhiều byte.",
-      "states": [
-        "m1_h1_nhan_chuoi",
-        "m1_h1_len_nho_32",
-        "m1_h1_len_bang_32",
-        "m1_h1_len_lon_32",
-        "m1_h1_chep_an_toan",
-        "m1_h1_tran_1_byte",
-        "m1_h1_tran_nhieu_byte"
-      ],
-      "initial": [
-        "m1_h1_nhan_chuoi"
-      ],
-      "labeling": {
-        "m1_h1_nhan_chuoi": [
-          "receiving_input"
-        ],
-        "m1_h1_len_nho_32": [
-          "len_safe"
-        ],
-        "m1_h1_len_bang_32": [
-          "len_boundary"
-        ],
-        "m1_h1_len_lon_32": [
-          "len_excessive"
-        ],
-        "m1_h1_chep_an_toan": [
+        "m1_chep_buffer_thanh_cong": [
           "copy_ok",
-          "done"
+          "buffer_valid"
         ],
-        "m1_h1_tran_1_byte": [
-          "stack_buffer_overflow",
-          "off_by_one",
-          "violation",
-          "done"
-        ],
-        "m1_h1_tran_nhieu_byte": [
-          "stack_buffer_overflow",
-          "violation",
-          "done"
-        ]
-      },
-      "transitions": [
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_len_nho_32"
-        ],
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_len_bang_32"
-        ],
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_len_lon_32"
-        ],
-        [
-          "m1_h1_len_nho_32",
-          "m1_h1_chep_an_toan"
-        ],
-        [
-          "m1_h1_len_bang_32",
-          "m1_h1_tran_1_byte"
-        ],
-        [
-          "m1_h1_len_lon_32",
-          "m1_h1_tran_nhieu_byte"
-        ],
-        [
-          "m1_h1_chep_an_toan",
-          "m1_h1_chep_an_toan"
-        ],
-        [
-          "m1_h1_tran_1_byte",
-          "m1_h1_tran_1_byte"
-        ],
-        [
-          "m1_h1_tran_nhieu_byte",
-          "m1_h1_tran_nhieu_byte"
-        ]
-      ]
-    },
-    "H1-v1: Giới hạn kích thước bộ đệm và gán null (Safe Ingest)": {
-      "description": "Hành vi H1-v1: ingest_raw_line_v1 kiểm tra con trỏ, cap == 32, len < 32; dùng memcpy an toàn và gán ký tự NUL kết thúc chuỗi.",
-      "states": [
-        "m1_h1_nhan_chuoi",
-        "m1_h1_kiem_tra_bien",
-        "m1_h1_tu_choi_chuoi_dai",
-        "m1_h1_chep_gioi_han_an_toan"
-      ],
-      "initial": [
-        "m1_h1_nhan_chuoi"
-      ],
-      "labeling": {
-        "m1_h1_nhan_chuoi": [
-          "receiving_input"
-        ],
-        "m1_h1_kiem_tra_bien": [
-          "checking_bounds"
-        ],
-        "m1_h1_tu_choi_chuoi_dai": [
-          "input_rejected",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h1_chep_gioi_han_an_toan": [
-          "copy_safe",
-          "null_terminated",
-          "done"
-        ]
-      },
-      "transitions": [
-        [
-          "m1_h1_nhan_chuoi",
-          "m1_h1_kiem_tra_bien"
-        ],
-        [
-          "m1_h1_kiem_tra_bien",
-          "m1_h1_tu_choi_chuoi_dai"
-        ],
-        [
-          "m1_h1_kiem_tra_bien",
-          "m1_h1_chep_gioi_han_an_toan"
-        ],
-        [
-          "m1_h1_tu_choi_chuoi_dai",
-          "m1_h1_tu_choi_chuoi_dai"
-        ],
-        [
-          "m1_h1_chep_gioi_han_an_toan",
-          "m1_h1_chep_gioi_han_an_toan"
-        ]
-      ]
-    },
-    "H2-v0: Đọc token không kiểm tra chỉ số (CWE-125)": {
-      "description": "Hành vi H2-v0: get_token_field_v0 không kiểm tra field_idx với token_count, đọc trực tiếp token_offsets[field_idx] gây lỗi CWE-125.",
-      "states": [
-        "m1_h2_nhan_chi_so",
-        "m1_h2_chi_so_hop_le",
-        "m1_h2_chi_so_ngoai_bien",
-        "m1_h2_doc_thanh_cong",
-        "m1_h2_doc_ngoai_bien"
-      ],
-      "initial": [
-        "m1_h2_nhan_chi_so"
-      ],
-      "labeling": {
-        "m1_h2_nhan_chi_so": [
+        "m1_tach_token_hang_hoa": [
+          "tokenizing",
           "receiving_index"
         ],
-        "m1_h2_chi_so_hop_le": [
-          "index_valid"
-        ],
-        "m1_h2_chi_so_ngoai_bien": [
-          "index_invalid"
-        ],
-        "m1_h2_doc_thanh_cong": [
+        "m1_hoan_tat_doc_an_toan": [
           "read_ok",
-          "done"
-        ],
-        "m1_h2_doc_ngoai_bien": [
-          "out_of_bounds_read",
-          "violation",
+          "token_safe",
+          "safe_exit",
           "done"
         ]
       },
       "transitions": [
         [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_chi_so_hop_le"
+          "m1_nhan_dong_dulieu",
+          "m1_kiem_tra_chieu_dai"
         ],
         [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_chi_so_ngoai_bien"
+          "m1_kiem_tra_chieu_dai",
+          "m1_chep_buffer_thanh_cong"
         ],
         [
-          "m1_h2_chi_so_hop_le",
-          "m1_h2_doc_thanh_cong"
+          "m1_chep_buffer_thanh_cong",
+          "m1_tach_token_hang_hoa"
         ],
         [
-          "m1_h2_chi_so_ngoai_bien",
-          "m1_h2_doc_ngoai_bien"
+          "m1_tach_token_hang_hoa",
+          "m1_hoan_tat_doc_an_toan"
         ],
         [
-          "m1_h2_doc_thanh_cong",
-          "m1_h2_doc_thanh_cong"
-        ],
-        [
-          "m1_h2_doc_ngoai_bien",
-          "m1_h2_doc_ngoai_bien"
-        ]
-      ]
-    },
-    "H2-v1: Kiểm tra biên mảng và chỉ số (Safe Token Read)": {
-      "description": "Hành vi H2-v1: get_token_field_v1 kiểm tra token_offsets != NULL, token_count > 0 và 0 <= field_idx < token_count.",
-      "states": [
-        "m1_h2_nhan_chi_so",
-        "m1_h2_kiem_tra_mang",
-        "m1_h2_kiem_tra_chi_so",
-        "m1_h2_tu_choi_mang",
-        "m1_h2_tu_choi_chi_so",
-        "m1_h2_doc_an_toan"
-      ],
-      "initial": [
-        "m1_h2_nhan_chi_so"
-      ],
-      "labeling": {
-        "m1_h2_nhan_chi_so": [
-          "receiving_index"
-        ],
-        "m1_h2_kiem_tra_mang": [
-          "checking_array"
-        ],
-        "m1_h2_kiem_tra_chi_so": [
-          "checking_index"
-        ],
-        "m1_h2_tu_choi_mang": [
-          "invalid_array",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h2_tu_choi_chi_so": [
-          "index_rejected",
-          "safe_exit",
-          "done"
-        ],
-        "m1_h2_doc_an_toan": [
-          "read_safe",
-          "done"
-        ]
-      },
-      "transitions": [
-        [
-          "m1_h2_nhan_chi_so",
-          "m1_h2_kiem_tra_mang"
-        ],
-        [
-          "m1_h2_kiem_tra_mang",
-          "m1_h2_tu_choi_mang"
-        ],
-        [
-          "m1_h2_kiem_tra_mang",
-          "m1_h2_kiem_tra_chi_so"
-        ],
-        [
-          "m1_h2_kiem_tra_chi_so",
-          "m1_h2_tu_choi_chi_so"
-        ],
-        [
-          "m1_h2_kiem_tra_chi_so",
-          "m1_h2_doc_an_toan"
-        ],
-        [
-          "m1_h2_tu_choi_mang",
-          "m1_h2_tu_choi_mang"
-        ],
-        [
-          "m1_h2_tu_choi_chi_so",
-          "m1_h2_tu_choi_chi_so"
-        ],
-        [
-          "m1_h2_doc_an_toan",
-          "m1_h2_doc_an_toan"
+          "m1_hoan_tat_doc_an_toan",
+          "m1_hoan_tat_doc_an_toan"
         ]
       ]
     }
   },
-  "suggested_ctl_formulas": [
-    "AG(!violation)",
-    "AG(!stack_buffer_overflow)",
-    "AG(!off_by_one)",
-    "AG(!out_of_bounds_read)",
-    "EF(copy_ok)",
-    "EF(read_ok)",
-    "EF(copy_safe)",
-    "EF(read_safe)",
-    "AF(done)"
-  ],
+  "suggested_ctl_formulas": {
+    "REQ-1 (Functional - Nạp chuỗi an toàn)": "EF(copy_ok)",
+    "REQ-2 (Functional - Đọc token thành công)": "EF(read_ok)",
+    "REQ-3 (Safety - Toàn vẹn bộ nhớ I/O)": "AG(!violation)",
+    "REQ-4 (Safety - Chống tràn stack buffer)": "AG(!stack_buffer_overflow)",
+    "REQ-5 (Safety - Chống đọc ngoài biên token)": "AG(!out_of_bounds_read)",
+    "REQ-6 (Liveness - Không deadlock, hoàn tất an toàn)": "AF(done)"
+  },
   "safety_properties": [
     "AG(!violation)",
     "AG(!stack_buffer_overflow)",
-    "AG(!off_by_one)",
-    "AG(!out_of_bounds_read)",
-    "EF(copy_ok)"
+    "AG(!out_of_bounds_read)"
   ],
   "functions": [
     {
@@ -1299,8 +435,6 @@
       "language": "c",
       "kind": "buffer_copy",
       "params": [
-        "dst",
-        "cap",
         "raw_line"
       ],
       "buffer_size": 32,
@@ -1309,180 +443,192 @@
     {
       "name": "get_token_field",
       "language": "c",
-      "kind": "array_read",
+      "kind": "arithmetic",
       "params": [
-        "token_offsets",
         "token_count",
         "field_idx"
-      ],
-      "bug": "out-of-bounds-read"
+      ]
     }
   ],
   "arithmetic_checks": [
     {
-      "name": "buffer_capacity_check",
-      "int_vars": [
-        "cap",
-        "input_len"
-      ],
-      "condition": "cap == 32 and input_len >= cap",
-      "overflow_expr": "input_len - cap"
-    },
-    {
-      "name": "token_index_check",
-      "int_vars": [
-        "token_count",
-        "field_idx"
-      ],
-      "condition": "token_count > 0 and (field_idx < 0 or field_idx >= token_count)",
-      "overflow_expr": "field_idx - token_count"
+      "function": "get_token_field",
+      "expression": "0 <= field_idx and field_idx < token_count",
+      "description": "Kiểm tra chỉ số trường token nằm trong phạm vi hợp lệ [0, token_count - 1] trước khi đọc mảng để phòng thủ CWE-125"
     }
   ],
   "test_cases": [
     {
       "id": "TC-M1-01",
       "requirement_ids": [
-        "REQ-1",
-        "REQ-5"
+        "REQ-1"
       ],
-      "title": "H1: Nạp chuỗi hợp lệ 31 byte vào bộ đệm stack 32 byte",
-      "preconditions": "char buffer[32], cap = 32, chuỗi đầu vào dài đúng 31 ký tự kết thúc \\0",
+      "title": "Nạp dòng chuỗi chuẩn độ dài ngắn (len = 15 < 32 bytes) vào buffer",
+      "preconditions": "Chuỗi raw_line hợp lệ: SP001;GaoST25;100;25000 (23 bytes)",
       "steps": [
-        "Gọi ingest_raw_line_v0 và ingest_raw_line_v1 với chuỗi 31 byte",
-        "Kiểm tra giá trị trả về và nội dung bộ đệm dst"
+        "Khởi tạo buffer stack 32 byte",
+        "Thực hiện nạp chuỗi raw_line vào buffer"
       ],
-      "expected_result": "Cả hai phiên bản thực hiện thành công, trả về 31, không có lỗi bộ nhớ",
+      "expected_result": "v0 và v1 đều nạp chuỗi thành công, buffer nhận đúng nội dung",
       "priority": "HIGH"
     },
     {
       "id": "TC-M1-02",
       "requirement_ids": [
-        "REQ-2",
-        "REQ-5"
+        "REQ-1"
       ],
-      "title": "H1: Nạp chuỗi 32 byte gây lỗi Off-by-one ghi đè ký tự null",
-      "preconditions": "char buffer[32], cap = 32, chuỗi đầu vào dài 32 ký tự",
+      "title": "Nạp dòng chuỗi cận trên an toàn (len = 31 bytes có null-terminator)",
+      "preconditions": "Chuỗi raw_line dài chính xác 31 ký tự + 1 byte null = 32 byte",
       "steps": [
-        "Gọi ingest_raw_line_v0 với chuỗi 32 ký tự dưới giám sát ASan",
-        "Gọi đối chứng ingest_raw_line_v1 với cùng dữ liệu đầu vào"
+        "Khởi tạo buffer stack 32 byte",
+        "Nạp chuỗi biên 31 byte vào buffer"
       ],
-      "expected_result": "v0: Ghi 33 byte (32 ký tự + byte \\0) đè byte kế tiếp trên stack (CWE-193); v1: Rào chắn chặn trả về -2",
+      "expected_result": "v0 và v1 đều sao chép an toàn, ký tự kết thúc chuỗi '\\0' được bảo toàn",
       "priority": "HIGH"
     },
     {
       "id": "TC-M1-03",
       "requirement_ids": [
-        "REQ-2",
-        "REQ-5"
+        "REQ-2"
       ],
-      "title": "H1: Nạp chuỗi 33 byte gây tràn bộ đệm stack (Stack Buffer Overflow)",
-      "preconditions": "char buffer[32], cap = 32, chuỗi đầu vào dài 33 ký tự",
+      "title": "Đọc trường token đầu tiên (field_idx = 0) từ danh sách token hợp lệ",
+      "preconditions": "Mảng token đã phân tách gồm 4 trường SP001, GaoST25, 100, 25000 (token_count = 4)",
       "steps": [
-        "Gọi ingest_raw_line_v0 với chuỗi 33 ký tự",
-        "Quan sát cảnh báo AddressSanitizer stack-buffer-overflow"
+        "Gọi hàm get_token_field với field_idx = 0",
+        "Lấy giá trị mã hàng"
       ],
-      "expected_result": "v0: Ghi vượt biên 2 byte gây hỏng stack frame (CWE-121); v1: Trả về mã lỗi an toàn -2",
+      "expected_result": "Truy xuất thành công trường mã hàng SP001, không lỗi",
       "priority": "HIGH"
     },
     {
       "id": "TC-M1-04",
       "requirement_ids": [
-        "REQ-2",
-        "REQ-7"
+        "REQ-2"
       ],
-      "title": "H1: Nạp chuỗi cực dài 64 byte (Boundary Fuzzing Overflow)",
-      "preconditions": "char buffer[32], cap = 32, chuỗi đầu vào dài 64 ký tự",
+      "title": "Đọc trường token cuối cùng (field_idx = token_count - 1)",
+      "preconditions": "token_count = 4, truy xuất trường đơn giá tại chỉ số 3",
       "steps": [
-        "Fuzzing chuỗi vượt gấp đôi dung lượng bộ đệm",
-        "Kiểm tra crash hoặc đè địa chỉ trở về hàm (Saved Frame Pointer)"
+        "Gọi hàm get_token_field với field_idx = 3",
+        "Lấy giá trị đơn giá"
       ],
-      "expected_result": "v0: Crash ngay lập tức với ASan stack-buffer-overflow; v1: Từ chối an toàn trả về -2",
+      "expected_result": "Truy xuất thành công trường đơn giá 25000",
       "priority": "HIGH"
     },
     {
       "id": "TC-M1-05",
       "requirement_ids": [
-        "REQ-5",
-        "REQ-7"
+        "REQ-3"
       ],
-      "title": "H1: Kiểm tra con trỏ NULL đầu vào (dst = NULL hoặc raw_line = NULL)",
-      "preconditions": "dst = NULL hoặc raw_line = NULL, cap = 32",
+      "title": "Kiểm toán an toàn chu trình I/O toàn diện không vi phạm bộ nhớ",
+      "preconditions": "Chạy qua toàn bộ chu trình nạp chuỗi và đọc token",
       "steps": [
-        "Thực thi ingest_raw_line_v1 với tham số con trỏ NULL"
+        "Kiểm tra bất biến AG(!violation) trên toàn bộ không gian trạng thái"
       ],
-      "expected_result": "v1: Rào chắn phát hiện con trỏ NULL và từ chối an toàn trả về -1",
-      "priority": "MEDIUM"
+      "expected_result": "v0: Vi phạm an toàn (CWE-120/125); v1: Thỏa mãn 100% AG(!violation)",
+      "priority": "HIGH"
     },
     {
       "id": "TC-M1-06",
       "requirement_ids": [
-        "REQ-7"
+        "REQ-4"
       ],
-      "title": "H1: Dung lượng bộ đệm cap sai khác kích thước định mức 32 byte",
-      "preconditions": "dst hợp lệ, cap = 16 (khác M1_BUFFER_SIZE = 32)",
+      "title": "Kích hoạt lỗi tràn bộ đệm stack với chuỗi dữ liệu vượt ngưỡng (len = 64 bytes)",
+      "preconditions": "Chuỗi raw_line chứa 64 ký tự (vượt quá stack buffer 32 byte)",
       "steps": [
-        "Gọi ingest_raw_line_v1 với cap != 32"
+        "Gọi ingest_raw_line với chuỗi 64 byte",
+        "Quan sát vùng nhớ stack liền kề"
       ],
-      "expected_result": "v1: Phát hiện dung lượng sai lệch định mức, từ chối xử lý trả về -1",
-      "priority": "MEDIUM"
+      "expected_result": "v0: Ghi đè frame stack và con trỏ trả về (CWE-120/121); v1: Chặn từ chối an toàn do len >= 32",
+      "priority": "HIGH"
     },
     {
       "id": "TC-M1-07",
       "requirement_ids": [
-        "REQ-3",
-        "REQ-5"
+        "REQ-4"
       ],
-      "title": "H2: Đọc trường token tại chỉ số hợp lệ trong mảng (Valid Token Index)",
-      "preconditions": "Mảng token_offsets có 4 phần tử {0, 10, 20, 30}, token_count = 4, field_idx = 2",
+      "title": "Bắt lỗi Off-by-one khi chuỗi có đúng 32 byte dữ liệu thiếu null-terminator",
+      "preconditions": "Chuỗi đầu vào có đúng 32 ký tự, không còn chỗ cho ký tự null kết thúc chuỗi",
       "steps": [
-        "Gọi get_token_field_v0 và get_token_field_v1 với field_idx = 2"
+        "Sao chép 32 byte vào buffer[32] bằng strcpy",
+        "Đọc chuỗi sau khi sao chép"
       ],
-      "expected_result": "Cả hai phiên bản trả về đúng giá trị token_offsets[2] = 20",
+      "expected_result": "v0: Đọc tràn qua biến tiếp theo trên stack do thiếu null (CWE-193); v1: buffer[31] = '\\0'",
       "priority": "HIGH"
     },
     {
       "id": "TC-M1-08",
       "requirement_ids": [
-        "REQ-4",
-        "REQ-5"
+        "REQ-4"
       ],
-      "title": "H2: Đọc token tại chỉ số chạm biên trên field_idx == token_count (CWE-125)",
-      "preconditions": "Mảng token_offsets có 4 phần tử (chỉ số 0..3), token_count = 4, field_idx = 4",
+      "title": "Phát hiện lỗi Stack Buffer Overflow bằng AddressSanitizer (ASan Crash Trigger)",
+      "preconditions": "Biên dịch mã nguồn C với flag -fsanitize=address",
       "steps": [
-        "Gọi get_token_field_v0 với field_idx = 4 dưới giám sát ASan",
-        "Gọi đối chứng get_token_field_v1 với field_idx = 4"
+        "Thực thi hàm ingest_raw_line với chuỗi 48 ký tự",
+        "Ghi nhận cảnh báo từ ASan"
       ],
-      "expected_result": "v0: Đọc ngoài biên mảng token (CWE-125 Out-of-bounds Read); v1: Rào chắn chặn trả về -2",
+      "expected_result": "v0: ASan báo lỗi ERROR: AddressSanitizer: stack-buffer-overflow; v1: 0 crash",
       "priority": "HIGH"
     },
     {
       "id": "TC-M1-09",
       "requirement_ids": [
-        "REQ-4",
         "REQ-5"
       ],
-      "title": "H2: Đọc token với chỉ số âm field_idx < 0 (Negative Index Read)",
-      "preconditions": "token_count = 4, field_idx = -1",
+      "title": "Bắt lỗi đọc ngoài biên mảng token khi chỉ số vượt trần (field_idx >= token_count)",
+      "preconditions": "token_count = 4, yêu cầu đọc trường tại field_idx = 4 hoặc field_idx = 10",
       "steps": [
-        "Gọi get_token_field_v0 với field_idx = -1",
-        "Gọi đối chứng get_token_field_v1 với field_idx = -1"
+        "Gọi get_token_field(4, 4)",
+        "Kiểm tra con trỏ token trả về"
       ],
-      "expected_result": "v0: Đọc ngược vùng nhớ trước mảng (CWE-125); v1: Từ chối an toàn trả về -2",
+      "expected_result": "v0: Đọc ngoài biên mảng con trỏ token (CWE-125); v1: Phát hiện và trả về NULL/mã lỗi an toàn",
       "priority": "HIGH"
     },
     {
       "id": "TC-M1-10",
       "requirement_ids": [
-        "REQ-4",
-        "REQ-7"
+        "REQ-5"
       ],
-      "title": "H2: Đọc token với mảng rỗng hoặc con trỏ token_offsets == NULL",
-      "preconditions": "token_offsets = NULL hoặc token_count <= 0, field_idx = 0",
+      "title": "Bắt lỗi đọc ngoài biên mảng token khi chỉ số âm (field_idx = -1 < 0)",
+      "preconditions": "Yêu cầu đọc trường với chỉ số âm field_idx = -1",
       "steps": [
-        "Gọi get_token_field_v1 với con trỏ mảng NULL"
+        "Gọi get_token_field(4, -1)",
+        "Kiểm tra phản hồi của hệ thống"
       ],
-      "expected_result": "v1: Rào chắn bảo vệ ngăn chặn dereference con trỏ NULL, trả về -1",
-      "priority": "MEDIUM"
+      "expected_result": "v0: Đọc vùng nhớ phía trước mảng token (CWE-125); v1: Chặn ngay tại điều kiện field_idx < 0",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-11",
+      "requirement_ids": [
+        "REQ-6"
+      ],
+      "title": "Kiểm tra tính sống: Không xảy ra deadlock trong toàn bộ chu trình xử lý I/O",
+      "preconditions": "Mô hình chuyển trạng thái Kripke của module M1",
+      "steps": [
+        "Duyệt qua tất cả 7 trạng thái",
+        "Kiểm tra bậc ra out-degree của từng trạng thái"
+      ],
+      "expected_result": "Mọi trạng thái đều có out-degree >= 1, 0 deadlock, công thức AF(done) thỏa mãn trên v1",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-12",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-2",
+        "REQ-3",
+        "REQ-4",
+        "REQ-5",
+        "REQ-6"
+      ],
+      "title": "Kiểm thử hồi quy đối chứng toàn diện pytest (Regression Verification Suite)",
+      "preconditions": "Bộ test pytest tự động test_verify_v0_cases_on_v1.py",
+      "steps": [
+        "Chạy kiểm thử toàn bộ test cases trên bản v0",
+        "Chạy kiểm thử toàn bộ test cases trên bản v1"
+      ],
+      "expected_result": "v0: Bắt đầy đủ lỗi CWE-120/121, CWE-193, CWE-125; v1: 100% PASSED",
+      "priority": "HIGH"
     }
   ]
 }
