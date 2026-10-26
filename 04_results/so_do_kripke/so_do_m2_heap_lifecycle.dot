@@ -1,0 +1,46 @@
+digraph M2_Heap_Lifecycle {
+    rankdir=LR;
+    node [shape=box, style="rounded,filled", fontname="Calibri", fontsize=11];
+    edge [fontname="Calibri", fontsize=10];
+
+    // Trạng thái ban đầu
+    "m2_khoi_tao" [label="m2_khoi_tao\n[initialized]", fillcolor="#D6EAF8", color="#2980B9", penwidth=2.0];
+
+    // Trạng thái chung
+    "m2_danh_sach_day" [label="m2_danh_sach_day\n[list_full]", fillcolor="#FCF3CF", color="#B7950B", penwidth=1.5];
+
+    // Nhánh v0 (Lỗi có chủ đích)
+    "m2_realloc_goi" [label="m2_realloc_goi\n[reallocating]", fillcolor="#FCF3CF", color="#B7950B", penwidth=1.5];
+    "m2_oom_null" [label="m2_oom_null\n[oom_occurred]", fillcolor="#FCF3CF", color="#B7950B", penwidth=1.5];
+    "m2_mat_con_tro_leak" [label="m2_mat_con_tro_leak\n[memory_leak, cwe_401, violation]", fillcolor="#FADBD8", color="#C0392B", penwidth=2.0];
+    "m2_giai_phong_xong" [label="m2_giai_phong_xong\n[freed_without_null]", fillcolor="#FCF3CF", color="#B7950B", penwidth=1.5];
+    "m2_doc_con_tro_treo_uaf" [label="m2_doc_con_tro_treo_uaf\n[use_after_free, cwe_416, violation]", fillcolor="#FADBD8", color="#C0392B", penwidth=2.0];
+
+    // Nhánh v1 (Bản vá an toàn)
+    "m2_realloc_tam" [label="m2_realloc_tam\n[realloc_temp]", fillcolor="#D4EFDF", color="#27AE60", penwidth=1.5];
+    "m2_oom_bao_toan_ram" [label="m2_oom_bao_toan_ram\n[owner_preserved, safe_exit, done]", fillcolor="#D4EFDF", color="#27AE60", penwidth=2.0];
+    "m2_realloc_thanh_cong" [label="m2_realloc_thanh_cong\n[realloc_ok]", fillcolor="#D4EFDF", color="#27AE60", penwidth=1.5];
+    "m2_giai_phong_an_toan" [label="m2_giai_phong_an_toan\n[pointer_nullified, zero_leak, done]", fillcolor="#D4EFDF", color="#27AE60", penwidth=2.0];
+
+    // Chuyển trạng thái
+    "m2_khoi_tao" -> "m2_danh_sach_day" [label="them 16 san pham"];
+    
+    // v0 Transitions (Màu đỏ nét đứt khi dẫn tới lỗi)
+    "m2_danh_sach_day" -> "m2_realloc_goi" [label="v0: goi realloc truc tiep", color="#C0392B", style=dashed];
+    "m2_realloc_goi" -> "m2_oom_null" [label="he thong het RAM (NULL)", color="#C0392B", style=dashed];
+    "m2_oom_null" -> "m2_mat_con_tro_leak" [label="ghi de mat con tro goc", color="#C0392B", style=dashed, penwidth=2.0];
+    "m2_mat_con_tro_leak" -> "m2_mat_con_tro_leak" [label="loop error", color="#C0392B", style=dashed];
+
+    "m2_realloc_goi" -> "m2_realloc_thanh_cong" [label="cap phat RAM moi thanh cong", color="#27AE60"];
+    "m2_realloc_thanh_cong" -> "m2_giai_phong_xong" [label="v0: free() khong set NULL", color="#C0392B", style=dashed];
+    "m2_giai_phong_xong" -> "m2_doc_con_tro_treo_uaf" [label="doc lai con tro treo", color="#C0392B", style=dashed, penwidth=2.0];
+    "m2_doc_con_tro_treo_uaf" -> "m2_doc_con_tro_treo_uaf" [label="loop error", color="#C0392B", style=dashed];
+
+    // v1 Transitions (Màu xanh nét liền an toàn)
+    "m2_danh_sach_day" -> "m2_realloc_tam" [label="v1: dung con tro tam tmp", color="#27AE60", penwidth=2.0];
+    "m2_realloc_tam" -> "m2_oom_bao_toan_ram" [label="tmp == NULL: giu con tro cu", color="#27AE60", penwidth=2.0];
+    "m2_oom_bao_toan_ram" -> "m2_oom_bao_toan_ram" [label="safe exit", color="#27AE60"];
+    "m2_realloc_tam" -> "m2_realloc_thanh_cong" [label="tmp != NULL: list = tmp", color="#27AE60", penwidth=2.0];
+    "m2_realloc_thanh_cong" -> "m2_giai_phong_an_toan" [label="v1: cache val, free, ptr=NULL", color="#27AE60", penwidth=2.0];
+    "m2_giai_phong_an_toan" -> "m2_giai_phong_an_toan" [label="safe exit", color="#27AE60"];
+}

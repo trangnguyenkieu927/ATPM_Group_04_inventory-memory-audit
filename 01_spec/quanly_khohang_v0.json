@@ -4,110 +4,110 @@
   "requirements": [
     {
       "id": "REQ-01",
-      "text": "H1: Hàm đọc mã phiếu kho (parse_voucher_id) không được ghi vượt biên bộ đệm, kể cả khi mã dài ĐÚNG 16 ký tự (C1.2, C1.3)",
+      "text": "H1: Hàm phân tích mã phiếu kho (parse_voucher_id) không được ghi vượt biên bộ đệm Stack 32 byte, kể cả khi mã dài ĐÚNG 32 ký tự (C1.2, C1.3)",
       "category": "memory",
       "priority": "HIGH"
     },
     {
       "id": "REQ-02",
-      "text": "H1: Mã phiếu hợp lệ không được bị cắt cụt hoặc biến đổi khi lưu vào bộ đệm stack (C1.4)",
+      "text": "H1: Mã phiếu kho hợp lệ không được bị cắt cụt hoặc biến đổi khi lưu vào bộ đệm Stack 32 byte (C1.4)",
       "category": "functional",
       "priority": "HIGH"
     },
     {
       "id": "REQ-03",
-      "text": "H2: Kết quả cấp phát mảng sản phẩm lô hàng (create_stock_items) phải được kiểm tra NULL trước khi sử dụng (C2.2)",
+      "text": "H2: Kết quả cấp phát mảng kiện hàng động (create_stock_items) trên Heap phải được kiểm tra NULL trước khi sử dụng (C2.2)",
       "category": "memory",
       "priority": "HIGH"
     },
     {
       "id": "REQ-04",
-      "text": "H2: Kích thước vùng nhớ cấp phát heap (số kiện x kích thước 1 kiện) không được tràn số hoặc âm (C2.3)",
-      "category": "safety",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-05",
-      "text": "H2: Các trường dữ liệu của từng kiện hàng mới cấp phát phải được khởi tạo đầy đủ trước khi đọc (C2.4)",
+      "text": "H2: Kích thước cấp phát mảng kiện hàng (n * sizeof(Product)) không được gây tràn số nguyên dẫn đến cấp phát thiếu bộ nhớ rồi ghi tràn Heap (C2.3)",
       "category": "memory",
       "priority": "HIGH"
     },
     {
+      "id": "REQ-05",
+      "text": "H2: Mọi phần tử kiện hàng trong danh mục động phải được khởi tạo đầy đủ trước khi đọc, không đọc dữ liệu rác (C2.4)",
+      "category": "functional",
+      "priority": "HIGH"
+    },
+    {
       "id": "REQ-06",
-      "text": "H3: Phép tính giá trị từng dòng lô hàng (line_total = don_gia * so_luong) không được tràn số nguyên 32-bit (C3.2)",
+      "text": "H3: Phép tính tổng giá trị tiền tồn kho (đơn giá x số lượng + phí đóng gói) không được gây tràn số nguyên có dấu 32-bit (C3.2, C3.3)",
       "category": "arithmetic",
       "priority": "HIGH"
     },
     {
       "id": "REQ-07",
-      "text": "H3: Phép cộng dồn tổng giá trị kho hàng không được vượt trần int32 (tối đa 2.147.483.647 VND) (C3.3)",
-      "category": "arithmetic",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-08",
-      "text": "H3: Số tiền sau khi trừ chiết khấu kho không được âm (C3.4)",
-      "category": "arithmetic",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-09",
-      "text": "H3: Đơn giá bình quân mặt hàng không được chia cho số lượng bằng 0 (C3.5)",
-      "category": "arithmetic",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-10",
-      "text": "H4: Hàm đọc token xác thực thủ kho (parse_auth_token) không được ghi vượt bộ đệm 32 byte (C4.2)",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
-      "id": "REQ-11",
-      "text": "H4: Không được có nhánh ẩn (backdoor/debug pin) bỏ qua kiểm tra quyền xuất kho khẩn cấp (C4.3)",
+      "text": "H3: Giá trị tiền tồn kho không được âm do chiết khấu lớn hơn tạm tính hoặc số lượng âm (C3.4)",
       "category": "safety",
       "priority": "HIGH"
     },
     {
+      "id": "REQ-08",
+      "text": "H3: Phép phân bổ định mức chi phí kho theo kỳ hạn không được chia cho 0 khi kỳ hạn bằng 0 (C3.5)",
+      "category": "arithmetic",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": "REQ-09",
+      "text": "H4: Chuỗi mã token ủy quyền thủ kho từ nguồn ngoài không được vượt quá 20 ký tự (C4.2)",
+      "category": "memory",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-10",
+      "text": "H4: Luồng xác thực quyền thủ kho không được chứa nhánh bí mật (magic value) bỏ qua kiểm tra an ninh (C4.3)",
+      "category": "security",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-11",
+      "text": "H4: Phép cộng dồn tồn kho mới vào tồn kho cũ (update_stock_quantity) không được gây tràn số nguyên có dấu 32-bit và phải từ chối số lượng nhập âm (C4.4)",
+      "category": "arithmetic",
+      "priority": "HIGH"
+    },
+    {
       "id": "REQ-12",
-      "text": "H5: Vùng nhớ buffer ghi nhật ký kiểm kê (write_audit_log) phải được giải phóng sạch khi gặp lỗi thoát sớm (C5.2)",
+      "text": "H5: Hàm ghi nhật ký kiểm kê kho không được rò rỉ bộ nhớ tiến trình khi tái cấp phát bộ đệm nhật ký (C5.2)",
       "category": "memory",
       "priority": "HIGH"
     },
     {
       "id": "REQ-13",
-      "text": "H5: Thông điệp log từ người dùng nhập không được đưa trực tiếp vào định dạng printf mà phải dùng printf(\"%s\", msg) (C5.3)",
-      "category": "safety",
+      "text": "H5: Nội dung ghi nhật ký kiểm kê không được sử dụng trực tiếp chuỗi do người dùng nhập làm format string cho printf/syslog (C5.3)",
+      "category": "security",
       "priority": "HIGH"
     },
     {
       "id": "REQ-14",
-      "text": "H6: Hai worker (nhập kho và xuất kho tự động) không được truy cập đồng thời vào phiên kho chưa khóa mutex (C6.2)",
+      "text": "H5: Phép nhân quy đổi giá trị hàng hóa theo tỉ giá (scale_product_price) không được gây tràn số nguyên có dấu 32-bit (C5.4)",
+      "category": "arithmetic",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": "REQ-15",
+      "text": "H6: Hai tiến trình worker nhập kho và worker xuất kho tự động dùng chung phiên kho không được đồng thời can thiệp gây tranh chấp tài nguyên (C6.2)",
       "category": "concurrency",
       "priority": "HIGH"
     },
     {
-      "id": "REQ-15",
-      "text": "H6: Không được giải phóng hai lần (double free) trên cùng một con trỏ danh mục lô hàng (C6.3)",
-      "category": "memory",
-      "priority": "HIGH"
-    },
-    {
       "id": "REQ-16",
-      "text": "H6: Không được đọc/ghi vào con trỏ lô hàng sau khi đã giải phóng (use-after-free) (C6.4)",
+      "text": "H6: Khi đóng phiên kho hàng, con trỏ phiên làm việc không được giải phóng hai lần (CWE-415 Double Free) (C6.3)",
       "category": "memory",
       "priority": "HIGH"
     },
     {
       "id": "REQ-17",
-      "text": "H6: Mã PIN két thủ kho lưu tạm trong bộ nhớ phải được xóa sạch (zero-out) trước khi free (C6.5)",
-      "category": "security",
+      "text": "H6: Sau khi giải phóng bộ nhớ danh mục hàng hóa (release_stock_items), con trỏ phải được gán NULL ngay lập tức; cấm tuyệt đối đọc/ghi vào vùng nhớ đã giải phóng (CWE-416 Use-After-Free) (C6.4)",
+      "category": "memory",
       "priority": "HIGH"
     },
     {
       "id": "REQ-18",
-      "text": "Toàn bộ luồng phiếu kho: Luôn kết thúc hợp lệ và tồn tại nhánh từ chối đầu vào độc hại",
-      "category": "liveness",
+      "text": "H6: Bộ nhớ chứa mã PIN thủ kho và dữ liệu nhạy cảm phải được xóa sạch bằng explicit_bzero trước khi gọi free(), không để sót lại trên Heap (C6.5)",
+      "category": "security",
       "priority": "HIGH"
     }
   ],
@@ -785,46 +785,57 @@
   ],
   "arithmetic_checks": [
     {
+      "name": "stock_addition_overflow",
+      "int_vars": [
+        "current_stock",
+        "added_quantity"
+      ],
+      "condition": "current_stock >= 0 and current_stock <= 2147483647 and added_quantity >= 1 and added_quantity <= 2147483647 and current_stock + added_quantity > 2147483647",
+      "overflow_expr": "current_stock + added_quantity"
+    },
+    {
+      "name": "heap_alloc_bytes",
+      "int_vars": [
+        "new_capacity",
+        "item_size"
+      ],
+      "condition": "new_capacity >= 1 and item_size == 48 and new_capacity * item_size > 2147483647",
+      "overflow_expr": "new_capacity * item_size"
+    },
+    {
       "name": "line_amount_mul",
-      "variables": "price, qty",
+      "int_vars": [
+        "price",
+        "qty"
+      ],
       "condition": "price >= 0 and price <= 50000000 and qty >= 1 and qty <= 1000 and price * qty > 2147483647",
-      "overflow_expression": "price * qty",
-      "note": "C3.2 — Phép nhân đơn giá x số lượng kiện tràn int32"
+      "overflow_expr": "price * qty"
     },
     {
       "name": "accumulated_total",
-      "variables": "total_before, line_total",
+      "int_vars": [
+        "total_before",
+        "line_total"
+      ],
       "condition": "total_before >= 0 and total_before <= 2147483647 and line_total >= 0 and line_total <= 50000000 and total_before + line_total > 2147483647",
-      "overflow_expression": "total_before + line_total",
-      "note": "C3.3 — Cộng dồn các kiện hàng làm tổng giá trị vượt trần"
+      "overflow_expr": "total_before + line_total"
     },
     {
-      "name": "voucher_total_int32",
-      "variables": "subtotal, packing_fee",
-      "condition": "subtotal >= 0 and subtotal <= 2147483647 and packing_fee >= 0 and packing_fee <= 500000 and subtotal + packing_fee > 2147483647",
-      "overflow_expression": "subtotal + packing_fee",
-      "note": "C3.2 — Cộng phí đóng gói bảo quản vào tiền hàng gần trần"
+      "name": "negative_quantity_check",
+      "int_vars": [
+        "added_quantity"
+      ],
+      "condition": "added_quantity < 0",
+      "overflow_expr": "added_quantity"
     },
     {
-      "name": "alloc_bytes",
-      "variables": "n_items, item_size",
-      "condition": "n_items >= 1 and item_size == 48 and n_items * item_size > 2147483647",
-      "overflow_expression": "n_items * item_size",
-      "note": "C2.3 — Kích thước cấp phát heap tràn khi n không bị giới hạn"
-    },
-    {
-      "name": "negative_stock_total",
-      "variables": "subtotal, discount",
+      "name": "negative_total",
+      "int_vars": [
+        "subtotal",
+        "discount"
+      ],
       "condition": "subtotal >= 0 and subtotal <= 2000000000 and discount + 2000000000 >= 0 and discount <= 2000000000 and subtotal - discount < 0",
-      "overflow_expression": "subtotal - discount",
-      "note": "C3.4 — Chiết khấu kho hàng lớn hơn tổng tiền"
-    },
-    {
-      "name": "div_by_zero_avg",
-      "variables": "total_amount, total_items",
-      "condition": "total_amount >= 0 and total_items == 0",
-      "overflow_expression": "total_amount / total_items",
-      "note": "C3.5 — Chia cho 0 khi tính đơn giá bình quân"
+      "overflow_expr": "subtotal - discount"
     }
   ],
   "test_cases": [
@@ -834,14 +845,14 @@
         "REQ-01",
         "CON-01"
       ],
-      "title": "Mã phiếu kho dài đúng 16 ký tự và 100 ký tự",
-      "preconditions": "parse_voucher_id (v0: buffer 16, strcpy)",
+      "title": "Mã phiếu kho dài đúng 32 ký tự và dài 100 ký tự",
+      "preconditions": "parse_voucher_id sinh từ đặc tả (v0: buffer 32 byte, Loi=buffer-overflow) - M1 Thọ",
       "steps": [
-        "1. Sinh mã C",
-        "2. Chạy check_c_source()",
-        "3. Kiểm tra AG(!buffer_overflow), AG(!off_by_one)"
+        "Sinh mã C cho parse_voucher_id",
+        "Chạy check_c_source() (Chương 2)",
+        "Kiểm tra AG(!buffer_overflow), AG(!off_by_one) trên mô hình Kripke"
       ],
-      "expected_result": "v0: strcpy gây CWE-120, 2 công thức VI PHẠM; v1: 0 vi phạm, công thức ĐÚNG",
+      "expected_result": "v0: dangerous-function strcpy (CWE-120/121), 2 công thức VI PHẠM; v1: 0 phát hiện, công thức ĐÚNG",
       "priority": "HIGH"
     },
     {
@@ -850,13 +861,14 @@
         "REQ-02",
         "CON-01"
       ],
-      "title": "Bản sửa có cắt cụt mã phiếu 16 ký tự không",
-      "preconditions": "Mô hình con M1, luồng M1-v1a vs M1-v1b",
+      "title": "Bản sửa của phần mềm có cắt cụt mã phiếu 32 ký tự không",
+      "preconditions": "Mô hình con M1, luồng 'M1-v1a' (strncpy 31 + '\\0') - M1 Thọ",
       "steps": [
-        "1. Nạp M1 vào tab kiểm chứng",
-        "2. Kiểm tra AG(!truncated)"
+        "Nạp mo_hinh_con/m1_doc_chuoi_buffer.json vào tab Ch1",
+        "Chọn luồng M1-v1a, kiểm tra AG(!truncated)",
+        "So sánh với luồng M1-v1b"
       ],
-      "expected_result": "M1-v1a: VI PHẠM (bị cắt mất ký tự); M1-v1b: ĐÚNG hoàn toàn",
+      "expected_result": "M1-v1a: AG(!truncated) VI PHẠM (mã bị cắt, phần mềm không báo); M1-v1b: ĐÚNG",
       "priority": "HIGH"
     },
     {
@@ -866,14 +878,14 @@
         "REQ-04",
         "REQ-05"
       ],
-      "title": "Cấp phát mảng kiện hàng trên heap",
-      "preconditions": "create_stock_items; mô hình con M2",
+      "title": "Cấp phát mảng kiện hàng trên Heap",
+      "preconditions": "create_stock_items (alloc_release); mô hình con M2 - M2 Trang",
       "steps": [
-        "1. Quét mã C",
-        "2. Kiểm tra AG(!null_deref), AG(!alloc_size_overflow)",
-        "3. Chạy KiemTraSoHoc alloc_bytes"
+        "Chạy check_c_source() trên mã sinh",
+        "Kiểm tra M2-v0: AG(!null_deref), AG(!heap_overflow), AG(!uninit_read)",
+        "Chạy KiemTraSoHoc heap_alloc_bytes"
       ],
-      "expected_result": "v0: 3 công thức VI PHẠM, alloc_bytes SAT; v1: 0 vi phạm, UNSAT",
+      "expected_result": "Phần mềm quét mã: 0 phát hiện; mô hình M2-v0: 3 công thức VI PHẠM; heap_alloc_bytes SAT (v0) / UNSAT (v1)",
       "priority": "HIGH"
     },
     {
@@ -883,69 +895,71 @@
         "CON-03",
         "CON-04"
       ],
-      "title": "Tổng tiền nhân và cộng dồn tràn int32",
-      "preconditions": "KiemTraSoHoc line_amount_mul, accumulated_total",
+      "title": "Tổng tiền tồn kho và cộng dồn tràn int32",
+      "preconditions": "KiemTraSoHoc stock_addition_overflow, line_amount_mul, accumulated_total; BMC vòng lặp trong file JSON",
       "steps": [
-        "1. Chạy check_satisfiability() Z3 trên điều kiện",
-        "2. Đưa phản ví dụ vào mã C"
+        "Chạy check_satisfiability() trên DieuKien",
+        "Chạy BMC bmc_cong_don_ton_kho (k = 100)"
       ],
-      "expected_result": "v0: SAT kèm phản ví dụ (don_gia=30tr, sl=100); v1: UNSAT do có guard",
+      "expected_result": "v0: SAT kèm phản ví dụ, BMC vi phạm tại bước 48 (total = 2.160.000.000); v1: UNSAT, BMC không vi phạm",
       "priority": "HIGH"
     },
     {
       "id": "TC-05",
       "requirement_ids": [
-        "REQ-08",
+        "REQ-07",
+        "REQ-11",
         "CON-03"
       ],
-      "title": "Số tiền âm do chiết khấu kho vượt tổng",
-      "preconditions": "KiemTraSoHoc negative_stock_total",
+      "title": "Số lượng nhập âm và số tiền âm do chiết khấu",
+      "preconditions": "KiemTraSoHoc negative_quantity_check, negative_total - M3 Đô",
       "steps": [
-        "1. Chạy check_satisfiability() Z3"
+        "Chạy check_satisfiability() trên DieuKien của Z3"
       ],
-      "expected_result": "v0: SAT (discount > subtotal); v1: UNSAT",
+      "expected_result": "v0: SAT (tìm được nghiệm added_quantity = -50 và discount > subtotal); v1: UNSAT",
       "priority": "HIGH"
     },
     {
       "id": "TC-06",
       "requirement_ids": [
-        "REQ-09",
+        "REQ-08",
         "CON-05"
       ],
-      "title": "Tính khấu hao / giá bình quân với kỳ hạn = 0",
-      "preconditions": "Hàm chia calc_unit_price_average(total, months)",
+      "title": "Phân bổ chi phí kho với kỳ hạn = 0",
+      "preconditions": "Hàm Python calc_batch_capacity(total_items, batch_size) (kind = divide) — chỉ có ở v0",
       "steps": [
-        "1. Chạy kiểm thử fuzzing số nguyên"
+        "Chạy blackbox_fuzz() 300 lần"
       ],
-      "expected_result": "v0: Crash ZeroDivisionError (CWE-369); v1: Kiểm tra months >= 1",
-      "priority": "HIGH"
+      "expected_result": "v0: tìm được ít nhất 1 crash ZeroDivisionError (CWE-248/369); v1: hàm thay bằng kiểm tra 1 <= batch_size <= 24",
+      "priority": "MEDIUM"
     },
     {
       "id": "TC-07",
       "requirement_ids": [
-        "REQ-10",
+        "REQ-09",
         "CON-02"
       ],
-      "title": "Mã token thủ kho dài hơn 32 ký tự",
-      "preconditions": "parse_auth_token (v0: buffer 32, strcpy)",
+      "title": "Mã token ủy quyền thủ kho dài hơn 20 ký tự",
+      "preconditions": "parse_auth_token (v0: buffer 20, Loi=buffer-overflow)",
       "steps": [
-        "1. Nạp chuỗi 48 byte",
-        "2. Kiểm tra tràn bộ đệm"
+        "Sinh mã C",
+        "Chạy check_c_source()"
       ],
-      "expected_result": "v0: dangerous-function strcpy; v1: 0 vi phạm",
+      "expected_result": "v0: dangerous-function strcpy (CWE-120); v1: 0 phát hiện",
       "priority": "HIGH"
     },
     {
       "id": "TC-08",
       "requirement_ids": [
-        "REQ-11"
+        "REQ-10"
       ],
-      "title": "Nhánh ẩn backdoor bỏ qua quyền thủ kho",
-      "preconditions": "Hàm stock_debug_bypass(manager_id, pin)",
+      "title": "Nhánh ẩn backdoor bỏ qua xác thực quyền thủ kho",
+      "preconditions": "Hàm Python auth_debug_bypass(warehouse_id, debug_pin), magic_values = (31337, 8080)",
       "steps": [
-        "1. Chạy concolic execution trên nhánh điều kiện"
+        "Chạy black-box fuzz trước (kỳ vọng không tìm ra)",
+        "Chạy concolic_fuzz()"
       ],
-      "expected_result": "v0: Tìm ra bộ mã PIN ẩn (CWE-912); v1: Xóa bỏ nhánh debug",
+      "expected_result": "Black-box: 0 lần chạm nhánh; concolic: tìm đúng (31337, 8080) sau vài lần thử (CWE-912)",
       "priority": "HIGH"
     },
     {
@@ -954,86 +968,90 @@
         "REQ-12",
         "NFR-03"
       ],
-      "title": "Rò rỉ bộ nhớ khi ghi log lỗi kho",
-      "preconditions": "write_audit_log (v0: malloc không free khi return sớm)",
+      "title": "Rò rỉ bộ nhớ khi mở rộng buffer ghi nhật ký kiểm kê",
+      "preconditions": "write_inventory_log (v0: Loi=memory-leak)",
       "steps": [
-        "1. Chạy AddressSanitizer (ASan)",
-        "2. Kiểm tra leak report"
+        "Sinh mã C",
+        "Chạy check_c_source()"
       ],
-      "expected_result": "v0: LeakSanitizer báo rò rỉ 32 byte (CWE-401); v1: 0 byte rò rỉ",
-      "priority": "HIGH"
+      "expected_result": "v0: memory-leak (CWE-401); v1: 0 phát hiện",
+      "priority": "MEDIUM"
     },
     {
       "id": "TC-10",
       "requirement_ids": [
         "REQ-13"
       ],
-      "title": "Chuỗi định dạng trong log kiểm kê",
-      "preconditions": "Mô hình con M5; printf(msg)",
+      "title": "Chuỗi định dạng format string trong nhật ký kiểm kê",
+      "preconditions": "Mô hình con M5 (Ghi nhật ký kiểm kê kho)",
       "steps": [
-        "1. Đưa chuỗi chứa %x%n vào log",
-        "2. Quét lỗ hổng format string"
+        "Nạp M5_ghi_nhat_ky.json vào tab Ch1",
+        "Chọn luồng M5-v0, kiểm tra AG(!format_string)",
+        "Chọn luồng M5-v1, kiểm tra lại"
       ],
-      "expected_result": "v0: VI PHẠM AG(!format_string) (CWE-134); v1: printf(\"%s\", msg) an toàn",
-      "priority": "HIGH"
+      "expected_result": "M5-v0: AG(!format_string) VI PHẠM (CWE-134); M5-v1: ĐÚNG",
+      "priority": "MEDIUM"
     },
     {
       "id": "TC-11",
       "requirement_ids": [
-        "REQ-14",
+        "REQ-15",
         "NFR-04"
       ],
-      "title": "Worker nhập và xuất cùng đóng phiên kho",
-      "preconditions": "Trạng thái h6_tranh_chap; LoaiTru nhap_locked, xuat_locked",
+      "title": "Worker nhập kho và worker xuất kho tự động cùng đóng phiên",
+      "preconditions": "Cụm trạng thái h6_* trong mô hình kết hợp; LoaiTruLanNhau dòng 1 (nhap_locked, xuat_locked)",
       "steps": [
-        "1. Mô phỏng 2 thread đồng thời vào phiên kho",
-        "2. Kiểm tra mutex lock"
+        "Worker xuất kho kích hoạt đúng lúc worker nhập kho đang giữ phiên",
+        "Chạy check_mutual_exclusion(model, 'nhap_locked', 'xuat_locked')"
       ],
-      "expected_result": "v0: Mutual exclusion VI PHẠM (CWE-362); v1: ĐÚNG với mutex",
+      "expected_result": "v0: Mutual exclusion VI PHẠM tại h6_tranh_chap (CWE-667); v1: ĐÚNG",
       "priority": "HIGH"
     },
     {
       "id": "TC-12",
       "requirement_ids": [
-        "REQ-15",
-        "REQ-16"
+        "REQ-16",
+        "REQ-17"
       ],
-      "title": "Double free và Use-after-free khi đóng phiên",
-      "preconditions": "close_stock_session, release_voucher_buffer",
+      "title": "Double-free và Use-after-free khi giải phóng phiên kho",
+      "preconditions": "close_inventory_session (double-free), release_stock_items (use-after-free) - M2 Trang",
       "steps": [
-        "1. Gộp mã C thực thi",
-        "2. Chạy với ASan"
+        "Gộp mã C của 2 hàm",
+        "Chạy check_c_source()",
+        "Chạy kiểm toán AddressSanitizer"
       ],
-      "expected_result": "v0: ASan bắt double-free (CWE-415) và heap-use-after-free (CWE-416); v1: 0 lỗi",
+      "expected_result": "v0: double-free (CWE-415) và use-after-free (CWE-416); v1: 0 phát hiện, 0 crash ASan",
       "priority": "HIGH"
     },
     {
       "id": "TC-13",
       "requirement_ids": [
-        "REQ-17",
-        "NFR-05"
+        "REQ-18",
+        "NFR-05",
+        "CON-07"
       ],
-      "title": "Mã PIN két kho còn sót trong RAM sau khi free",
-      "preconditions": "Mô hình con M6; con_ma_pin",
+      "title": "Mã PIN thủ kho còn trong bộ nhớ Heap sau khi giải phóng",
+      "preconditions": "Mô hình con M6 (Đóng phiên kho và thu hồi tài nguyên)",
       "steps": [
-        "1. Kiểm tra AG(!secret_residue)",
-        "2. Kiểm tra vùng nhớ sau free()"
+        "Nạp M6_dong_phien.json vào tab Ch1",
+        "Chọn luồng M6-v0, kiểm tra AG(!secret_residue)",
+        "Chọn luồng M6-v1, kiểm tra lại"
       ],
-      "expected_result": "v0: VI PHẠM (CWE-226/244); v1: explicit_bzero trước free an toàn",
+      "expected_result": "M6-v0: VI PHẠM (CWE-226/244, CWE-14); M6-v1 (explicit_bzero trước free): ĐÚNG",
       "priority": "HIGH"
     },
     {
       "id": "TC-14",
       "requirement_ids": [
-        "REQ-18"
+        "REQ-01 đến REQ-18"
       ],
-      "title": "Kiểm chứng toàn luồng phiếu kho",
-      "preconditions": "Mô hình 36 trạng thái (sheet MoHinhTrangThai)",
+      "title": "Kiểm chứng toàn luồng quản lý kho hàng",
+      "preconditions": "Mô hình kết hợp tổng thể (sheet MoHinhTrangThai 35 trạng thái)",
       "steps": [
-        "1. Chạy kiểm chứng Kripke trên toàn bộ 22 công thức CTL",
-        "2. Kiểm tra deadlock"
+        "Chạy '1) Sinh Kripke + kiểm chứng (Ch1)'",
+        "Kiểm tra deadlock, AF(flow_end), EF(stock_done), EF(input_rejected)"
       ],
-      "expected_result": "Không deadlock; v0: 16 công thức VI PHẠM; v1: 100% công thức ĐÚNG",
+      "expected_result": "Không deadlock; v0: AF(flow_end) và EF(input_rejected) VI PHẠM; v1: tất cả 22 công thức ĐÚNG",
       "priority": "HIGH"
     }
   ],
@@ -2108,16 +2126,31 @@
       "language": "c",
       "kind": "buffer_copy",
       "params": [
-        "voucher_str"
+        "raw_voucher_id"
       ],
-      "buffer_size": 16,
+      "buffer_size": 32,
       "bug": "buffer-overflow"
+    },
+    {
+      "name": "parse_auth_token",
+      "language": "c",
+      "kind": "buffer_copy",
+      "params": [
+        "raw_token"
+      ],
+      "buffer_size": 20,
+      "bug": "buffer-overflow"
+    },
+    {
+      "name": "create_stock_items",
+      "language": "c",
+      "kind": "alloc_release",
+      "buffer_size": 100
     },
     {
       "name": "expand_stock_items",
       "language": "c",
       "kind": "alloc_release",
-      "params": [],
       "buffer_size": 16,
       "bug": "memory-leak"
     },
@@ -2125,26 +2158,40 @@
       "name": "release_stock_items",
       "language": "c",
       "kind": "alloc_release",
-      "params": [],
       "buffer_size": 16,
       "bug": "use-after-free"
+    },
+    {
+      "name": "write_inventory_log",
+      "language": "c",
+      "kind": "alloc_release",
+      "buffer_size": 32,
+      "bug": "memory-leak"
+    },
+    {
+      "name": "close_inventory_session",
+      "language": "c",
+      "kind": "alloc_release",
+      "buffer_size": 4,
+      "bug": "double-free"
     },
     {
       "name": "update_stock_quantity",
       "language": "c",
       "kind": "arithmetic",
       "params": [
-        "old_stock",
+        "current_stock",
         "added_quantity"
       ]
     },
     {
-      "name": "write_audit_log",
+      "name": "scale_product_price",
       "language": "c",
-      "kind": "alloc_release",
-      "params": [],
-      "buffer_size": 32,
-      "bug": "memory-leak"
+      "kind": "arithmetic",
+      "params": [
+        "base_price",
+        "rate"
+      ]
     },
     {
       "name": "calc_batch_capacity",
@@ -2153,6 +2200,19 @@
       "params": [
         "total_items",
         "batch_size"
+      ]
+    },
+    {
+      "name": "auth_debug_bypass",
+      "language": "python",
+      "kind": "magic_value",
+      "params": [
+        "warehouse_id",
+        "debug_pin"
+      ],
+      "magic_values": [
+        31337,
+        8080
       ]
     }
   ]
