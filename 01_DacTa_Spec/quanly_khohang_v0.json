@@ -2101,5 +2101,59 @@
     "EG(!violation)",
     "EF(nhap_locked)",
     "EF(xuat_locked)"
+  ],
+  "functions": [
+    {
+      "name": "parse_voucher_id",
+      "language": "c",
+      "kind": "buffer_copy",
+      "params": [
+        "voucher_str"
+      ],
+      "buffer_size": 16,
+      "bug": "buffer-overflow"
+    },
+    {
+      "name": "expand_stock_items",
+      "language": "c",
+      "kind": "alloc_release",
+      "params": [],
+      "buffer_size": 16,
+      "bug": "memory-leak"
+    },
+    {
+      "name": "release_stock_items",
+      "language": "c",
+      "kind": "alloc_release",
+      "params": [],
+      "buffer_size": 16,
+      "bug": "use-after-free"
+    },
+    {
+      "name": "update_stock_quantity",
+      "language": "c",
+      "kind": "arithmetic",
+      "params": [
+        "old_stock",
+        "added_quantity"
+      ]
+    },
+    {
+      "name": "write_audit_log",
+      "language": "c",
+      "kind": "alloc_release",
+      "params": [],
+      "buffer_size": 32,
+      "bug": "memory-leak"
+    },
+    {
+      "name": "calc_batch_capacity",
+      "language": "python",
+      "kind": "divide",
+      "params": [
+        "total_items",
+        "batch_size"
+      ]
+    }
   ]
 }
