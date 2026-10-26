@@ -1,4 +1,44 @@
 {
+  "name": "quanly_khohang_m3_tinh_ton_kho",
+  "description": "Hệ thống tính toán số học kho hàng (M3 - Hà Văn Đô - MSV: 23010406): cộng dồn số lượng hàng mới nhập vào tồn kho cũ (tồn kho = cũ + mới) và nhân giá trị hàng hóa. Bản v0 dùng phép cộng signed int 32-bit trực tiếp không kiểm tra biên INT_MAX gây lật thành số âm (CWE-190). Bản v1 cài rào chắn defensive guard kiểm tra added > INT_MAX - stock trước khi cộng, từ chối số âm và kiểm tra tràn phép nhân giá.",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Hệ thống phải có thể tiến đến trạng thái cộng dồn tồn kho thành công từ trạng thái nhận số lượng",
+      "category": "functional",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-2",
+      "text": "Hệ thống không được rơi vào deadlock ở bất kỳ trạng thái nào trong chu trình tính toán tồn kho",
+      "category": "liveness",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-3",
+      "text": "Trạng thái vi phạm tràn số/lật âm (violation, integer_overflow) không được xảy ra ở bất kỳ trạng thái tương lai nào: AG(!violation)",
+      "category": "safety",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-4",
+      "text": "Phép cộng dồn tồn kho mới vào tồn kho cũ (update_stock_quantity) không được gây tràn số nguyên có dấu 32-bit (CWE-190 Signed Integer Overflow)",
+      "category": "arithmetic",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-5",
+      "text": "Hệ thống phải từ chối số lượng nhập hàng là số âm để đảm bảo toàn vẹn dữ liệu nghiệp vụ kho",
+      "category": "safety",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-6",
+      "text": "Phép nhân đơn giá với hệ số tỉ giá quy đổi hàng hóa (scale_product_price) không được gây tràn số nguyên 32-bit (CWE-190)",
+      "category": "arithmetic",
+      "priority": "MEDIUM"
+    }
+  ],
   "v0": {
     "module": "M3_arithmetic",
     "member": "Hà Văn Đô",

@@ -1,6 +1,7 @@
 import subprocess
 import os
 import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 print("============================================================")
 print("  CHẠY BỘ KIỂM TOÁN ĐỐI CHỨNG TEST SUITE TRÊN BẢN VÁ V1   ")

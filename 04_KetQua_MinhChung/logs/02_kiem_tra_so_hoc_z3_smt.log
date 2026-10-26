@@ -1,10 +1,24 @@
 === KET QUA KIEM TRA SO HOC Z3 SMT (SAT / UNSAT PROOF) ===
+=====================================================================
+ KIá»‚M TRA RÃ€NG BUá»˜C Sá»� Há»ŒC VÃ€ AN TOÃ€N Bá»˜ NHá»š Báº°NG Z3 SMT SOLVER
+ PhiÃªn báº£n Z3 Engine: 5.1.0
+=====================================================================
 
-Traceback (most recent call last):
-  File "f:\Truong_P\atpm\ATPM_Group_04_inventory-memory-audit\02_KiemChung_MoHinh\kiem_tra_so_hoc_z3.py", line 2, in <module>
-    print("=== KI\u1ec2M TRA RÀNG BU\u1ed8C S\u1ed0 H\u1eccC VÀ AN TOÀN B\u1ed8 NH\u1eda B\u1eb0NG Z3 SMT SOLVER ===")
-    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\450G9\AppData\Local\Programs\Python\Python314\Lib\encodings\cp1252.py", line 19, in encode
-    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
-           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-UnicodeEncodeError: 'charmap' codec can't encode character '\u1ec2' in position 6: character maps to <undefined>
+--- Kiá»ƒm tra 1. PhÃ©p nhÃ¢n tiá»�n lÃ´ hÃ ng (line_amount_mul = price * qty) ---
+  [v0_ban_loi]  ==> SAT   (PhÃ¡t hiá»‡n lá»— há»•ng! Bá»™ sá»‘ pháº£n vÃ­ dá»¥: qty = 512, price = 44564485)
+  [v1_ban_va]   ==> UNSAT (Chá»©ng minh toÃ¡n há»�c: KhÃ´ng thá»ƒ xáº£y ra lá»—i vá»›i rÃ o cháº¯n guard)
+
+--- Kiá»ƒm tra 2. Cá»™ng dá»“n tá»•ng giÃ¡ trá»‹ kho hÃ ng (accumulated_total) ---
+  [v0_ban_loi]  ==> SAT   (PhÃ¡t hiá»‡n lá»— há»•ng! Bá»™ sá»‘ pháº£n vÃ­ dá»¥: total_before = 2147483647, line_total = 1)
+  [v1_ban_va]   ==> UNSAT (Chá»©ng minh toÃ¡n há»�c: KhÃ´ng thá»ƒ xáº£y ra lá»—i vá»›i rÃ o cháº¯n guard)
+
+--- Kiá»ƒm tra 3. KÃ­ch thÆ°á»›c cáº¥p phÃ¡t máº£ng kiá»‡n hÃ ng (alloc_bytes = n * 48) ---
+  [v0_ban_loi]  ==> SAT   (PhÃ¡t hiá»‡n lá»— há»•ng! Bá»™ sá»‘ pháº£n vÃ­ dá»¥: n_items = 44739243)
+  [v1_ban_va]   ==> UNSAT (Chá»©ng minh toÃ¡n há»�c: KhÃ´ng thá»ƒ xáº£y ra lá»—i vá»›i rÃ o cháº¯n guard)
+
+--- Kiá»ƒm tra 4. Sá»‘ tiá»�n tá»“n kho Ã¢m sau chiáº¿t kháº¥u (negative_stock_total) ---
+  [v0_ban_loi]  ==> SAT   (PhÃ¡t hiá»‡n lá»— há»•ng! Bá»™ sá»‘ pháº£n vÃ­ dá»¥: discount = 1, subtotal = 0)
+  [v1_ban_va]   ==> UNSAT (Chá»©ng minh toÃ¡n há»�c: KhÃ´ng thá»ƒ xáº£y ra lá»—i vá»›i rÃ o cháº¯n guard)
+
+===> Tá»”NG Káº¾T: 100% cÃ´ng thá»©c sá»‘ há»�c Ä‘áº¡t chuáº©n Ä‘á»‘i chá»©ng v0 (SAT) -> v1 (UNSAT chá»©ng minh an toÃ n)!
+

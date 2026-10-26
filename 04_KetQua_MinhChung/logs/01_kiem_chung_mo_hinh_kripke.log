@@ -20,12 +20,12 @@
  [VI PHáº M]    AG(!hidden_bypass)           ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_nhanh_an
  [VI PHáº M]    AG(!mem_leak)                ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ro_ri
  [VI PHáº M]    AG(!format_string)           ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_format_string
- [VI PHáº M]    AG(!race)                    ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_tranh_chap
- [VI PHáº M]    AG(!double_free)             ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_tranh_chap -> h6_double_free
- [VI PHáº M]    AG(!use_after_free)          ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_tranh_chap -> h6_uaf
- [VI PHáº M]    AG(!secret_residue)          ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_giai_phong -> h6_con_ma_pin
+ [VI PHáº M]    AG(!race)                    ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_tranh_chap
+ [VI PHáº M]    AG(!double_free)             ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_tranh_chap -> h6_double_free
+ [VI PHáº M]    AG(!use_after_free)          ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_tranh_chap -> h6_uaf
+ [VI PHáº M]    AG(!secret_residue)          ==> Lá»–I! Váº¿t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_giai_phong -> h6_con_ma_pin
  [THá»ŽA MÃƒN]   AF(flow_end)                 ==> Má»�i nhÃ¡nh xá»­ lÃ½ Ä‘á»�u káº¿t thÃºc há»£p lá»‡
- [THá»ŽA MÃƒN]   EF(stock_done)               ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_xuat_giu -> h6_giai_phong -> ket_thuc_ok
+ [THá»ŽA MÃƒN]   EF(stock_done)               ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu -> h6_giai_phong -> ket_thuc_ok
  [VI PHáº M]    EF(input_rejected)           ==> KhÃ´ng thá»ƒ Ä‘áº¡t tá»›i tráº¡ng thÃ¡i input_rejected
  [THá»ŽA MÃƒN]   EG(!violation)               ==> Tá»“n táº¡i Ã­t nháº¥t má»™t Ä‘Æ°á»�ng Ä‘i luÃ´n an toÃ n
  [THá»ŽA MÃƒN]   EF(nhap_locked)              ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_tu_choi_quyen -> h6_phien_ranh -> h6_nhap_giu
@@ -58,7 +58,7 @@
  [THá»ŽA MÃƒN]   AG(!use_after_free)          ==> AN TOÃ€N
  [THá»ŽA MÃƒN]   AG(!secret_residue)          ==> AN TOÃ€N
  [THá»ŽA MÃƒN]   AF(flow_end)                 ==> Má»�i nhÃ¡nh xá»­ lÃ½ Ä‘á»�u káº¿t thÃºc há»£p lá»‡
- [THá»ŽA MÃƒN]   EF(stock_done)               ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ok -> h6_phien_ranh -> h6_xuat_giu -> h6_giai_phong -> ket_thuc_ok
+ [THá»ŽA MÃƒN]   EF(stock_done)               ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ok -> h6_phien_ranh -> h6_nhap_giu -> h6_giai_phong -> ket_thuc_ok
  [THá»ŽA MÃƒN]   EF(input_rejected)           ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_tu_choi
  [THá»ŽA MÃƒN]   EG(!violation)               ==> Tá»“n táº¡i Ã­t nháº¥t má»™t Ä‘Æ°á»�ng Ä‘i luÃ´n an toÃ n
  [THá»ŽA MÃƒN]   EF(nhap_locked)              ==> Kháº£ Ä‘áº¡t: start -> h1_vao -> h1_ok -> h2_vao -> h2_ok -> h3_vao -> h3_ok -> h4_vao -> h4_ok -> h5_vao -> h5_ok -> h6_phien_ranh -> h6_nhap_giu

@@ -1,4 +1,44 @@
 {
+  "name": "quanly_khohang_m2_cap_phat_heap",
+  "description": "Hệ thống quản lý vòng đời bộ nhớ Heap kho hàng (M2 - Nguyễn Kiều Trang - MSV: 23010495): phụ trách cấp phát, mở rộng động danh mục hàng hóa (H3) và lưu trữ, giải phóng an toàn tài nguyên sau xử lý (H6). Bản v0 cài các lỗi bộ nhớ: (1) Tính toán kích thước mở rộng không kiểm tra cận trên gây tràn số và kích thước sai; (2) Dùng realloc gán trực tiếp vào con trỏ gốc khiến khi gặp sự cố OOM (hết RAM/NULL) làm mất địa chỉ khối nhớ ban đầu, gây rò rỉ bộ nhớ tiến trình (CWE-401 Memory Leak); (3) Sau khi free() không xóa con trỏ (dangling pointer) dẫn tới đọc vùng nhớ đã giải phóng (CWE-416 Use-After-Free). Bản v1 cài đặt kỹ thuật phòng thủ: dùng con trỏ tạm tmp kiểm tra NULL bảo toàn khối nhớ cũ khi OOM, kiểm soát cận trên MAX_SAFE_CAPACITY, lưu giá trị ra biến đệm trước khi giải phóng và lập tức gán ptr = NULL để triệt tiêu hoàn toàn lỗi Use-After-Free.",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Hệ thống phải có thể tiến đến trạng thái mở rộng hoặc cấp phát bộ nhớ Heap thành công từ trạng thái danh sách đầy: EF(realloc_ok)",
+      "category": "functional",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-2",
+      "text": "Hệ thống không được rơi vào deadlock ở bất kỳ trạng thái nào trong chu trình quản lý vòng đời bộ nhớ Heap: AF(done)",
+      "category": "liveness",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-3",
+      "text": "Trạng thái vi phạm an toàn bộ nhớ (violation, memory_leak, use_after_free) không được xảy ra ở bất kỳ trạng thái tương lai nào: AG(!violation)",
+      "category": "safety",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-4",
+      "text": "Quá trình mở rộng bộ đệm bằng realloc khi gặp lỗi OOM (NULL) không được ghi đè làm mất địa chỉ vùng nhớ cũ gây rò rỉ bộ nhớ tiến trình (CWE-401 Memory Leak): AG(!memory_leak)",
+      "category": "memory",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-5",
+      "text": "Sau khi thực thi lệnh free(ptr), con trỏ phải được gán NULL ngay lập tức; hệ thống cấm tuyệt đối mọi hành vi đọc hoặc ghi vào vùng nhớ đã giải phóng (CWE-416 Use-After-Free): AG(!use_after_free)",
+      "category": "memory",
+      "priority": "HIGH"
+    },
+    {
+      "id": "REQ-6",
+      "text": "Kích thước tái cấp phát mảng động phải được kiểm tra cận trên (0 < new_capacity <= MAX_SAFE_CAPACITY) để ngăn chặn yêu cầu kích thước âm hoặc khổng lồ làm kiệt quệ Heap",
+      "category": "bounds_checking",
+      "priority": "MEDIUM"
+    }
+  ],
   "v0": {
     "module": "M2_heap_lifecycle",
     "member": "Nguyễn Kiều Trang",
