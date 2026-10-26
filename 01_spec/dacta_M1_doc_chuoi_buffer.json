@@ -452,9 +452,22 @@
   ],
   "arithmetic_checks": [
     {
-      "function": "get_token_field",
-      "expression": "0 <= field_idx and field_idx < token_count",
-      "description": "Kiểm tra chỉ số trường token nằm trong phạm vi hợp lệ [0, token_count - 1] trước khi đọc mảng để phòng thủ CWE-125"
+      "name": "buffer_capacity_check",
+      "int_vars": [
+        "cap",
+        "input_len"
+      ],
+      "condition": "cap == 32 and input_len >= cap",
+      "overflow_expr": "input_len - cap"
+    },
+    {
+      "name": "token_index_check",
+      "int_vars": [
+        "token_count",
+        "field_idx"
+      ],
+      "condition": "token_count > 0 and (field_idx < 0 or field_idx >= token_count)",
+      "overflow_expr": "field_idx - token_count"
     }
   ],
   "test_cases": [
