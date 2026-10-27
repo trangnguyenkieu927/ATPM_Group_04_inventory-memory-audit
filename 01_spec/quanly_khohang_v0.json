@@ -1000,176 +1000,403 @@
   ],
   "test_cases": [
     {
-      "id": "TC-01",
+      "id": "TC-M1-01",
       "requirement_ids": [
-        "REQ-01",
-        "CON-01"
+        "REQ-1"
       ],
-      "title": "H1: Nạp chuỗi đúng 32 byte gây lỗi Off-by-one và 33 byte tràn stack",
-      "preconditions": "ingest_raw_line sinh từ đặc tả (v0: buffer 32 byte, Loi=buffer-overflow) - M1 Thọ",
+      "title": "Nạp dòng chuỗi chuẩn độ dài ngắn (len = 15 < 32 bytes) vào buffer",
+      "preconditions": "Chuỗi raw_line hợp lệ: SP001;GaoST25;100;25000 (23 bytes)",
       "steps": [
-        "Gọi ingest_raw_line_v0 với chuỗi 32 và 33 ký tự",
-        "Chạy kiểm tra AG(!stack_buffer_overflow), AG(!off_by_one)"
+        "Khởi tạo buffer stack 32 byte",
+        "Thực hiện nạp chuỗi raw_line vào buffer"
       ],
-      "expected_result": "v0: ghi đè byte '\\0' và tràn stack frame (CWE-120/121, CWE-193); v1: rào chắn từ chối trả về -2",
+      "expected_result": "v0 và v1 đều nạp chuỗi thành công, buffer nhận đúng nội dung",
       "priority": "HIGH"
     },
     {
-      "id": "TC-02",
+      "id": "TC-M1-02",
       "requirement_ids": [
-        "REQ-02",
-        "CON-01"
+        "REQ-1"
       ],
-      "title": "H1: Nạp chuỗi hợp lệ 31 byte vào bộ đệm stack 32 byte",
-      "preconditions": "char buffer[32], cap = 32, chuỗi đầu vào dài đúng 31 ký tự - M1 Thọ",
+      "title": "Nạp dòng chuỗi cận trên an toàn (len = 31 bytes có null-terminator)",
+      "preconditions": "Chuỗi raw_line dài chính xác 31 ký tự + 1 byte null = 32 byte",
       "steps": [
-        "Gọi v0 và v1 với chuỗi 31 byte",
-        "Kiểm tra giá trị trả về và nội dung bộ đệm"
+        "Khởi tạo buffer stack 32 byte",
+        "Nạp chuỗi biên 31 byte vào buffer"
       ],
-      "expected_result": "Cả 2 phiên bản trả về 31, sao chép thành công có '\\0'",
+      "expected_result": "v0 và v1 đều sao chép an toàn, ký tự kết thúc chuỗi '\\0' được bảo toàn",
       "priority": "HIGH"
     },
     {
-      "id": "TC-03",
+      "id": "TC-M1-03",
       "requirement_ids": [
-        "REQ-03",
-        "CON-02"
+        "REQ-2"
       ],
-      "title": "H2: Đọc token tại chỉ số chạm biên trên field_idx == token_count",
-      "preconditions": "token_offsets có 4 phần tử (chỉ số 0..3), field_idx = 4 - M1 Thọ",
+      "title": "Đọc trường token đầu tiên (field_idx = 0) từ danh sách token hợp lệ",
+      "preconditions": "Mảng token đã phân tách gồm 4 trường SP001, GaoST25, 100, 25000 (token_count = 4)",
       "steps": [
-        "Gọi get_token_field_v0 với field_idx = 4 dưới giám sát ASan",
-        "Gọi get_token_field_v1 với cùng tham số"
+        "Gọi hàm get_token_field với field_idx = 0",
+        "Lấy giá trị mã hàng"
       ],
-      "expected_result": "v0: Đọc ngoài biên mảng token (CWE-125); v1: Rào chắn chặn trả về -2",
+      "expected_result": "Truy xuất thành công trường mã hàng SP001, không lỗi",
       "priority": "HIGH"
     },
     {
-      "id": "TC-04",
+      "id": "TC-M1-04",
       "requirement_ids": [
-        "REQ-04",
-        "CON-02"
+        "REQ-2"
       ],
-      "title": "H2: Đọc token với chỉ số âm field_idx < 0",
-      "preconditions": "token_count = 4, field_idx = -1 - M1 Thọ",
+      "title": "Đọc trường token cuối cùng (field_idx = token_count - 1)",
+      "preconditions": "token_count = 4, truy xuất trường đơn giá tại chỉ số 3",
       "steps": [
-        "Gọi get_token_field_v0 với field_idx = -1",
-        "Gọi đối chứng get_token_field_v1"
+        "Gọi hàm get_token_field với field_idx = 3",
+        "Lấy giá trị đơn giá"
       ],
-      "expected_result": "v0: Đọc lùi vùng nhớ trước mảng (CWE-125); v1: Từ chối an toàn trả về -2",
+      "expected_result": "Truy xuất thành công trường đơn giá 25000",
       "priority": "HIGH"
     },
     {
-      "id": "TC-05",
+      "id": "TC-M1-05",
       "requirement_ids": [
-        "REQ-05",
-        "CON-03"
+        "REQ-3"
       ],
-      "title": "H3: Mô phỏng sự cố OOM khi realloc mảng danh mục hàng",
-      "preconditions": "realloc trả về NULL khi hệ thống cạn kiệt RAM - M2 Trang",
+      "title": "Kiểm toán an toàn chu trình I/O toàn diện không vi phạm bộ nhớ",
+      "preconditions": "Chạy qua toàn bộ chu trình nạp chuỗi và đọc token",
       "steps": [
-        "Gọi expand_stock_items trên bản v0 và v1 khi mảng đầy cần nhân đôi",
-        "Quan sát con trỏ list"
+        "Kiểm tra bất biến AG(!violation) trên toàn bộ không gian trạng thái"
       ],
-      "expected_result": "v0: list bị gán NULL làm mất địa chỉ mảng cũ (CWE-401 Leak); v1: giữ nguyên con trỏ cũ qua biến tạm tmp",
+      "expected_result": "v0: Vi phạm an toàn (CWE-120/125); v1: Thỏa mãn 100% AG(!violation)",
       "priority": "HIGH"
     },
     {
-      "id": "TC-06",
+      "id": "TC-M1-06",
       "requirement_ids": [
-        "REQ-06",
-        "CON-03"
+        "REQ-4"
       ],
-      "title": "H3: Tràn số nguyên khi tính toán kích thước mở rộng mảng động",
-      "preconditions": "new_capacity lớn gây tràn phép nhân new_capacity * sizeof(Product) - M2 Trang",
+      "title": "Kích hoạt lỗi tràn bộ đệm stack với chuỗi dữ liệu vượt ngưỡng (len = 64 bytes)",
+      "preconditions": "Chuỗi raw_line chứa 64 ký tự (vượt quá stack buffer 32 byte)",
+      "steps": [
+        "Gọi ingest_raw_line với chuỗi 64 byte",
+        "Quan sát vùng nhớ stack liền kề"
+      ],
+      "expected_result": "v0: Ghi đè frame stack và con trỏ trả về (CWE-120/121); v1: Chặn từ chối an toàn do len >= 32",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-07",
+      "requirement_ids": [
+        "REQ-4"
+      ],
+      "title": "Bắt lỗi Off-by-one khi chuỗi có đúng 32 byte dữ liệu thiếu null-terminator",
+      "preconditions": "Chuỗi đầu vào có đúng 32 ký tự, không còn chỗ cho ký tự null kết thúc chuỗi",
+      "steps": [
+        "Sao chép 32 byte vào buffer[32] bằng strcpy",
+        "Đọc chuỗi sau khi sao chép"
+      ],
+      "expected_result": "v0: Đọc tràn qua biến tiếp theo trên stack do thiếu null (CWE-193); v1: buffer[31] = '\\0'",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-08",
+      "requirement_ids": [
+        "REQ-4"
+      ],
+      "title": "Phát hiện lỗi Stack Buffer Overflow bằng AddressSanitizer (ASan Crash Trigger)",
+      "preconditions": "Biên dịch mã nguồn C với flag -fsanitize=address",
+      "steps": [
+        "Thực thi hàm ingest_raw_line với chuỗi 48 ký tự",
+        "Ghi nhận cảnh báo từ ASan"
+      ],
+      "expected_result": "v0: ASan báo lỗi ERROR: AddressSanitizer: stack-buffer-overflow; v1: 0 crash",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-09",
+      "requirement_ids": [
+        "REQ-5"
+      ],
+      "title": "Bắt lỗi đọc ngoài biên mảng token khi chỉ số vượt trần (field_idx >= token_count)",
+      "preconditions": "token_count = 4, yêu cầu đọc trường tại field_idx = 4 hoặc field_idx = 10",
+      "steps": [
+        "Gọi get_token_field(4, 4)",
+        "Kiểm tra con trỏ token trả về"
+      ],
+      "expected_result": "v0: Đọc ngoài biên mảng con trỏ token (CWE-125); v1: Phát hiện và trả về NULL/mã lỗi an toàn",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-10",
+      "requirement_ids": [
+        "REQ-5"
+      ],
+      "title": "Bắt lỗi đọc ngoài biên mảng token khi chỉ số âm (field_idx = -1 < 0)",
+      "preconditions": "Yêu cầu đọc trường với chỉ số âm field_idx = -1",
+      "steps": [
+        "Gọi get_token_field(4, -1)",
+        "Kiểm tra phản hồi của hệ thống"
+      ],
+      "expected_result": "v0: Đọc vùng nhớ phía trước mảng token (CWE-125); v1: Chặn ngay tại điều kiện field_idx < 0",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-11",
+      "requirement_ids": [
+        "REQ-6"
+      ],
+      "title": "Kiểm tra tính sống: Không xảy ra deadlock trong toàn bộ chu trình xử lý I/O",
+      "preconditions": "Mô hình chuyển trạng thái Kripke của module M1",
+      "steps": [
+        "Duyệt qua tất cả 7 trạng thái",
+        "Kiểm tra bậc ra out-degree của từng trạng thái"
+      ],
+      "expected_result": "Mọi trạng thái đều có out-degree >= 1, 0 deadlock, công thức AF(done) thỏa mãn trên v1",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M1-12",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-2",
+        "REQ-3",
+        "REQ-4",
+        "REQ-5",
+        "REQ-6"
+      ],
+      "title": "Kiểm thử hồi quy đối chứng toàn diện pytest (Regression Verification Suite)",
+      "preconditions": "Bộ test pytest tự động test_verify_v0_cases_on_v1.py",
+      "steps": [
+        "Chạy kiểm thử toàn bộ test cases trên bản v0",
+        "Chạy kiểm thử toàn bộ test cases trên bản v1"
+      ],
+      "expected_result": "v0: Bắt đầy đủ lỗi CWE-120/121, CWE-193, CWE-125; v1: 100% PASSED",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-01",
+      "requirement_ids": [
+        "REQ-1"
+      ],
+      "title": "Khởi tạo mảng động danh mục hàng ban đầu (Initial Capacity)",
+      "preconditions": "Khởi tạo danh sách rỗng product_list_init(&list)",
+      "steps": [
+        "Gọi hàm khởi tạo danh mục",
+        "Kiểm tra count == 0, capacity == 16, con trỏ items != NULL"
+      ],
+      "expected_result": "Thành công: Cấp phát đúng 16 ô nhớ ban đầu trên Heap",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-02",
+      "requirement_ids": [
+        "REQ-1"
+      ],
+      "title": "Thêm sản phẩm tới chạm ngưỡng dung lượng chưa mở rộng (Fill to Capacity)",
+      "preconditions": "Danh sách đang có capacity = 16",
+      "steps": [
+        "Thêm liên tiếp 16 sản phẩm hợp lệ vào danh sách",
+        "Kiểm tra count == 16, capacity == 16"
+      ],
+      "expected_result": "Thành công: 16 sản phẩm được lưu trọn vẹn, chưa kích hoạt realloc",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": "TC-M2-03",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-6"
+      ],
+      "title": "Tự động nhân đôi dung lượng khi thêm sản phẩm thứ 17 (Capacity Doubling)",
+      "preconditions": "Danh sách đã đầy 16 phần tử, thêm phần tử thứ 17",
+      "steps": [
+        "Gọi add_product thêm sản phẩm thứ 17",
+        "Kiểm tra capacity tăng từ 16 lên 32, count == 17"
+      ],
+      "expected_result": "Thành công: Thuật toán nhân đôi mảng động cấp phát vùng nhớ mới an toàn",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-04",
+      "requirement_ids": [
+        "REQ-6"
+      ],
+      "title": "Kiểm tra tràn số nguyên khi tính toán kích thước mở rộng (Integer Overflow in Capacity)",
+      "preconditions": "current_capacity vượt ngưỡng an toàn (ví dụ: SIZE_MAX / 2)",
       "steps": [
         "Chạy kiểm tra SMT Z3 trên điều kiện heap_alloc_bytes",
-        "Thực thi hàm mở rộng"
+        "Thực thi hàm calc_expand_capacity_v0 với factor lớn"
       ],
-      "expected_result": "v0: SAT (tìm được nghiệm tràn int32 cấp phát thiếu ô nhớ); v1: UNSAT",
+      "expected_result": "v0: Phép nhân tràn số âm/nhỏ gây cấp phát thiếu ô nhớ; v1: Rào chắn từ chối mở rộng",
       "priority": "HIGH"
     },
     {
-      "id": "TC-07",
+      "id": "TC-M2-05",
       "requirement_ids": [
-        "REQ-07",
-        "CON-04"
+        "REQ-4"
       ],
-      "title": "H4: Cộng dồn số lượng tồn kho mới vượt trần INT_MAX",
-      "preconditions": "current_stock = 2.147.483.640, added_quantity = 20 - M3 Đô",
+      "title": "Mô phỏng sự cố OOM khi realloc mảng động (Fault Injection OOM NULL)",
+      "preconditions": "Hệ thống cạn kiệt RAM, mock_realloc trả về NULL",
       "steps": [
-        "Gọi update_stock_quantity trên bản v0 và v1"
+        "Ép hàm realloc trả về NULL khi mảng đầy cần mở rộng",
+        "Quan sát phản ứng của hàm mở rộng"
       ],
-      "expected_result": "v0: 2147483640 + 20 = -2147483636 (tràn số âm CWE-190); v1: từ chối trước khi cộng",
+      "expected_result": "v0: Gán list = NULL làm mất sạch địa chỉ vùng nhớ cũ; v1: Trả về STATUS_ERR_ALLOC",
       "priority": "HIGH"
     },
     {
-      "id": "TC-08",
+      "id": "TC-M2-06",
       "requirement_ids": [
-        "REQ-08",
-        "CON-04"
+        "REQ-4"
       ],
-      "title": "H4: Số lượng nhập hàng là số âm (added_quantity < 0)",
-      "preconditions": "added_quantity = -50 - M3 Đô",
+      "title": "Bảo toàn địa chỉ và quyền sở hữu vùng nhớ cũ khi OOM (Ownership Retention)",
+      "preconditions": "realloc trả về NULL",
       "steps": [
-        "Gọi update_stock_quantity với số lượng âm"
+        "So sánh địa chỉ con trỏ items trước và sau khi realloc thất bại"
       ],
-      "expected_result": "v0: trừ lùi tồn kho sai nghiệp vụ; v1: phát hiện số âm từ chối an toàn",
+      "expected_result": "v0: Con trỏ gốc bị ghi đè thành NULL; v1: Địa chỉ cũ được bảo toàn 100%",
       "priority": "HIGH"
     },
     {
-      "id": "TC-09",
+      "id": "TC-M2-07",
       "requirement_ids": [
-        "REQ-09",
-        "CON-04"
+        "REQ-4"
       ],
-      "title": "H5: Quy đổi đơn giá sản phẩm theo tỉ giá gây tràn phép nhân",
-      "preconditions": "base_price = 50.000.000, rate = 100 - M3 Đô",
+      "title": "Bảo toàn tính toàn vẹn của dữ liệu đã có khi OOM (Data Integrity on Failure)",
+      "preconditions": "Danh sách chứa sẵn 16 mặt hàng ban đầu",
       "steps": [
-        "Gọi scale_product_price trên bản v0 và v1"
+        "Sau khi mở rộng thất bại, duyệt đọc lại 16 mặt hàng cũ"
       ],
-      "expected_result": "v0: 50.000.000 * 100 vượt INT_MAX gây tràn số (CWE-190); v1: rào chắn từ chối an toàn",
+      "expected_result": "v0: Crash bộ nhớ do con trỏ bị NULL hóa; v1: 16 mặt hàng cũ còn nguyên vẹn",
       "priority": "HIGH"
     },
     {
-      "id": "TC-10",
+      "id": "TC-M2-08",
       "requirement_ids": [
-        "REQ-10",
-        "CON-05"
+        "REQ-4"
       ],
-      "title": "H6: Tranh chấp khóa phiên giữa worker nhập kho và xuất kho",
-      "preconditions": "Cả 2 worker cùng giữ phiên làm việc tại h6_tranh_chap - M2 Trang",
+      "title": "Kiểm toán rò rỉ bộ nhớ bằng LeakSanitizer (LSan Memory Leak Audit)",
+      "preconditions": "Biên dịch bản v0 và v1 với flag -fsanitize=leak",
       "steps": [
-        "Chạy check_mutual_exclusion(model, 'nhap_locked', 'xuat_locked')"
+        "Chạy kịch bản nhập kho OOM trên bản v0 và v1",
+        "Kiểm tra log của LeakSanitizer"
       ],
-      "expected_result": "v0: vi phạm loại trừ lẫn nhau tại h6_tranh_chap (CWE-667); v1: đồng bộ mutex đạt chuẩn",
+      "expected_result": "v0: LSan bắt lỗi leaked 16 blocks (CWE-401); v1: LSan báo 0 byte leaked",
       "priority": "HIGH"
     },
     {
-      "id": "TC-11",
+      "id": "TC-M2-09",
       "requirement_ids": [
-        "REQ-11",
-        "REQ-12"
+        "REQ-5"
       ],
-      "title": "H6: Double-free và Use-after-free khi giải phóng phiên kho",
-      "preconditions": "release_stock_items và close_inventory_session - M2 Trang",
+      "title": "Con trỏ mượn bị vô hiệu hóa sau khi mảng động dời địa chỉ (Dangling Pointer on Resize)",
+      "preconditions": "Lưu con trỏ mượn p = find_product_by_id(&list, \"P0001\")",
       "steps": [
-        "Chạy kiểm toán AddressSanitizer trên bản v0 và v1"
+        "Gọi add_product kích hoạt realloc sang địa chỉ RAM mới",
+        "Đọc dữ liệu qua con trỏ p ban đầu"
       ],
-      "expected_result": "v0: bắt lỗi use-after-free (CWE-416) và double-free (CWE-415); v1: 0 crash ASan",
+      "expected_result": "v0: p trỏ vào vùng nhớ cũ đã bị OS thu hồi; v1: Cảnh báo Borrowed Pointer Invalidation",
       "priority": "HIGH"
     },
     {
-      "id": "TC-12",
+      "id": "TC-M2-10",
       "requirement_ids": [
-        "REQ-01 đến REQ-12"
+        "REQ-5"
       ],
-      "title": "Kiểm chứng toàn luồng quản lý kho hàng kết hợp",
-      "preconditions": "Mô hình kết hợp tổng thể 35 trạng thái",
+      "title": "Đọc con trỏ sau khi free phiên kho (Use-After-Free Audit)",
+      "preconditions": "Hàm cleanup_and_read_uaf_v0 giải phóng struct nhưng vẫn return *ptr",
       "steps": [
-        "Chạy chay_kiem_chung_kripke.py kiểm tra deadlock và 22 công thức CTL"
+        "Gọi hàm giải phóng tài nguyên phiên kho",
+        "Thực hiện đọc/ghi vào con trỏ vừa giải phóng"
       ],
-      "expected_result": "Không deadlock; v0: phát hiện lỗi tại các trạng thái vi phạm; v1: 100% thỏa mãn thuộc tính",
+      "expected_result": "v0: Đọc dữ liệu rác/vùng nhớ tự do (CWE-416); v1: Triệt tiêu hoàn toàn vì con trỏ đã set NULL",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-11",
+      "requirement_ids": [
+        "REQ-5"
+      ],
+      "title": "Bắt lỗi Heap-Use-After-Free bằng AddressSanitizer (ASan Crash Trigger)",
+      "preconditions": "Biên dịch mã nguồn với flag -fsanitize=address",
+      "steps": [
+        "Thực thi test_sim001_heap trên bản v0",
+        "Ghi nhận crash log do ASan sinh ra"
+      ],
+      "expected_result": "v0: ASan sinh log crash: ERROR: AddressSanitizer: heap-use-after-free on address; v1: 0 crash",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-12",
+      "requirement_ids": [
+        "REQ-5"
+      ],
+      "title": "Phòng thủ giải phóng hai lần trên cùng một con trỏ (Double-Free Defense)",
+      "preconditions": "Gọi product_list_free(&list) liên tiếp 2 lần",
+      "steps": [
+        "Thực hiện lệnh free(list->items) lần 1",
+        "Thực hiện tiếp lệnh free(list->items) lần 2"
+      ],
+      "expected_result": "v0: Crash OS double free or corruption (CWE-415); v1: Lần 2 gặp con trỏ NULL nên bỏ qua an toàn",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M2-13",
+      "requirement_ids": [
+        "REQ-3"
+      ],
+      "title": "Kiểm toán bất biến an toàn bộ nhớ (Safety Invariant: count <= capacity)",
+      "preconditions": "Chạy qua 50 lần thêm/xóa ngẫu nhiên",
+      "steps": [
+        "Kiểm tra điều kiện list.count <= list.capacity tại mọi thời điểm"
+      ],
+      "expected_result": "Bất biến an toàn luôn được duy trì 100% trong suốt vòng đời mảng động",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": "TC-M2-14",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-2",
+        "REQ-3",
+        "REQ-4",
+        "REQ-5"
+      ],
+      "title": "Kiểm thử hồi quy đối chứng toàn diện pytest (Regression Verification Suite)",
+      "preconditions": "Bộ test pytest test_verify_v0_cases_on_v1.py",
+      "steps": [
+        "Chạy toàn bộ test cases trên bản lỗi v0",
+        "Chạy lại toàn bộ test cases trên bản vá v1"
+      ],
+      "expected_result": "v0: Phát hiện đầy đủ lỗi CWE-190, CWE-401, CWE-416; v1: 100% PASSED (Xanh toàn bộ)",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M3-01",
+      "requirement_ids": [
+        "REQ-1",
+        "REQ-4"
+      ],
+      "title": "Cộng dồn số lượng hàng hóa gây tràn số nguyên có dấu 32-bit",
+      "preconditions": "old_stock = 2.147.483.640, added_quantity = 100",
+      "steps": [
+        "Chạy check_satisfiability() trên stock_addition_overflow (Chương 3 Z3)",
+        "Kiểm tra AG(!integer_overflow) trên luồng M3-v0"
+      ],
+      "expected_result": "v0: VI PHẠM (CWE-190 Signed Integer Overflow), kết quả lật âm; v1: ĐÚNG (chặn trước khi cộng)",
+      "priority": "HIGH"
+    },
+    {
+      "id": "TC-M3-02",
+      "requirement_ids": [
+        "REQ-3",
+        "REQ-5"
+      ],
+      "title": "Từ chối số lượng nhập hàng là số âm",
+      "preconditions": "added_quantity = -50",
+      "steps": [
+        "Kiểm tra AG(!negative_input) trên luồng M3-v0",
+        "Kiểm tra lại trên luồng M3-v1"
+      ],
+      "expected_result": "v0: VI PHẠM (nhận số âm); v1: ĐÚNG (rào chắn từ chối ngay lập tức)",
       "priority": "HIGH"
     }
   ]
