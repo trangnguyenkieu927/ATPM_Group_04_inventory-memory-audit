@@ -1,8 +1,10 @@
 /* =========================================================================
  * MODULE 2: DYNAMIC MEMORY & HEAP LIFECYCLE MANAGEMENT (v0 - CO LOI)
- * Thanh vien phu trach: Nguyen Kieu Trang
+ * Thanh vien phu trach: Nguyen Kieu Trang - MSV: 23010495
  * Muc tieu: Kiem toan giai doan Cap phat Heap, Mo rong dung luong, va Thu hoi RAM.
  * Cac loi chu dich:
+ *   - expand_stock_items      : Cap phat thieu free gay ro ri bo nho (CWE-401)
+ *   - release_stock_items     : Doc ghi con tro sau khi free gay Use-After-Free (CWE-416)
  *   - calc_expand_capacity_v0 : Nhan he so gay tran so nguyen (CWE-190/787)
  *   - realloc_buffer_leak_v0  : Gan de truc tiep con tro lam mat dia chi (CWE-401)
  *   - cleanup_and_read_uaf_v0 : Doc lai vung nho da giai phong (CWE-416)
@@ -10,6 +12,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/* =========================================================
+ * CAC HAM SINH MA CHUAN TU DAC TA JSON (SpecVerificationLab)
+ * ========================================================= */
+
+/* sinh từ đặc tả 'quanly_khohang_m2_cap_phat_heap', hàm 'expand_stock_items', kind='alloc_release' */
+void expand_stock_items(void) {
+    int *buf = malloc(sizeof(int) * 16);
+    buf[0] = 0;
+    /* sinh từ đặc tả: memory-leak (thiếu free) */
+}
+
+/* sinh từ đặc tả 'quanly_khohang_m2_cap_phat_heap', hàm 'release_stock_items', kind='alloc_release' */
+void release_stock_items(void) {
+    int *buf = malloc(sizeof(int) * 16);
+    buf[0] = 0;
+    free(buf);
+    buf[0] = 1;   /* sinh từ đặc tả: use-after-free */
+}
+
+/* =========================================================
+ * CAC HAM MO PHONG NGHIEP VU KHO HANG V0
+ * ========================================================= */
 
 /* KICH BAN SC-03: CWE-190 -> CWE-787 (Integer Overflow dan den Heap Overflow)
  * Giai doan RAM: Danh sach san pham day, can mo rong suc chua buffer kho.

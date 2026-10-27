@@ -1,0 +1,171 @@
+==========================================================================
+ BÁO CÁO PIPELINE TỪ CÔNG CỤ: SpecVerificationLab.exe
+ Dự án: ATPM_Group_04_inventory-memory-audit
+ Thời điểm thực thi: 2026-10-27
+==========================================================================
+
+--------------------------------------------------------------------------
+PHẦN 1: MODULE M1 — quanly_khohang_m1_doc_chuoi_buffer (Thọ)
+--------------------------------------------------------------------------
+=== Mã C sinh từ đặc tả ===
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* sinh từ đặc tả 'quanly_khohang_m1_doc_chuoi_buffer', hàm 'ingest_raw_line', kind='buffer_copy' */
+void ingest_raw_line(const char *raw_line) {
+    char buffer[32];
+    strcpy(buffer, raw_line);   /* sinh từ đặc tả: buffer-overflow */
+    printf("%s\n", buffer);
+}
+
+/* sinh từ đặc tả 'quanly_khohang_m1_doc_chuoi_buffer', hàm 'get_token_field', kind='arithmetic' */
+int get_token_field(int token_count, int field_idx) {
+    return token_count + field_idx;
+}
+
+[Chương 1] Kiểm chứng hình thức (Kripke/CTL)
+  Trạng thái deadlock: không có
+  AG(!violation)       -> VI PHAM (thoa tai: ['m1_hoan_tat_doc_an_toan'])
+  AG(!stack_buffer_overflow) -> VI PHAM (thoa tai: ['m1_chep_buffer_thanh_cong', 'm1_hoan_tat_doc_an_toan', 'm1_tach_token_hang_hoa', 'm1_truy_cap_ngoai_bien'])
+  AG(!out_of_bounds_read) -> VI PHAM (thoa tai: ['m1_hoan_tat_doc_an_toan', 'm1_tran_stack_buffer'])
+
+[Chương 2] Static C Checker trên mã sinh từ đặc tả
+  Phát hiện 1 vấn đề:
+    [dong    8] HIGH   dangerous-function Sử dụng hàm không an toàn 'strcpy()' — dễ gây buffer overflow. Goi y: dung strncpy thay the.
+
+[Chương 3] Trích xuất AST/điều kiện + SMT (Z3)
+  ingest_raw_line: bien=['buffer'] dieu_kien=[] vong_lap=[]
+      -> độ phức tạp McCabe=1, độ sâu lồng nhau=1, so cau lenh~=3
+  get_token_field: bien=[] dieu_kien=[] vong_lap=[]
+      -> độ phức tạp McCabe=1, độ sâu lồng nhau=1, so cau lenh~=1
+  buffer_capacity_check: sat model={'cap': 32, 'input_len': 32}
+  buffer_capacity_check (int32 overflow?): sat model={'cap': -1, 'input_len': 2147483647}
+  token_index_check: sat model={'token_count': 1, 'field_idx': -1}
+  token_index_check (int32 overflow?): sat model={'token_count': 1, 'field_idx': -2147483648}
+
+[Chương 4] Dynamic Fuzzing trên hàm sinh từ đặc tả
+
+[Phân loại CWE/CVE] Tổng hợp toàn bộ phát hiện
+  Phân loại 6 phát hiện theo CWE/CVE:
+    [ch1] cong thuc AG(!violation): safety-property-violation -> CWE-693 (Protection Mechanism Failure)
+    [ch1] cong thuc AG(!stack_buffer_overflow): safety-property-violation -> CWE-693 (Protection Mechanism Failure)
+    [ch1] cong thuc AG(!out_of_bounds_read): safety-property-violation -> CWE-693 (Protection Mechanism Failure)
+    [ch2] dong 8: dangerous-function -> CWE-120 (Buffer Copy without Checking Size of Input)
+        vi du minh hoa: CVE-2003-0352 (2003) — Lỗi tràn bộ đệm trong dịch vụ RPC/DCOM của Windows (khai thác bởi sâu MSBlast).
+    [ch3] buffer_capacity_check: integer-overflow -> CWE-190 (Integer Overflow or Wraparound)
+        vi du minh hoa: CVE-2016-5195 (2016) — 'Dirty COW' — điều kiện tranh chấp liên quan tới xử lý bộ nhớ trong Linux kernel.
+    [ch3] token_index_check: integer-overflow -> CWE-190 (Integer Overflow or Wraparound)
+        vi du minh hoa: CVE-2016-5195 (2016) — 'Dirty COW' — điều kiện tranh chấp liên quan tới xử lý bộ nhớ trong Linux kernel.
+
+--------------------------------------------------------------------------
+PHẦN 2: MODULE M2 — quanly_khohang_m2_cap_phat_heap (Trang)
+--------------------------------------------------------------------------
+=== Mã C sinh từ đặc tả ===
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* sinh từ đặc tả 'quanly_khohang_m2_cap_phat_heap', hàm 'expand_stock_items', kind='alloc_release' */
+void expand_stock_items(void) {
+    int *buf = malloc(sizeof(int) * 16);
+    buf[0] = 0;
+    /* sinh từ đặc tả: memory-leak (thiếu free) */
+}
+
+/* sinh từ đặc tả 'quanly_khohang_m2_cap_phat_heap', hàm 'release_stock_items', kind='alloc_release' */
+void release_stock_items(void) {
+    int *buf = malloc(sizeof(int) * 16);
+    buf[0] = 0;
+    free(buf);
+    buf[0] = 1;   /* sinh từ đặc tả: use-after-free */
+}
+
+=== Hàm Python 'calc_batch_capacity' ===
+def calc_batch_capacity(total_items, batch_size):
+    return total_items // batch_size
+
+[Chương 1] Kiểm chứng hình thức (Kripke/CTL)
+  Trạng thái deadlock: không có
+  AG(!violation)       -> VI PHAM (thoa tai: [])
+  AG(!memory_leak)     -> VI PHAM (thoa tai: ['m2_doc_con_tro_treo_uaf', 'm2_giai_phong_xong', 'm2_realloc_thanh_cong'])
+  AG(!use_after_free)  -> VI PHAM (thoa tai: ['m2_mat_con_tro_leak', 'm2_oom_null'])
+  EF(realloc_ok)       -> DUNG (thoa tai: ['m2_danh_sach_day', 'm2_khoi_tao', 'm2_realloc_goi', 'm2_realloc_thanh_cong'])
+
+[Chương 2] Static C Checker trên mã sinh từ đặc tả
+  Phát hiện 2 vấn đề:
+    [dong    7] MEDIUM memory-leak      Con trỏ 'buf' được cấp phát (malloc/calloc/realloc) nhưng không thấy free() trong hàm expand_stock_items() — nghi ngờ rò rỉ bộ nhớ
+    [dong   17] HIGH   use-after-free   Khả năng sử dụng con trỏ 'buf' sau khi free() (freed tại dòng 16) trong hàm release_stock_items()
+
+[Chương 3] Trích xuất AST/điều kiện + SMT (Z3)
+  expand_stock_items: bien=['buf'] dieu_kien=[] vong_lap=[]
+      -> độ phức tạp McCabe=1, độ sâu lồng nhau=1, so cau lenh~=2
+  release_stock_items: bien=['buf'] dieu_kien=[] vong_lap=[]
+      -> độ phức tạp McCabe=1, độ sâu lồng nhau=1, so cau lenh~=4
+  calc_batch_capacity: bien=[] dieu_kien=[] vong_lap=[]
+      -> độ phức tạp McCabe=1, độ sâu lồng nhau=1, so cau lenh~=0
+  heap_alloc_bytes: sat model={'new_capacity': 67107967, 'item_size': 48}
+  heap_alloc_bytes (int32 overflow?): sat model={'new_capacity': -2147483647, 'item_size': -2147483647}
+
+[Chương 4] Dynamic Fuzzing trên hàm sinh từ đặc tả
+  calc_batch_capacity: black-box: 11/300 lan crash
+
+[Phân loại CWE/CVE] Tổng hợp toàn bộ phát hiện
+  Phân loại 7 phát hiện theo CWE/CVE:
+    [ch1] cong thuc AG(!violation): safety-property-violation -> CWE-693 (Protection Mechanism Failure)
+    [ch1] cong thuc AG(!memory_leak): safety-property-violation -> CWE-693 (Protection Mechanism Failure)
+    [ch1] cong thuc AG(!use_after_free): safety-property-violation -> CWE-693 (Protection Mechanism Failure)
+    [ch2] dong 7: memory-leak -> CWE-401 (Missing Release of Memory after Effective Lifetime)
+    [ch2] dong 17: use-after-free -> CWE-416 (Use After Free)
+        vi du minh hoa: CVE-2019-0708 (2019) — 'BlueKeep' — lỗi use-after-free trong dịch vụ Remote Desktop của Windows.
+    [ch3] heap_alloc_bytes: integer-overflow -> CWE-190 (Integer Overflow or Wraparound)
+        vi du minh hoa: CVE-2016-5195 (2016) — 'Dirty COW' — điều kiện tranh chấp liên quan tới xử lý bộ nhớ trong Linux kernel.
+    [ch4] calc_batch_capacity: uncontrolled-crash -> CWE-248 (Uncaught Exception)
+
+--------------------------------------------------------------------------
+PHẦN 3: MODULE M3 — quanly_khohang_m3_tinh_ton_kho (Đô)
+--------------------------------------------------------------------------
+=== Mã C sinh từ đặc tả ===
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* sinh từ đặc tả 'quanly_khohang_m3_tinh_ton_kho', hàm 'update_stock_quantity', kind='arithmetic' */
+int update_stock_quantity(int current_stock, int added_quantity) {
+    return current_stock + added_quantity;
+}
+
+/* sinh từ đặc tả 'quanly_khohang_m3_tinh_ton_kho', hàm 'scale_product_price', kind='arithmetic' */
+int scale_product_price(int base_price, int rate) {
+    return base_price + rate;
+}
+
+[Chương 1] Kiểm chứng hình thức (Kripke/CTL)
+  Trạng thái deadlock: không có
+  AG(!violation)       -> VI PHAM (thoa tai: ['m3_cong_don_an_toan'])
+  AG(!integer_overflow) -> VI PHAM (thoa tai: ['m3_cong_don_an_toan', 'm3_nhan_gia_tran_int', 'm3_so_nhap_am'])
+  AG(!negative_input)  -> VI PHAM (thoa tai: ['m3_cong_don_an_toan', 'm3_nhan_gia_tran_int', 'm3_so_nhap_hop_le', 'm3_tran_so_lat_am'])
+  EF(sum_safe)         -> DUNG (thoa tai: ['m3_cong_don_an_toan', 'm3_nhan_so_luong', 'm3_so_nhap_hop_le'])
+
+[Chương 2] Static C Checker trên mã sinh từ đặc tả
+  Không phát hiện lỗi nào (theo các quy tắc heuristic hiện có).
+
+[Chương 3] Trích xuất AST/điều kiện + SMT (Z3)
+  update_stock_quantity: bien=[] dieu_kien=[] vong_lap=[]
+      -> độ phức tạp McCabe=1, độ sâu lồng nhau=1, so cau lenh~=1
+  scale_product_price: bien=[] dieu_kien=[] vong_lap=[]
+      -> độ phức tạp McCabe=1, độ sâu lồng nhau=1, so cau lenh~=1
+  stock_addition_overflow: sat model={'old_stock': 2147483647, 'added_quantity': 1}
+  stock_addition_overflow (int32 overflow?): sat model={'old_stock': -1, 'added_quantity': -2147483648}
+  negative_quantity_check: sat model={'added_quantity': -1}
+  negative_quantity_check (int32 overflow?): unsat model=None
+
+[Chương 4] Dynamic Fuzzing trên hàm sinh từ đặc tả
+
+[Phân loại CWE/CVE] Tổng hợp toàn bộ phát hiện
+  Phân loại 4 phát hiện theo CWE/CVE:
+    [ch1] cong thuc AG(!violation): safety-property-violation -> CWE-693 (Protection Mechanism Failure)
+    [ch1] cong thuc AG(!integer_overflow): safety-property-violation -> CWE-693 (Protection Mechanism Failure)
+    [ch1] cong thuc AG(!negative_input): safety-property-violation -> CWE-693 (Protection Mechanism Failure)
+    [ch3] stock_addition_overflow: integer-overflow -> CWE-190 (Integer Overflow or Wraparound)
+        vi du minh hoa: CVE-2016-5195 (2016) — 'Dirty COW' — điều kiện tranh chấp liên quan tới xử lý bộ nhớ trong Linux kernel.

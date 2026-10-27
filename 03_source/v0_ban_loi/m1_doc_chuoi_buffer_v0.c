@@ -1,7 +1,6 @@
-
 /* =========================================================
  * MODULE 1: I/O PIPELINE - PHIEN BAN V0 (CO LOI)
- * Thanh vien: Nguyen Quang Tho
+ * Thanh vien: Nguyen Quang Tho - MSV: 23010322
  *
  * Kich ban chinh SC-01:
  *   Doc ma phieu kho vao bo dem Stack 32 byte.
@@ -25,25 +24,31 @@
 
 #define M1_BUFFER_SIZE 32
 
+/* =========================================================
+ * CAC HAM SINH MA CHUAN TU DAC TA JSON (SpecVerificationLab)
+ * ========================================================= */
+
+/* sinh từ đặc tả 'quanly_khohang_m1_doc_chuoi_buffer', hàm 'ingest_raw_line', kind='buffer_copy' */
+void ingest_raw_line(const char *raw_line) {
+    char buffer[32];
+    strcpy(buffer, raw_line);   /* sinh từ đặc tả: buffer-overflow */
+    printf("%s\n", buffer);
+}
+
+/* sinh từ đặc tả 'quanly_khohang_m1_doc_chuoi_buffer', hàm 'get_token_field', kind='arithmetic' */
+int get_token_field(int token_count, int field_idx) {
+    return token_count + field_idx;
+}
+
 /* ---------------------------------------------------------
- * SC-01: NAP CHUOI VAO BUFFER - CWE-120 / CWE-121
+ * SC-01: NAP CHUOI VAO BUFFER - CWE-120 / CWE-121 / CWE-193
  *
  * Trang thai Kripke:
- *   m1_nhan_chuoi
- *      |
- *      +-- len < 32  --> m1_len_nho_32
- *      |                 --> m1_chep_an_toan
- *      |
- *      +-- len == 32 --> m1_len_bang_32
- *      |                 --> m1_tran_1_byte
- *      |
- *      +-- len > 32  --> m1_len_lon_32
- *                        --> m1_tran_nhieu_byte
+ *   m1_nhan_dong_dulieu -> m1_kiem_tra_chieu_dai -> m1_tran_stack_buffer
  *
  * Root cause:
- *   strcpy khong kiem tra dung luong buffer dich.
+ *   strcpy khong kiem tra dung luong buffer dich (32 byte).
  * --------------------------------------------------------- */
-
 int ingest_raw_line_v0(
     char *dst,
     int cap,
@@ -53,8 +58,8 @@ int ingest_raw_line_v0(
     (void)cap;
 
     /* LOI: strcpy sao chep ca ky tu '\0'.
-     * Neu dst co 32 byte va raw_line dai 32 byte,
-     * strcpy se ghi 33 byte.
+     * Neu dst co 32 byte va raw_line dai >= 32 byte,
+     * strcpy se ghi de khung stack frame.
      */
     strcpy(dst, raw_line);
 
@@ -64,11 +69,13 @@ int ingest_raw_line_v0(
 /* ---------------------------------------------------------
  * SC-02: DOC TRUONG DU LIEU - CWE-125
  *
+ * Trang thai Kripke:
+ *   m1_tach_token_hang_hoa -> m1_truy_cap_ngoai_bien
+ *
  * Root cause:
  *   Khong kiem tra field_idx co nam trong
  *   khoang [0, token_count - 1] hay khong.
  * --------------------------------------------------------- */
-
 int get_token_field_v0(
     const int *token_offsets,
     int token_count,
@@ -77,6 +84,6 @@ int get_token_field_v0(
     /* Co tinh bo qua so luong token */
     (void)token_count;
 
-    /* LOI: co the doc ngoai gioi han mang */
+    /* LOI: co the doc ngoai gioi han mang (chi so am hoac vuot tran) */
     return token_offsets[field_idx];
 }
