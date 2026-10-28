@@ -1,0 +1,56 @@
+==============================================================================
+   HỆ THỐNG KIỂM CHỨNG HÌNH THỨC SỐ HỌC (SMT Z3) - MODULE 2 (NGUYỄN KIỀU TRANG)
+   Phiên bản Z3 Engine: 5.1.0 | Chuẩn kiểm toán: CWE-190 / CWE-401 / CWE-416
+==============================================================================
+
+[M2-CHECK-01] BÀI TOÁN 1: Tràn số nguyên kích thước cấp phát Heap (heap_alloc_bytes)
+   |-- Lỗ hổng kiểm toán : CWE-190 / CWE-787 Integer Overflow dẫn tới Heap Overflow
+   |-- Ánh xạ đặc tả     : REQ-1, REQ-6 (Hành vi H3)
+   |-- Mệnh đề toán học  : new_capacity * item_size > 2.147.483.647 (với item_size = 48 bytes)
+   |-- BẢN LỖI v0        : [SAT]   ==> ĐÃ PHÁT HIỆN LỖ HỔNG!
+   |                       Vết phản ví dụ (Counterexample): new_capacity = 67107967, item_size = 48
+   \-- BẢN VÁ v1 (GUARD) : [UNSAT] ==> CHỨNG MINH TOÁN HỌC AN TOÀN 100%!
+                           (Không tồn tại bất kỳ giá trị nào vi phạm rào chắn)
+
+[M2-CHECK-02] BÀI TOÁN 2: Tràn số nguyên khi nhân đôi dung lượng danh sách kho (calc_expand_capacity)
+   |-- Lỗ hổng kiểm toán : CWE-190 Integer Overflow (Dung lượng mới lật thành số âm hoặc 0)
+   |-- Ánh xạ đặc tả     : REQ-1, REQ-6 (Hành vi H3)
+   |-- Mệnh đề toán học  : current_capacity * factor > 2.147.483.647 (với factor = 2)
+   |-- BẢN LỖI v0        : [SAT]   ==> ĐÃ PHÁT HIỆN LỖ HỔNG!
+   |                       Vết phản ví dụ (Counterexample): current_capacity = 1073741824, factor = 2
+   \-- BẢN VÁ v1 (GUARD) : [UNSAT] ==> CHỨNG MINH TOÁN HỌC AN TOÀN 100%!
+                           (Không tồn tại bất kỳ giá trị nào vi phạm rào chắn)
+
+[M2-CHECK-03] BÀI TOÁN 3: Mất địa chỉ gốc khi realloc thất bại OOM (realloc_buffer_leak)
+   |-- Lỗ hổng kiểm toán : CWE-401 Memory Leak (Rò rỉ mảng động khi cạn kiệt RAM)
+   |-- Ánh xạ đặc tả     : REQ-4 (Hành vi H3)
+   |-- Mệnh đề toán học  : realloc_return == NULL and orig_pointer_overwritten == True
+   |-- BẢN LỖI v0        : [SAT]   ==> ĐÃ PHÁT HIỆN LỖ HỔNG!
+   |                       Vết phản ví dụ (Counterexample): old_ptr = 1, list_ptr = 0
+   \-- BẢN VÁ v1 (GUARD) : [UNSAT] ==> CHỨNG MINH TOÁN HỌC AN TOÀN 100%!
+                           (Không tồn tại bất kỳ giá trị nào vi phạm rào chắn)
+
+[M2-CHECK-04] BÀI TOÁN 4: Đọc con trỏ sau khi free phiên kho (cleanup_and_read_uaf)
+   |-- Lỗ hổng kiểm toán : CWE-416 Use After Free (Truy xuất ô nhớ sau khi đã trả về cho OS)
+   |-- Ánh xạ đặc tả     : REQ-5 (Hành vi H6)
+   |-- Mệnh đề toán học  : ptr_state == FREED and operation == READ
+   |-- BẢN LỖI v0        : [SAT]   ==> ĐÃ PHÁT HIỆN LỖ HỔNG!
+   |                       Vết phản ví dụ (Counterexample): read_op = 1, ptr_state = 2
+   \-- BẢN VÁ v1 (GUARD) : [UNSAT] ==> CHỨNG MINH TOÁN HỌC AN TOÀN 100%!
+                           (Không tồn tại bất kỳ giá trị nào vi phạm rào chắn)
+
+==============================================================================
+                   BẢNG TỔNG HỢP ĐỐI CHỨNG HÌNH THỨC SMT Z3
+==============================================================================
+Mã kiểm tra    | Bản lỗi v0 (Kỳ vọng SAT)   | Bản vá v1 (Kỳ vọng UNSAT)   
+------------------------------------------------------------------------------
+M2-CHECK-01    | SAT (Bắt được lỗi)         | UNSAT (Chứng minh an toàn)  
+M2-CHECK-02    | SAT (Bắt được lỗi)         | UNSAT (Chứng minh an toàn)  
+M2-CHECK-03    | SAT (Bắt được lỗi)         | UNSAT (Chứng minh an toàn)  
+M2-CHECK-04    | SAT (Bắt được lỗi)         | UNSAT (Chứng minh an toàn)  
+==============================================================================
+ KẾT LUẬN KIỂM TOÁN:
+   1. 100% kịch bản trên Bản v0 đều trả về SAT (xác thực lỗ hổng CWE-190, 401, 416).
+   2. 100% kịch bản trên Bản vá v1 đều trả về UNSAT (chứng minh toán học an toàn tuyệt đối).
+   3. Module M2 của Nguyễn Kiều Trang (23010495) đạt chuẩn nghiệm thu kiểm chứng hình thức!
+==============================================================================

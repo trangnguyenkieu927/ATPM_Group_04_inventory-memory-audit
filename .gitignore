@@ -24,6 +24,12 @@ nul
 *.tmp
 
 
-# Tai lieu rieng tu gui thanh vien (khong push len thay)
-BaoCaoCaNhan_*.docx
+# Tai lieu Word docx va huong dan noi bo
+*.docx
+~$*.docx
 HUONG_DAN_THANH_VIEN.*
+
+# Thu muc luu tru noi bo va script sinh file phu tro
+05_tailieu_luutru/
+scratch/
+build_*.py

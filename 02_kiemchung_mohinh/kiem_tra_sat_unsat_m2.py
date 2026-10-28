@@ -28,7 +28,7 @@ MAX_SAFE_CAPACITY = INT32_MAX // ITEM_SIZE_PRODUCT  # 44,739,242 items
 
 def in_tieu_de():
     print("=" * 78)
-    print("   HỆ THỐNG KIỂM CHỨNG HÌNH THỨC SỐ HỌC (SMT Z3) — MODULE 2 (NGUYỄN KIỀU TRANG)")
+    print("   HỆ THỐNG KIỂM CHỨNG HÌNH THỨC SỐ HỌC (SMT Z3) - MODULE 2 (NGUYỄN KIỀU TRANG)")
     print(f"   Phiên bản Z3 Engine: {z3.get_version_string()} | Chuẩn kiểm toán: CWE-190 / CWE-401 / CWE-416")
     print("=" * 78)
     print()
@@ -161,9 +161,9 @@ def kiem_tra_m2():
 
     for idx, check in enumerate(danh_sach_kiem_tra, 1):
         print(f"[{check['id']}] BÀI TOÁN {idx}: {check['ten']}")
-        print(f"   ├─ Lỗ hổng kiểm toán : {check['lo_hong']}")
-        print(f"   ├─ Ánh xạ đặc tả     : {check['anh_xa_req']}")
-        print(f"   ├─ Mệnh đề toán học  : {check['bieu_thuc_toan']}")
+        print(f"   |-- Lỗ hổng kiểm toán : {check['lo_hong']}")
+        print(f"   |-- Ánh xạ đặc tả     : {check['anh_xa_req']}")
+        print(f"   |-- Mệnh đề toán học  : {check['bieu_thuc_toan']}")
 
         # 1. KIỂM TRA BẢN LỖI v0
         s0 = z3.Solver()
@@ -175,11 +175,11 @@ def kiem_tra_m2():
         if res0 == z3.sat:
             m0 = s0.model()
             counterexample = ", ".join([f"{d} = {m0[d]}" for d in m0.decls()])
-            print(f"   ├─ BẢN LỖI v0        : \033[91m[SAT]\033[0m   ==> ĐÃ PHÁT HIỆN LỖ HỔNG!")
-            print(f"   │                       Vết phản ví dụ (Counterexample): {counterexample}")
+            print(f"   |-- BẢN LỖI v0        : [SAT]   ==> ĐÃ PHÁT HIỆN LỖ HỔNG!")
+            print(f"   |                       Vết phản ví dụ (Counterexample): {counterexample}")
             v0_status = "SAT (Bắt được lỗi)"
         else:
-            print(f"   ├─ BẢN LỖI v0        : [UNSAT] ==> Bất thường (Không tìm thấy lỗi)")
+            print(f"   |-- BẢN LỖI v0        : [UNSAT] ==> Bất thường (Không tìm thấy lỗi)")
             v0_status = "UNSAT"
 
         # 2. KIỂM TRA BẢN VÁ v1
@@ -190,11 +190,11 @@ def kiem_tra_m2():
         res1 = s1.check()
 
         if res1 == z3.unsat:
-            print(f"   └─ BẢN VÁ v1 (GUARD) : \033[92m[UNSAT]\033[0m ==> CHỨNG MINH TOÁN HỌC AN TOÀN 100%!")
+            print(f"   \\-- BẢN VÁ v1 (GUARD) : [UNSAT] ==> CHỨNG MINH TOÁN HỌC AN TOÀN 100%!")
             print(f"                           (Không tồn tại bất kỳ giá trị nào vi phạm rào chắn)")
             v1_status = "UNSAT (Chứng minh an toàn)"
         else:
-            print(f"   └─ BẢN VÁ v1 (GUARD) : \033[91m[SAT]\033[0m   ==> CẢNH BÁO: Rào chắn v1 vẫn còn kẽ hở!")
+            print(f"   \\-- BẢN VÁ v1 (GUARD) : [SAT]   ==> CẢNH BÁO: Rào chắn v1 vẫn còn kẽ hở!")
             v1_status = "SAT (Vẫn còn lỗi)"
 
         ket_qua_tong_hop.append({
